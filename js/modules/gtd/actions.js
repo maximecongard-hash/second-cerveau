@@ -1,24 +1,22 @@
 import { $, today, addDays, fmtDate, nowIso } from '../../core/util.js';
 import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store.js';
-import { hydrateImages } from '../../core/images.js';
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
 import { complete, clarify, moveInDay, evening, createReminder, nextOrder, toggleFocus } from './model.js';
 import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
-import { notesList } from './views.js';
 
 // ---------------------------------------------------------------------------
 // Actions GTD (data-act) et formulaires (data-form)
 // ---------------------------------------------------------------------------
+// Bouton + des vues GTD
+export function fab(v) {
+  if (v === 'capture') openCapture();
+  else if (v === 'today') openCapture({ kind: 'task', scheduled_date: S.ui.day, day_order: nextOrder(S.ui.day), label: `Tâche · ${fmtDate(S.ui.day)}` });
+  else if (v === 'task') openCapture({ kind: 'task', contexts: S.ui.ctx !== 'all' && S.ui.ctx !== 'none' ? [S.ui.ctx] : [], label: 'Prochaine action' });
+  else if (v === 'project') createAndEdit({ kind: 'project' });
+  else if (v.startsWith('proj-task:')) openCapture({ kind: 'task', parent_id: v.split(':')[1], label: 'Action du projet' });
+}
+
 export const acts = {
-  fab: el => {
-    const v = el.dataset.v;
-    if (v === 'capture') openCapture();
-    else if (v === 'today') openCapture({ kind: 'task', scheduled_date: S.ui.day, day_order: nextOrder(S.ui.day), label: `Tâche · ${fmtDate(S.ui.day)}` });
-    else if (v === 'task') openCapture({ kind: 'task', contexts: S.ui.ctx !== 'all' && S.ui.ctx !== 'none' ? [S.ui.ctx] : [], label: 'Prochaine action' });
-    else if (v === 'project') createAndEdit({ kind: 'project' });
-    else if (v === 'note') createAndEdit({ kind: 'note', tags: S.ui.noteTag ? [S.ui.noteTag] : [] });
-    else if (v.startsWith('proj-task:')) openCapture({ kind: 'task', parent_id: v.split(':')[1], label: 'Action du projet' });
-  },
   toggle: el => complete(el.dataset.id),
   kind: el => {
     const it = S.items.get(SH.editingId);
@@ -43,16 +41,7 @@ export const acts = {
     const v = el.dataset.v;
     setField(SH.editingId, 'scheduled_date', v === 'clear' ? '' : addDays(today(), +v), true);
   },
-  trash: el => {
-    const id = el.dataset.id;
-    const prev = S.items.get(id).status;
-    if (SH.draftId === id) SH.draftId = null;
-    patch(id, { status: 'trashed' });
-    closeSheet();
-    toast('Supprimé', () => patch(id, { status: prev }));
-  },
   reminder: el => createReminder(el.dataset.id),
-  preview: el => { S.ui.preview = el.dataset.v === '1'; renderEditor(); },
   'new-note': el => createAndEdit({ kind: 'note', parent_id: el.dataset.id }),
   clar: el => clarify(el.dataset.id, el.dataset.v),
   'clarify-one': el => { location.hash = '#/clarify/' + el.dataset.id; },
@@ -99,7 +88,6 @@ export const acts = {
     closeSheet();
   },
   'ctx-filter': el => { S.ui.ctx = el.dataset.v; render(); },
-  'note-tag': el => { S.ui.noteTag = S.ui.noteTag === el.dataset.v ? null : el.dataset.v; render(); },
   activate: el => { patch(el.dataset.id, { status: 'active' }); toast('Activé'); },
   'proj-done': el => { patch(el.dataset.id, { status: 'done', completed_at: nowIso() }); toast('Projet terminé', () => patch(el.dataset.id, { status: 'active', completed_at: null })); },
   'review-check': el => { const k = el.dataset.v; S.ui.review.has(k) ? S.ui.review.delete(k) : S.ui.review.add(k); render(); },
@@ -122,17 +110,6 @@ export const forms = {
     input.value = '';
     if (SH.mode === 'editor') { renderEditor(); $('#ed-next')?.focus(); }
   },
-  // depuis une note : prochaine action liée à la note (et à son projet)
-  'link-task': f => {
-    const input = f.querySelector('input'), v = input.value.trim();
-    const n = S.items.get(f.dataset.id);
-    if (!v || !n) return;
-    const p = n.parent_id && S.items.get(n.parent_id);
-    saveItem(newItem({ kind: 'task', title: v, links: [n.id], parent_id: p?.kind === 'project' ? p.id : null }));
-    input.value = '';
-    toast('Action ajoutée');
-    if (SH.mode === 'editor') { renderEditor(); $('#ed-link-task')?.focus(); }
-  },
   'ctx-add': f => {
     const input = f.querySelector('input');
     let v = input.value.trim();
@@ -152,13 +129,6 @@ export const forms = {
 };
 
 // Saisies propres au module (renvoient true si traitées)
-export function onInput(t) {
-  if (t.dataset.live !== 'notes') return false;
-  S.ui.noteQuery = t.value;
-  $('#notes-list').innerHTML = notesList();
-  hydrateImages($('#notes-list'));
-  return true;
-}
 export function onChange(t) {
   if (t.id === 'cap-file') { $('#cap-file-name').textContent = t.files[0] ? t.files[0].name : ''; return true; }
   if (t.dataset.evdate && t.value) { patch(t.dataset.evdate, { scheduled_date: t.value, day_order: nextOrder(t.value), focus: null }); toast(`Prévu ${fmtDate(t.value).toLowerCase()}`); return true; }

@@ -1,6 +1,6 @@
-import { esc, I, today, fmtDate, fmtDur, fmtAgo, plain, plural } from '../../core/util.js';
+import { esc, I, today, fmtDate, fmtDur, plural } from '../../core/util.js';
 import { S, ofKind, linkedIds } from '../../core/store.js';
-import { itemTags, hasNextAction } from './model.js';
+import { hasNextAction } from './model.js';
 
 // ---------------------------------------------------------------------------
 // Lignes de liste GTD
@@ -27,18 +27,6 @@ export function taskRow(t, o = {}) {
   </div>`;
 }
 const linkMeta = it => { const n = linkedIds(it.id).length; return n ? `<span class="m-link" title="Éléments liés">${I.link}${n}</span>` : ''; };
-export function noteRow(n) {
-  const snippet = plain(n.body).slice(0, 110);
-  const tags = itemTags(n);
-  const p = n.parent_id && S.items.get(n.parent_id);
-  return `<div class="row" data-act="edit" data-id="${n.id}">
-    <div class="row-icon">${I.note}</div>
-    <div class="row-main"><div class="row-title">${n.pinned ? `<span class="pin-mark" aria-label="Épinglée">${I.pin}</span>` : ''}${esc(n.title) || '<i>Sans titre</i>'}</div>
-    ${snippet ? `<div class="row-snippet">${esc(snippet)}</div>` : ''}
-    <div class="row-meta">${p ? `<span class="m-proj">${esc(p.title)}</span>` : ''}${tags.map(t => `<span class="m-tag">#${esc(t)}</span>`).join('')}${linkMeta(n)}<span>${fmtAgo(n.updated_at)}</span></div></div>
-    ${n.image_path ? `<img class="thumb" data-img="${esc(n.image_path)}" alt="">` : ''}
-  </div>`;
-}
 export const starBtn = (t, day) => `<button class="star ${t.focus && t.scheduled_date === day ? 'on' : ''}" data-act="focus" data-id="${t.id}" aria-label="Top 3">${I.star}</button>`;
 export function projectRow(p) {
   const n = ofKind('task').filter(t => t.parent_id === p.id && (t.status === 'active' || t.status === 'waiting')).length;
@@ -54,7 +42,6 @@ export function projectRow(p) {
 }
 export function anyRow(it) {
   if (it.kind === 'task') return taskRow(it, { showSched: true });
-  if (it.kind === 'note') return noteRow(it);
   if (it.kind === 'project') return projectRow(it);
   const label = { inbox: 'Inbox', area: 'Domaine' }[it.kind];
   return `<div class="row" data-act="edit" data-id="${it.id}"><div class="row-main"><div class="row-title">${esc(it.title) || '<i>Sans titre</i>'}</div><div class="row-meta"><span>${label}</span></div></div></div>`;

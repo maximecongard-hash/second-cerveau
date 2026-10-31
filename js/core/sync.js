@@ -89,7 +89,7 @@ export async function sync() {
   } catch (e) {
     console.error('sync', e);
     S.lastError = /column|schema cache|violates check/i.test(e.message || '')
-      ? 'base de données à mettre à jour (supabase/003_liens.sql)'
+      ? 'base de données à mettre à jour (supabase/004_signets.sql)'
       : (e.message || String(e));
   } finally {
     S.syncing = false;

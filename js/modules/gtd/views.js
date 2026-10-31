@@ -1,8 +1,9 @@
 import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetween, cap, domain, plural, fmtDate, fmtDur, fmtAgo, FMT_LONG } from '../../core/util.js';
 import { S, live, ofKind, byTitle } from '../../core/store.js';
-import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, itemTags, sortTasks } from './model.js';
-import { taskRow, noteRow, starBtn, projectRow, planBtn } from './rows.js';
-import { linkedSection } from '../../core/links.js';
+import { kindOwner } from '../../core/modules.js';
+import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks } from './model.js';
+import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
+import { linkedSection, itemRow } from '../../core/links.js';
 
 // ---------------------------------------------------------------------------
 // Vues GTD (adresses inchangées : #/inbox, #/today, #/project/<id>…)
@@ -46,8 +47,9 @@ views.clarify = arg => {
         ${btn('project', 'Projet', 'plusieurs étapes')}
         ${btn('waiting', 'En attente', 'quelqu’un d’autre')}
         ${btn('someday', 'Un jour', 'peut-être, plus tard')}
-        ${btn('note', 'Note', 'idée, référence')}
-        ${btn('trash', 'Supprimer', 'pas utile', 'danger')}
+        ${kindOwner('note') ? btn('note', 'Note', 'idée, référence') : ''}
+        ${kindOwner('bookmark') ? btn('bookmark', 'Signet', 'lien à lire, à garder', it.url ? 'suggest' : '') : ''}
+        ${btn('trash', 'Supprimer', 'pas utile', 'danger wide')}
       </div>
     </div>`
   };
@@ -136,7 +138,8 @@ views.project = id => {
   const waiting = ts.filter(t => t.status === 'waiting');
   const some = ts.filter(t => t.status === 'someday');
   const done = ts.filter(t => t.status === 'done').sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
-  const notes = ofKind('note').filter(n => n.parent_id === id).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  // notes et signets rattachés au projet (module Notes, affichés via le registre)
+  const notes = live().filter(n => (n.kind === 'note' || n.kind === 'bookmark') && n.parent_id === id).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   const area = p.parent_id && S.items.get(p.parent_id);
   const statusLabel = { active: 'Actif', someday: 'Un jour', done: 'Terminé', waiting: 'En attente', clarify: 'À clarifier' }[p.status];
   let html = `<a class="back" href="#/projects">${I.left} Projets</a>
@@ -153,30 +156,12 @@ views.project = id => {
     `<form class="inline-add" data-form="add-proj" data-id="${p.id}"><input id="add-proj" placeholder="+ Ajouter une action" enterkeyhint="done" autocomplete="off"></form>`);
   if (waiting.length) html += sec('En attente', waiting.map(t => taskRow(t, { noProject: true })).join(''));
   if (some.length) html += sec('Un jour / peut-être', some.map(t => taskRow(t, { noProject: true })).join(''));
-  html += sec('Notes', notes.map(noteRow).join('') || '<div class="muted pad">Aucune note.</div>', `<button class="link" data-act="new-note" data-id="${p.id}">+ Note</button>`);
+  if (kindOwner('note')) html += sec('Notes', notes.map(itemRow).join('') || '<div class="muted pad">Aucune note.</div>', `<button class="link" data-act="new-note" data-id="${p.id}">+ Note</button>`);
   html += linkedSection(p, new Set([...ts, ...notes].map(x => x.id)));
   if (done.length) html += `<details class="done-sec"><summary>${plural(done.length, 'action terminée', 'actions terminées')}</summary>${done.map(t => taskRow(t, { noProject: true })).join('')}</details>`;
   return { title: 'Projet', html, fab: 'proj-task:' + p.id };
 };
 
-export function notesList() {
-  const q = S.ui.noteQuery.trim().toLowerCase();
-  let list = ofKind('note');
-  if (S.ui.noteTag) list = list.filter(n => itemTags(n).includes(S.ui.noteTag));
-  if (q) list = list.filter(n => (n.title + ' ' + n.body + ' ' + itemTags(n).join(' ')).toLowerCase().includes(q));
-  list.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updated_at.localeCompare(a.updated_at));
-  return list.length ? list.map(noteRow).join('') : empty(q || S.ui.noteTag ? 'Aucune note trouvée' : 'Aucune note', q ? '' : 'Ton second cerveau commence ici : idées, références, apprentissages.');
-}
-views.notes = () => {
-  const tags = [...new Set(ofKind('note').flatMap(itemTags))].sort((a, b) => a.localeCompare(b, 'fr'));
-  return {
-    title: 'Notes',
-    html: `<input id="note-q" class="search" type="search" placeholder="Rechercher dans les notes" value="${esc(S.ui.noteQuery)}" data-live="notes" autocomplete="off">
-      ${tags.length ? `<div class="chips scroll">${tags.map(t => chip('#' + esc(t), S.ui.noteTag === t, 'note-tag', t)).join('')}</div>` : ''}
-      <div id="notes-list" class="list">${notesList()}</div>`,
-    fab: 'note'
-  };
-};
 
 views.waiting = () => {
   const list = ofKind('task').filter(t => t.status === 'waiting').sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -193,7 +178,7 @@ views.someday = () => {
 };
 
 views.logbook = () => {
-  const list = live().filter(i => i.status === 'done' && i.completed_at).sort((a, b) => b.completed_at.localeCompare(a.completed_at)).slice(0, 150);
+  const list = live().filter(i => i.status === 'done' && i.completed_at && (i.kind === 'task' || i.kind === 'project')).sort((a, b) => b.completed_at.localeCompare(a.completed_at)).slice(0, 150);
   const groups = new Map();
   for (const it of list) { const d = ymd(new Date(it.completed_at)); if (!groups.has(d)) groups.set(d, []); groups.get(d).push(it); }
   const html = [...groups].map(([d, its]) => sec(cap(fmtDate(d)), its.map(it => it.kind === 'project' ? projectRow(it) : taskRow(it)).join(''))).join('');

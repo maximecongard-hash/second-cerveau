@@ -23,10 +23,10 @@ export function linksBlock(it, extra = '') {
 }
 
 // Section « Liés » d'une page (fiche projet…), avec les lignes propres à chaque module
+export const itemRow = x => (kindOwner(x.kind)?.row || (y => `<div class="row" data-act="edit" data-id="${y.id}"><div class="row-main"><div class="row-title">${titleOf(y)}</div></div></div>`))(x);
 export function linkedSection(it, skip = new Set()) {
   const ls = linked(it.id).filter(x => !skip.has(x.id));
-  const rowOf = x => (kindOwner(x.kind)?.row || (y => `<div class="row" data-act="edit" data-id="${y.id}"><div class="row-main"><div class="row-title">${titleOf(y)}</div></div></div>`))(x);
-  return sec('Liés', ls.map(rowOf).join('') || '<div class="muted pad">Aucun lien.</div>', `<button class="link" data-act="link-open" data-id="${it.id}">+ Lier</button>`);
+  return sec('Liés', ls.map(itemRow).join('') || '<div class="muted pad">Aucun lien.</div>', `<button class="link" data-act="link-open" data-id="${it.id}">+ Lier</button>`);
 }
 
 // ---------------------------------------------------------------------------

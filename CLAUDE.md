@@ -11,8 +11,8 @@ PWA personnelle, mono-utilisateur, installée en plein écran sur iPhone : un se
 en **modules** (thèmes) dans une barre latérale.
 
 - **Organisation** (`gtd`) : le cœur actuel. Capture rapide (app, bouton Action, Siri, partage, photo),
-  tri de l'Inbox, prochaines actions par contexte, projets, notes Markdown liées, Top 3 du jour, agenda,
-  revue du soir et revue hebdo.
+  tri de l'Inbox, prochaines actions par contexte, projets, Top 3 du jour, agenda, revue du soir et revue hebdo.
+- **Notes** (`notes`) : notes Markdown, signets à lire / lus, épinglés, liés aux tâches et projets.
 - **Sport** et **Courses** : coquilles en aperçu, désactivées par défaut. Contenu prévu en phase 2.
 
 Stack : HTML + CSS + modules ES natifs, sans build ni npm. Données dans Supabase (table unique `items`,
@@ -20,7 +20,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.5.0**, cache SW `sc-v8`. Migration `003_liens.sql` à coller dans Supabase avant d'utiliser la 0.5.
+- Version **0.6.0**, cache SW `sc-v9`. Migrations à jour sur Supabase : 003 (passée le 31/10/2026) ; 004 à coller avant de publier la 0.6.
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
@@ -38,11 +38,12 @@ RLS), hors ligne via localStorage + service worker.
   9. 0.5.0 : liens entre éléments de tous les modules (colonne `links`, `core/links.js`) : bloc « Liés » dans
      les éditeurs, feuille « Lier à… », section « Liés » sur la fiche projet, « + Action liée » depuis une note,
      `[[wikiliens]]` vers notes, projets et tâches, épingle des notes (colonne `pinned`).
+  10. 0.6.0 : module Notes séparé (`js/modules/notes`) avec notes, signets (kind `bookmark`) et épinglés ;
+     choix « Signet » au tri de l'Inbox ; bouton + routé par module (`fab`) ; migration 004 qui ouvre `kind`.
 
 ## Pistes ouvertes
 
-- **Feuille de route issue de l'étude du Notion** (31/10/2026) : 0.6 module Notes séparé avec signets
-  (kind `bookmark`, choix « Signet » au tri de l'Inbox) ; 0.7 agenda visuel jour / semaine (`scheduled_time` +
+- **Feuille de route issue de l'étude du Notion** (31/10/2026) : 0.7 agenda visuel jour / semaine (`scheduled_time` +
   `duration_min`) ; 0.8 flux ICS vers Apple Calendar puis import des événements par Raccourci. À clarifier :
   agenda source iCloud ou Google (les Procédures IA du Notion parlent de Google Agenda).
 - **Phase 2** : remplir les modules Sport et Courses.
