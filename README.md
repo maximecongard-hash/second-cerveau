@@ -197,7 +197,7 @@ L'app est organisée en modules, affichés dans une barre latérale : fixe sur g
 - **Notes** : notes en Markdown, signets à lire ou lus, éléments épinglés. Chaque note ou signet peut être lié à des tâches et des projets (« Liés », « + Lier à… », « + Action liée »).
 - **Sport** et **Courses** : en aperçu, désactivés par défaut.
 
-Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque module et change leur ordre. Le premier module s'ouvre au lancement. Ce choix est enregistré dans tes préférences et synchronisé entre tes appareils.
+Groupe **Modules** des Réglages : active ou masque chaque module et change leur ordre. Le premier module s'ouvre au lancement. Ce choix est enregistré dans tes préférences et synchronisé entre tes appareils.
 
 ## Fichiers
 

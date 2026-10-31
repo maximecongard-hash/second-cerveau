@@ -2,7 +2,7 @@ import { TEXT_FIELDS } from './state.js';
 import { S, patch } from './store.js';
 import { sync, setSyncState } from './sync.js';
 import { MODULES, ACTS, FORMS } from './modules.js';
-import { app, render, flushPendingRender, SH, closeSheet, openEditor, setField, openMenu, openSide, closeSide, runUndo, activeModule, toast } from './ui.js';
+import { app, render, flushPendingRender, SH, closeSheet, openEditor, renderEditor, setField, openMenu, openSide, closeSide, runUndo, activeModule, toast } from './ui.js';
 import { liveSearch } from './views.js';
 import { liveLinkSearch } from './links.js';
 
@@ -56,10 +56,23 @@ document.addEventListener('input', e => {
   if (t.dataset.inline && t.dataset.id) { patch(t.dataset.id, { [t.dataset.inline]: t.value }, { render: false }); return; }
   if (SH.mode === 'editor' && t.dataset.f && TEXT_FIELDS.has(t.dataset.f)) setField(SH.editingId, t.dataset.f, t.value, false);
 });
+// Sur iOS, un sélecteur date / heure envoie « change » encore ouvert : redessiner l'éditeur le fermerait.
+// On enregistre tout de suite et on redessine à la sortie du champ.
+const isPicker = t => /^(date|time|datetime-local)$/.test(t.type);
+let pickerDirty = false;
 document.addEventListener('change', e => {
   const t = e.target;
   if (MODULES.some(m => m.onChange?.(t))) return;
-  if (SH.mode === 'editor' && t.dataset.f && !TEXT_FIELDS.has(t.dataset.f)) setField(SH.editingId, t.dataset.f, t.value, true);
+  if (SH.mode !== 'editor' || !t.dataset.f || TEXT_FIELDS.has(t.dataset.f)) return;
+  const wait = isPicker(t) && document.activeElement === t;
+  setField(SH.editingId, t.dataset.f, t.value, !wait);
+  if (wait) pickerDirty = true;
+});
+document.addEventListener('focusout', e => {
+  // passage direct à un autre sélecteur : attendre qu'il se ferme aussi
+  if (!pickerDirty || !isPicker(e.target) || (e.relatedTarget && isPicker(e.relatedTarget))) return;
+  pickerDirty = false;
+  if (SH.mode === 'editor') setTimeout(renderEditor, 0);
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (SH.mode) closeSheet(); else closeSide(); }

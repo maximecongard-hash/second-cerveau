@@ -90,7 +90,7 @@ function onChange(t) {
 function settings() {
   const opts = (k, from, to) => `<select data-agpref="${k}">${Array.from({ length: to - from + 1 }, (_, n) => from + n)
     .map(h => `<option value="${h}" ${S.prefs[k] === h ? 'selected' : ''}>${pad(h)} h</option>`).join('')}</select>`;
-  return sec('Agenda', `<div class="muted small pad">Heures affichées dans la grille. Elle s'élargit seule si un créneau en sort.</div>
+  return sec('Heures', `<div class="muted small pad">Heures affichées dans la grille. Elle s'élargit seule si un créneau en sort.</div>
     <div class="fields"><div class="f-row"><label>Début</label><div class="f-val">${opts('agStart', 0, 12)}</div></div>
     <div class="f-row"><label>Fin</label><div class="f-val">${opts('agEnd', 13, 24)}</div></div></div>`) + appleSettings();
 }
@@ -121,6 +121,7 @@ registerModule({
   prefs: { agStart: 7, agEnd: 22, agApple: true },
   ui: { agDay: today() },
   settings,
+  settingsMeta: 'Heures · Calendrier Apple',
   seedDemo,
   onChange,
   // après chaque synchro : relit les événements de Calendrier (au plus toutes les 5 minutes)

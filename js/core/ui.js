@@ -40,7 +40,7 @@ export function flushPendingRender() {
   if (pendingSyncRender) { pendingSyncRender = false; setTimeout(() => queueRender(true), 50); }
 }
 
-const CORE_LINKS = [['search', 'Recherche', I.search], ['modules', 'Modules', I.grid], ['settings', 'Réglages', I.sliders]];
+const CORE_LINKS = [['search', 'Recherche', I.search], ['settings', 'Réglages', I.sliders]];
 const badgeHtml = (n, cls) => (n ? `<b class="${cls}">${n}</b>` : '');
 
 function sidebar(r, mod) {

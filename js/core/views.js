@@ -28,11 +28,13 @@ VIEWS.search = () => ({
     <div id="search-results" class="list">${searchResults()}</div>`
 });
 
-VIEWS.modules = () => {
+// Liste des modules : activation et ordre, affichée dans les Réglages
+function modulesList() {
   const list = moduleOrder();
-  const rows = list.map((x, i) => {
-    const m = getModule(x.id);
-    return `<div class="row mod-row ${x.on ? '' : 'off'}">
+  return `<div class="muted small pad">Thèmes affichés dans la barre latérale et leur ordre. Le premier s'ouvre au lancement. Désactiver un module masque ses écrans, sans effacer ses données.</div>` +
+    list.map((x, i) => {
+      const m = getModule(x.id);
+      return `<div class="row mod-row ${x.on ? '' : 'off'}">
       <div class="row-icon mod-icon">${m.icon}</div>
       <div class="row-main"><div class="row-title">${esc(m.label)}${m.preview ? ' <span class="pill">Aperçu</span>' : ''}</div>
         <div class="row-snippet">${esc(m.description || '')}</div></div>
@@ -42,13 +44,14 @@ VIEWS.modules = () => {
       </div>
       <button class="switch ${x.on ? 'on' : ''}" data-act="mod-toggle" data-v="${m.id}" role="switch" aria-checked="${x.on}" aria-label="Activer ${esc(m.label)}"></button>
     </div>`;
-  }).join('');
-  return {
-    title: 'Modules',
-    html: `<div class="muted small pad">Choisis les thèmes affichés dans la barre latérale et leur ordre. Le premier s'ouvre au lancement. Désactiver un module masque ses écrans, sans effacer ses données.</div>
-      <div class="list">${rows}</div>`
-  };
-};
+    }).join('');
+}
+
+// Groupe repliable : l'état ouvert vit dans S.ui.folds, le rendu reconstruit le DOM
+const fold = (id, icon, title, meta, inner) => `<details class="fold" ${S.ui.folds[id] ? 'open' : ''}>
+    <summary data-act="fold" data-v="${id}"><span class="fold-icon">${icon}</span><span class="fold-main"><span class="fold-title">${title}</span>${meta ? `<span class="fold-meta">${meta}</span>` : ''}</span><span class="fold-chev">${I.down}</span></summary>
+    <div class="fold-body">${inner}</div>
+  </details>`;
 
 VIEWS.settings = () => {
   if (!DEMO && S.ui.tokens === undefined) { S.ui.tokens = null; loadTokens(); }
@@ -59,20 +62,23 @@ VIEWS.settings = () => {
       : '<div class="muted pad">Aucun jeton. Génère-en un pour tes raccourcis.</div>') +
       `<button class="btn block" data-act="token-new">Générer un jeton</button>${S.ui.tokenErr ? `<div class="err pad">${esc(S.ui.tokenErr)}</div>` : ''}`;
   const html =
-    sec('Compte', `<div class="kv"><span>${esc(S.user.email)}</span><span class="sync ${syncClass()}"></span></div>
+    fold('account', I.user, 'Compte', esc(DEMO ? 'Mode démo' : S.user.email),
+      `<div class="kv"><span>${esc(S.user.email)}</span><span class="sync ${syncClass()}"></span></div>
       <div class="muted small pad">${syncLabel()}${S.lastSync ? ` · dernière synchro ${FMT_TIME.format(new Date(S.lastSync))}` : ''}</div>
-      <div class="btn-row">${DEMO ? '' : '<button class="btn" data-act="sync-now">Synchroniser</button><button class="btn danger" data-act="logout">Se déconnecter</button>'}</div>`) +
-    sec('Notifications', pushSettings()) +
-    sec('Modules', `<a class="row" href="#/modules"><div class="row-main"><div class="row-title">Thèmes affichés</div><div class="row-meta"><span>${enabledModules().map(m => esc(m.label)).join(' · ')}</span></div></div><span class="chev">${I.right}</span></a>`) +
-    enabledModules().map(m => m.settings?.() || '').join('') +
-    sec('Capture iPhone', `<div class="muted small pad">Valeurs à coller dans tes raccourcis (voir le guide).</div>
+      ${DEMO ? '' : '<div class="btn-row"><button class="btn" data-act="sync-now">Synchroniser</button><button class="btn danger" data-act="logout">Se déconnecter</button></div>'}`) +
+    fold('notif', I.bell, 'Notifications', 'Rappels des tâches', pushSettings()) +
+    fold('modules', I.grid, 'Modules', enabledModules().map(m => esc(m.label)).join(' · '), modulesList()) +
+    enabledModules().filter(m => m.settings).map(m => fold('mod-' + m.id, m.icon, esc(m.label), esc(m.settingsMeta || ''), m.settings())).join('') +
+    fold('capture', I.inbox, 'Capture iPhone', 'Raccourcis et jeton',
+      `<div class="muted small pad">Valeurs à coller dans tes raccourcis (voir le guide).</div>
       <div class="kv"><span>URL du projet</span><button class="btn" data-act="copy" data-v="${esc(CFG.url)}">Copier</button></div>
       <div class="kv"><span>Clé publique</span><button class="btn" data-act="copy" data-v="${esc(CFG.key)}">Copier</button></div>
       <div class="muted small pad">Jeton de capture (secret, ne le partage pas) :</div>${tokenHtml}`) +
-    sec('Icône', iconSettings()) +
-    sec('Données', `<div class="btn-row"><button class="btn" data-act="export">Exporter (JSON)</button></div>
+    fold('icon', I.image, 'Icône', iconChoice().label, iconSettings()) +
+    fold('data', I.save, 'Données', 'Export · version ' + VERSION,
+      `<div class="btn-row"><button class="btn" data-act="export">Exporter (JSON)</button></div>
       <div class="muted small pad">Version ${VERSION}${DEMO ? ' · mode démo' : ''}</div>`);
-  return { title: 'Réglages', html };
+  return { title: 'Réglages', html: `<div class="folds">${html}</div>` };
 };
 // iOS lit l'icône au moment de « Sur l'écran d'accueil » puis la fige
 function iconSettings() {
@@ -141,6 +147,7 @@ Object.assign(ACTS, {
     [list[i], list[j]] = [list[j], list[i]];
     saveModules(list);
   },
+  fold: el => { S.ui.folds[el.dataset.v] = !S.ui.folds[el.dataset.v]; render(); },
   'sync-now': () => { S.lastError = null; sync(); },
   logout: async () => {
     if ((S.dirty.size || S.prefsDirty) && !confirm('Des modifications ne sont pas encore synchronisées et seront perdues. Se déconnecter quand même ?')) return;

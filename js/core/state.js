@@ -21,5 +21,5 @@ export const S = {
   lastSync: null,
   lastError: null,
   // état d'affichage ; les modules y ajoutent leurs champs (registerModule)
-  ui: { mod: null, search: '', tokens: undefined, tokenErr: null }
+  ui: { mod: null, search: '', tokens: undefined, tokenErr: null, folds: {} }
 };

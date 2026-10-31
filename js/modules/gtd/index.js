@@ -97,6 +97,7 @@ registerModule({
   row: anyRow,
   searchable: it => it.kind !== 'area',
   settings,
+  settingsMeta: 'Contextes · domaines',
   afterSync,
   seedDemo,
   onChange,

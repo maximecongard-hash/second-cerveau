@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.9.0**, cache SW `sc-v12`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.9.1**, cache SW `sc-v13`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -56,6 +56,9 @@ RLS), hors ligne via localStorage + service worker.
      les tâches, `js/core/push.js` (abonnement, Réglages > Notifications), push dans `sw.js`, fonction
      `supabase/functions/send-reminders` (Web Push fait main en WebCrypto, testé sur le vecteur RFC 8291) appelée
      chaque minute par pg_cron ; clés VAPID créées par la fonction et rangées dans `push_config` (pas de RLS ouverte).
+  15. 0.9.1 : Réglages en groupes repliables (Compte, Notifications, Modules, un groupe par module actif, Capture,
+     Icône, Données) ; la liste des modules vit dans les Réglages, plus de lien « Modules » dans la barre latérale.
+     Sélecteurs date / heure de l'éditeur : l'éditeur se redessine à leur fermeture (sinon iOS les refermait).
 
 ## Pistes ouvertes
 

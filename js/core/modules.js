@@ -16,7 +16,8 @@ import { S, DEFAULT_PREFS } from './state.js';
 //   editor(it), setField(id, f, v) éditeur des éléments de ses kinds
 //   row(it), searchable(it)        ligne de résultat de recherche
 //   prefs, ui                      valeurs par défaut ajoutées à S.prefs et S.ui
-//   badge(), menu(), settings()    pastille, entrées du menu ⋯, section des réglages
+//   badge(), menu(), settings()    pastille, entrées du menu ⋯, contenu du groupe du module dans les réglages
+//   settingsMeta                   résumé affiché sous le titre de ce groupe replié
 //   afterSync(), seedDemo()        initialisations (renvoie true si quelque chose a changé)
 //   onInput(el), onChange(el)      saisies propres au module (renvoie true si traité)
 //   onResume()                     retour au premier plan
