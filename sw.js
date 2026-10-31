@@ -1,7 +1,7 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
 // et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v15';
+const CACHE = 'sc-v17';
 const SHELL = [
   './',
   'index.html',
@@ -13,10 +13,12 @@ const SHELL = [
   'js/core/links.js',
   'js/core/modules.js',
   'js/core/push.js',
+  'js/core/share.js',
   'js/core/state.js',
   'js/core/store.js',
   'js/core/sync.js',
   'js/core/ui.js',
+  'js/core/users.js',
   'js/core/util.js',
   'js/core/views.js',
   'js/main.js',

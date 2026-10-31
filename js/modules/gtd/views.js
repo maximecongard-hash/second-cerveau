@@ -1,9 +1,10 @@
 import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetween, cap, domain, plural, fmtDate, fmtDur, fmtAgo, FMT_LONG } from '../../core/util.js';
-import { S, live, ofKind, byTitle } from '../../core/store.js';
+import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '../../core/store.js';
 import { kindOwner, viewOwner, isEnabled } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks } from './model.js';
 import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
+import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
 
 // ---------------------------------------------------------------------------
 // Vues GTD (adresses inchangées : #/inbox, #/today, #/project/<id>…)
@@ -126,7 +127,9 @@ views.projects = () => {
   let html = clar.length ? sec('À clarifier', clar.map(projectRow).join('')) : '';
   html += groups.map(([a, ps]) => sec(esc(a.title), ps.map(projectRow).join(''))).join('');
   if (orphan.length) html += sec(groups.length ? 'Sans domaine' : 'Projets actifs', orphan.map(projectRow).join(''));
-  if (!act.length && !clar.length) html += empty('Aucun projet actif', 'Un projet = tout résultat qui demande plus d’une action.');
+  const shared = sharedWithMe();
+  if (shared.length) html += sec('Partagés avec moi', shared.map(itemRow).join(''));
+  if (!act.length && !clar.length && !shared.length) html += empty('Aucun projet actif', 'Un projet = tout résultat qui demande plus d’une action.');
   const some = projectsBy('someday'), done = projectsBy('done');
   if (some.length) html += `<details class="done-sec"><summary>Un jour / peut-être (${some.length})</summary>${some.map(projectRow).join('')}</details>`;
   if (done.length) html += `<details class="done-sec"><summary>Terminés (${done.length})</summary>${done.map(projectRow).join('')}</details>`;
@@ -136,33 +139,35 @@ views.projects = () => {
 views.project = id => {
   const p = S.items.get(id);
   if (!p || p.status === 'trashed') return { title: 'Projet', html: empty('Projet introuvable', '<a class="btn" href="#/projects">Retour aux projets</a>') };
-  const ts = ofKind('task').filter(t => t.parent_id === id);
+  const ts = ofKindAll('task').filter(t => t.parent_id === id);
+  const ro = !canEdit(p);
   const active = ts.filter(t => t.status === 'active').sort(sortTasks);
   const waiting = ts.filter(t => t.status === 'waiting');
   const some = ts.filter(t => t.status === 'someday');
   const done = ts.filter(t => t.status === 'done').sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
   // notes et signets rattachés au projet (module Notes, affichés via le registre)
-  const notes = live().filter(n => (n.kind === 'note' || n.kind === 'bookmark') && n.parent_id === id).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  const notes = liveAll().filter(n => (n.kind === 'note' || n.kind === 'bookmark') && n.parent_id === id).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   const area = p.parent_id && S.items.get(p.parent_id);
   const statusLabel = { active: 'Actif', someday: 'Un jour', done: 'Terminé', waiting: 'En attente', clarify: 'À clarifier' }[p.status];
   let html = `<a class="back" href="#/projects">${I.left} Projets</a>
     <div class="proj-head">
       <h2 class="proj-title">${esc(p.title) || '<i>Sans titre</i>'}</h2>
-      <div class="row-meta"><span>${statusLabel}</span>${area ? `<span class="m-proj">${esc(area.title)}</span>` : ''}${p.due_date ? `<span class="m-due">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${p.review_date ? `<span class="${p.review_date <= today() ? 'warn' : ''}">Revue ${fmtDate(p.review_date).toLowerCase()}</span>` : ''}</div>
+      <div class="row-meta"><span>${statusLabel}</span>${area ? `<span class="m-proj">${esc(area.title)}</span>` : ''}${p.due_date ? `<span class="m-due">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${p.review_date ? `<span class="${p.review_date <= today() ? 'warn' : ''}">Revue ${fmtDate(p.review_date).toLowerCase()}</span>` : ''}${shareMeta(p)}${ro ? '<span>Lecture seule</span>' : ''}</div>
       ${p.outcome ? `<div class="outcome"><span>Résultat attendu</span>${esc(p.outcome)}</div>` : ''}
       ${p.body ? `<div class="md">${md(p.body)}</div>` : ''}
-      <div class="btn-row"><button class="btn" data-act="edit" data-id="${p.id}">Modifier</button>${p.status !== 'done' ? `<button class="btn" data-act="proj-done" data-id="${p.id}">Projet terminé</button>` : ''}</div>
+      <div class="btn-row"><button class="btn" data-act="edit" data-id="${p.id}">${ro ? 'Détails' : 'Modifier'}</button>${isMine(p) ? `<button class="btn" data-act="share-open" data-id="${p.id}">Partager</button>` : ''}${p.status !== 'done' && !ro ? `<button class="btn" data-act="proj-done" data-id="${p.id}">Projet terminé</button>` : ''}</div>
     </div>`;
+  if (!isMine(p)) html += `<div class="banner soft">Projet de ${esc(personName(p.user_id))}</div>`;
   if (p.status === 'clarify') html += `<div class="banner warn">À clarifier : précise le résultat attendu et la prochaine action, puis passe le projet en Actif. <button class="link" data-act="proj-activate" data-id="${p.id}">Activer</button></div>`;
   else if (p.status === 'active' && !active.length) html += `<div class="banner warn">Aucune prochaine action : quelle est la prochaine étape concrète ?</div>`;
   html += sec('Actions', active.map(t => taskRow(t, { noProject: true, showSched: true })).join('') +
-    `<form class="inline-add" data-form="add-proj" data-id="${p.id}"><input id="add-proj" placeholder="+ Ajouter une action" enterkeyhint="done" autocomplete="off"></form>`);
+    (ro ? '' : `<form class="inline-add" data-form="add-proj" data-id="${p.id}"><input id="add-proj" placeholder="+ Ajouter une action" enterkeyhint="done" autocomplete="off"></form>`));
   if (waiting.length) html += sec('En attente', waiting.map(t => taskRow(t, { noProject: true })).join(''));
   if (some.length) html += sec('Un jour / peut-être', some.map(t => taskRow(t, { noProject: true })).join(''));
   if (kindOwner('note')) html += sec('Notes', notes.map(itemRow).join('') || '<div class="muted pad">Aucune note.</div>', `<button class="link" data-act="new-note" data-id="${p.id}">+ Note</button>`);
   html += linkedSection(p, new Set([...ts, ...notes].map(x => x.id)));
   if (done.length) html += `<details class="done-sec"><summary>${plural(done.length, 'action terminée', 'actions terminées')}</summary>${done.map(t => taskRow(t, { noProject: true })).join('')}</details>`;
-  return { title: 'Projet', html, fab: 'proj-task:' + p.id };
+  return { title: 'Projet', html, fab: ro ? undefined : 'proj-task:' + p.id };
 };
 
 

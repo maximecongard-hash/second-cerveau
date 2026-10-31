@@ -55,6 +55,14 @@ function seedDemo() {
   add({ kind: 'task', title: 'Choisir un thème pour le site', parent_id: p2.id, contexts: ['@ordi'], energy: 'high' });
   add({ kind: 'task', title: 'Devis du plombier', status: 'waiting', waiting_for: 'M. Durand', contexts: [] });
   add({ kind: 'task', title: 'Apprendre la guitare', status: 'someday' });
+  // partage : un projet donné à Camille (lecture), un projet reçu d'elle (modification)
+  const cam = { id: 'u-camille', email: 'camille@exemple.fr', name: 'Camille' };
+  S.people[cam.id] = cam;
+  S.shares.push({ id: 'demo-s1', item_id: p1.id, owner_id: S.user.id, user_id: cam.id, role: 'view' });
+  const p3 = add({ kind: 'project', title: 'Organiser l’anniversaire de Léa', user_id: cam.id, outcome: 'Fête réussie le 14/11, tout le monde est prévenu.' });
+  S.shares.push({ id: 'demo-s2', item_id: p3.id, owner_id: cam.id, user_id: S.user.id, role: 'edit' });
+  add({ kind: 'task', title: 'Réserver la salle', parent_id: p3.id, user_id: cam.id });
+  add({ kind: 'task', title: 'Commander le gâteau', parent_id: p3.id, user_id: cam.id, status: 'done', completed_at: new Date().toISOString() });
   S.prefs.seeded = true;
   S.prefs.areasV2 = true;
 }

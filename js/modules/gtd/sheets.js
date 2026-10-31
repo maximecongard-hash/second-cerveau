@@ -3,6 +3,7 @@ import { S, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '../../co
 import { uploadImage } from '../../core/images.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
+import { shareBlock } from '../../core/share.js';
 import { kindOwner } from '../../core/modules.js';
 import { areas, nextActions, nextOrder, sortTasks, spawnNext, recOptions, toLocalInput, fromLocalInput } from './model.js';
 import { pushHint } from '../../core/push.js';
@@ -15,7 +16,8 @@ export let pickSel = new Set();
 
 function projectOptions(cur) {
   const ps = ofKind('project').filter(p => ['active', 'someday', 'clarify'].includes(p.status) || p.id === cur).sort(byTitle);
-  return [['', 'Aucun'], ...ps.map(p => [p.id, p.title + (p.status === 'someday' ? ' (un jour)' : '')])];
+  const shared = cur && !ps.some(p => p.id === cur) ? S.items.get(cur) : null; // projet partagé par quelqu'un d'autre
+  return [['', 'Aucun'], ...(shared ? [shared] : []).concat(ps).map(p => [p.id, p.title + (p.status === 'someday' ? ' (un jour)' : '')])];
 }
 function media(it) {
   return `${it.image_path ? `<img class="cap-img" data-img="${esc(it.image_path)}" alt="">` : ''}${it.url ? `<a class="link-card" href="${esc(it.url)}" target="_blank" rel="noopener">${I.link}<span>${esc(domain(it.url))}</span></a>` : ''}`;
@@ -55,6 +57,7 @@ export function editorHTML(it) {
       <div class="sub-list"><div class="sub-title">Actions (${ts.length})</div>${ts.map(t => `<div class="sub-item">${esc(t.title)}</div>`).join('')}
         <form class="inline-add" data-form="add-proj" data-id="${it.id}"><input id="ed-next" placeholder="+ Prochaine action" enterkeyhint="done" autocomplete="off"></form></div>
       ${linksBlock(it)}
+      ${shareBlock(it)}
       <a class="btn block" href="#/project/${it.id}" data-act="close-go">Ouvrir le projet</a>`;
   }
   // tâche
@@ -79,6 +82,7 @@ export function editorHTML(it) {
       ${tagsF}${urlF}
     </div>
     ${linksBlock(it)}
+    ${shareBlock(it)}
 `;
 }
 

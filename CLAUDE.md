@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.10.0**, cache SW `sc-v15`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.11.0**, cache SW `sc-v16`. La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -64,11 +64,15 @@ RLS), hors ligne via localStorage + service worker.
   17. 0.10.0 : Agenda sur tablette et ordinateur (≥ 700 px) : panneau « Tâches à placer » à côté de la grille, glisser-déposer aux
      pointeurs (`js/modules/agenda/dnd.js`, appui long au doigt), poignée en bas d'un créneau pour changer la durée
      (pas de 15 min), dépôt sur le panneau pour retirer l'heure. Semaine : 7 jours si la place le permet, sinon 5.
+  18. 0.11.0 : plusieurs comptes et partage. Table `profiles` (le plus ancien compte = administrateur), Edge Function `add-user`
+     (Réglages > Utilisateurs : email + mot de passe provisoire), tables `shares` + `share_item()`, RLS `row_role()`, droits
+     modifier / lecture seule, section « Partagés avec moi » dans Projets, `core/share.js` et `core/users.js`.
 
 ## Pistes ouvertes
 
 - **Calendrier 0.8 à valider sur l'iPhone** : raccourci « Agenda Apple » (identifiants d'actions non testés sur
   l'appareil) et abonnement ICS une fois l'Edge Function déployée.
+- **Partage 0.11 à valider en vrai** : migration 007 + fonction `add-user` non testées sur Supabase (testé en mode démo seulement). Pistes : assigner une tâche partagée, notification à l'invité, planifier un élément reçu.
 - **Phase 2** : remplir les modules Sport et Courses.
 - **Import Notion** : un script ponctuel (`build.py` → `import-notion.sql`) a généré l'import des tâches
   Notion ouvertes. Il contient des données personnelles et n'est volontairement pas dans le dépôt.

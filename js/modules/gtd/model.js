@@ -1,5 +1,5 @@
 import { uuid, today, parseYmd, addDays, daysBetween, ymd, nowIso, fmtDate } from '../../core/util.js';
-import { S, newItem, saveItem, patch, live, ofKind, byTitle } from '../../core/store.js';
+import { S, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
 import { toast, route, openEditor } from '../../core/ui.js';
 
 // ---------------------------------------------------------------------------
@@ -16,7 +16,7 @@ function projectBlocked(t) {
   return !!p && p.kind === 'project' && ['someday', 'done', 'trashed'].includes(p.status);
 }
 export const nextActions = () => ofKind('task').filter(t => t.status === 'active' && !projectBlocked(t));
-export const hasNextAction = p => ofKind('task').some(t => t.parent_id === p.id && t.status === 'active');
+export const hasNextAction = p => ofKindAll('task').some(t => t.parent_id === p.id && t.status === 'active');
 export function nextOrder(day) {
   const os = ofKind('task').filter(t => t.scheduled_date === day && t.day_order != null).map(t => t.day_order);
   return os.length ? Math.max(...os) + 1 : 1;

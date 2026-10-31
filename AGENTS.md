@@ -21,7 +21,7 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
 
 Autres repères :
 
-- Un seul utilisateur (le propriétaire). Inscriptions désactivées côté Supabase.
+- Plusieurs comptes (0.11), inscriptions désactivées côté Supabase : l'administrateur (`profiles.is_admin`) crée les comptes via l'Edge Function `add-user`. Chaque compte a ses données ; on se rejoint par le partage de projets / tâches / notes.
 - Données synchronisées avec Supabase, l'app fonctionne hors ligne (localStorage + service worker).
 - Interface et textes **en français**, tutoiement dans le README, ton calme et sans culpabilisation dans l'app.
 - Version courante : `VERSION` dans `js/core/config.js`.
@@ -68,6 +68,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `manifest.webmanifest`, `manifest-papier.webmanifest`, `icons/` | installation sur l'écran d'accueil ; deux icônes au choix (Encre par défaut, Papier), sources SVG dans `icons/src/`, choix appliqué par `applyIcon()` de `util.js` |
 | `supabase/schema.sql` | schéma complet, idempotent |
 | `supabase/00X_*.sql` | migrations incrémentales, idempotentes |
+| `supabase/functions/add-user/index.ts` | Edge Function de création de compte (réservée à l'administrateur, « Verify JWT » **activé**) |
 | `supabase/functions/calendrier/index.ts` | Edge Function du flux ICS (abonnement Calendrier), déployée à la main par l'utilisateur, « Verify JWT » désactivé ; `buildIcs` testable avec node |
 
 ### Cœur (`js/core/`)
@@ -85,6 +86,8 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `util.js` | dates, formats, `esc()`, `md()`, icônes `I`, petits gabarits (`sec`, `empty`) |
 | `images.js` | redimensionnement, upload et URL signées des photos |
 | `links.js` | liens entre éléments de tous les modules : bloc « Liés » des éditeurs, section de page, feuille « Lier à… », `[[wikiliens]]`, épingle |
+| `share.js` | partage : feuille « Partager », `shareBlock()` (éditeur), `shareMeta()` (lignes), `sharedWithMe()`, quitter un partage ; simulé en mode démo |
+| `users.js` | Réglages > Compte (prénom, mot de passe) et > Utilisateurs (ajout par l'administrateur) |
 | `boot.js` | `init()` : restauration, mode démo ou session Supabase, premier rendu |
 
 ## Architecture
@@ -101,6 +104,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
   `status` ∈ `active | waiting | someday | done | trashed | clarify`. La hiérarchie passe par `parent_id`
   (tâche → projet → domaine). La suppression est logique (`status: 'trashed'`). Chaque `kind` appartient à un module
   (`kinds`, `kindOwner()`, libellé via `kindLabel`).
+- **Partage** (0.11) : table `shares` (élément, propriétaire, invité, droit `edit` | `view`), créée via la fonction `share_item(item, email, role)` qui « touche » l'élément et ses enfants pour que l'invité les reçoive (le curseur de synchro est `updated_at`). Un projet partagé couvre ses tâches (`parent_id`). RLS de `items` : `row_role()` ; `user_id` ne change jamais (trigger), un invité qui modifie renvoie le `user_id` d'origine (`toRow`). Côté client : `live()` / `ofKind()` ne renvoient que **mes** éléments (planification personnelle), `liveAll()` / `ofKindAll()` y ajoutent les éléments reçus (page projet, « Partagés avec moi »). `roleOf()` / `canEdit()` de `store.js` bloquent l'écriture en lecture seule (toast) et l'éditeur désactive ses champs. `sync.js` charge `shares` et `profiles` (sans erreur si la migration 007 manque) et retire de l'appareil ce qui n'est plus accessible. Un invité ne peut pas planifier (date, Top 3) un élément qui n'est pas à lui dans ses listes perso.
 - **Liens entre éléments** (0.5) : colonne `links uuid[]`, stockée d'un seul côté et lue dans les deux sens.
   Toujours passer par `linkedIds()`, `linked()`, `link()`, `unlink()` de `store.js`. `mentionsOf()` donne les
   éléments qui citent `[[titre]]`, `findByTitle()` résout un wikilien. L'interface commune (bloc « Liés »,
@@ -154,7 +158,7 @@ L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'u
 ## Sécurité
 
 - `config.js` ne contient que la clé **publishable**. Ne jamais y mettre, ni committer, une clé `service_role` / secret.
-- Toute nouvelle table : `enable row level security` + politique `user_id = auth.uid()`.
+- Toute nouvelle table : `enable row level security` + politique `user_id = auth.uid()` (les éléments partagés passent par `row_role()`, voir Partage). `profiles` ne laisse modifier que `name` (grant par colonne) ; `is_admin` ne se change que dans le SQL Editor. La clé `service_role` n'existe que dans l'Edge Function `add-user`, jamais dans l'app.
 - Les raccourcis iOS passent par la fonction `capture()` (security definer, jeton dans `capture_tokens`) et ne peuvent
   qu'ajouter dans l'Inbox. Seules autres portes `anon`, toutes derrière un jeton : `sync_events()` (jeton de capture,
   remplace la copie des événements de Calendrier dans `events`) et `calendar_feed()` (jeton de `calendar_tokens`,

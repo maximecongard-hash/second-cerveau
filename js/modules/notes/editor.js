@@ -3,6 +3,7 @@ import { S, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '../../co
 import { kindOwner } from '../../core/modules.js';
 import { SH, openEditor } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
+import { shareBlock } from '../../core/share.js';
 
 // ---------------------------------------------------------------------------
 // Éditeur des notes et des signets
@@ -35,7 +36,8 @@ export function editorHTML(it) {
         ${fRow('Statut', seg('status', it.status === 'done' ? 'done' : 'active', [['active', 'À lire'], ['done', 'Lu']]))}
         ${common}
       </div>
-      ${linksBlock(it, linkTask)}`;
+      ${linksBlock(it, linkTask)}
+      ${shareBlock(it)}`;
   }
   return head + title +
     `<div class="seg small mode">${[['0', 'Écrire'], ['1', 'Aperçu']].map(([v, l]) => `<button class="${(S.ui.preview ? '1' : '0') === v ? 'on' : ''}" data-act="note-preview" data-v="${v}">${l}</button>`).join('')}</div>
@@ -43,7 +45,8 @@ export function editorHTML(it) {
       : `<textarea class="notes-input big" data-f="body" rows="12" placeholder="Écris librement… [[Titre]] pour citer une note, une tâche ou un projet, #tag pour classer">${esc(it.body)}</textarea>`}
     ${img}${it.url ? linkCard(it.url) : ''}
     <div class="fields">${common}${urlF}</div>
-    ${linksBlock(it, linkTask)}`;
+    ${linksBlock(it, linkTask)}
+    ${shareBlock(it)}`;
 }
 
 // Le cœur relance l'éditeur après coup (setField de core/ui.js)

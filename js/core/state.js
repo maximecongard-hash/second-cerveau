@@ -13,6 +13,8 @@ export const S = {
   user: null,
   uid: null,
   items: new Map(),
+  shares: [], // partages visibles (donnés ou reçus), table shares
+  people: {}, // comptes connus : id -> { id, email, name, is_admin }
   prefs: { ...DEFAULT_PREFS },
   dirty: new Set(),
   prefsDirty: false,

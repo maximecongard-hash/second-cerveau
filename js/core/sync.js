@@ -1,6 +1,6 @@
 import { DEMO, sb } from './config.js';
 import { nowIso } from './util.js';
-import { S, FIELDS, DEFAULT_PREFS, persist } from './store.js';
+import { S, FIELDS, DEFAULT_PREFS, persist, isMine, saveItem } from './store.js';
 import { MODULES } from './modules.js';
 import { queueRender } from './ui.js';
 
@@ -17,7 +17,7 @@ export function scheduleSync(delay = 800) {
 function toRow(it) {
   const r = {};
   for (const f of FIELDS) r[f] = it[f] ?? null;
-  r.user_id = S.user.id;
+  r.user_id = it.user_id || S.user.id; // un invité garde le propriétaire d'origine
   r.contexts = it.contexts || [];
   r.tags = it.tags || [];
   r.links = it.links || [];
@@ -82,6 +82,9 @@ export async function sync() {
       if (data.length < 1000) break;
       since = data[data.length - 1].updated_at;
     }
+    // 3b. partages et comptes connus ; ce qui n'est plus accessible disparaît de l'appareil
+    if (await pullSharing()) changed = true;
+    if (await pruneForeign()) changed = true;
     // 4. initialisations propres à chaque module (données par défaut, migrations)
     for (const m of MODULES) if (m.afterSync?.()) changed = true;
     S.lastError = null;
@@ -89,7 +92,7 @@ export async function sync() {
   } catch (e) {
     console.error('sync', e);
     S.lastError = /column|schema cache|violates check/i.test(e.message || '')
-      ? 'base de données à mettre à jour (supabase/005_calendrier.sql puis 006_notifications.sql)'
+      ? 'base de données à mettre à jour (supabase/005_calendrier.sql, 006_notifications.sql puis 007_partage.sql)'
       : (e.message || String(e));
   } finally {
     S.syncing = false;
@@ -98,6 +101,30 @@ export async function sync() {
     if (changed) queueRender(true);
     if ((S.dirty.size || S.prefsDirty) && !S.lastError) scheduleSync(300);
   }
+}
+// Tant que 007_partage.sql n'est pas passée, les tables manquent : l'app reste utilisable seule
+async function pullSharing() {
+  const [sh, pe] = await Promise.all([sb.from('shares').select('*'), sb.from('profiles').select('id, email, name, is_admin')]);
+  if (sh.error || pe.error) return false;
+  const people = Object.fromEntries(pe.data.map(p => [p.id, p]));
+  const changed = JSON.stringify(sh.data) !== JSON.stringify(S.shares) || JSON.stringify(people) !== JSON.stringify(S.people);
+  S.shares = sh.data;
+  S.people = people;
+  return changed;
+}
+// Retire les éléments d'autrui qu'on ne peut plus lire (partage retiré) ; mes tâches qui y étaient rangées sont détachées
+async function pruneForeign() {
+  const foreign = [...S.items.values()].filter(i => !isMine(i));
+  if (!foreign.length) return false;
+  const { data, error } = await sb.from('items').select('id').neq('user_id', S.user.id).limit(1000);
+  if (error) throw error;
+  if (data.length >= 1000) return false;
+  const ok = new Set(data.map(r => r.id));
+  const gone = new Set(foreign.filter(i => !ok.has(i.id)).map(i => i.id));
+  if (!gone.size) return false;
+  for (const id of gone) { S.items.delete(id); S.dirty.delete(id); }
+  for (const it of S.items.values()) if (isMine(it) && gone.has(it.parent_id)) { it.parent_id = null; saveItem(it, { render: false }); }
+  return true;
 }
 export function syncClass() {
   if (DEMO) return 'demo';

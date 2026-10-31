@@ -41,7 +41,7 @@ Les données sont copiées dans le `localStorage` du téléphone et un service w
 
 ### Sécurité
 
-Chaque table est protégée par des règles RLS : seul ton compte connecté voit ses données. La clé publique de `config.js` est sans danger dans le navigateur. Les raccourcis n'utilisent pas ton mot de passe : ils passent par un **jeton de capture** qui ne permet que d'ajouter dans l'Inbox et de remplacer la copie de tes événements de Calendrier. Il se révoque à tout moment dans les Réglages.
+Chaque table est protégée par des règles RLS : chaque compte ne voit que ses données, plus les projets et tâches qu'un autre compte a partagés avec lui (droit « peut modifier » ou « lecture seule »). La clé publique de `config.js` est sans danger dans le navigateur. Les raccourcis n'utilisent pas ton mot de passe : ils passent par un **jeton de capture** qui ne permet que d'ajouter dans l'Inbox et de remplacer la copie de tes événements de Calendrier. Il se révoque à tout moment dans les Réglages.
 
 ### Les modules
 
@@ -88,7 +88,7 @@ Une tâche peut avoir une date d'échéance, une date prévue, une heure et une 
 1. **SQL Editor** > **New query**.
 2. Colle tout [`supabase/schema.sql`](supabase/schema.sql) puis **Run**. Message attendu : « Success. No rows returned ».
 
-Ce script est complet et à jour : il contient aussi les migrations `002` à `006`, tu n'as rien d'autre à coller sur une installation neuve. Il crée :
+Ce script est complet et à jour : il contient aussi les migrations `002` à `007`, tu n'as rien d'autre à coller sur une installation neuve. Il crée :
 
 | Élément | Rôle |
 |---|---|
@@ -101,15 +101,16 @@ Ce script est complet et à jour : il contient aussi les migrations `002` à `00
 | colonnes `remind_at`, `reminded_at` | rappels |
 | tables `push_subscriptions`, `push_config`, fonction `push_public_key()` | notifications Web Push |
 | tâche `pg_cron` `brain-reminders` | appelle `send-reminders` chaque minute |
+| tables `profiles`, `shares`, fonction `share_item()` | plusieurs comptes et partage de projets / tâches |
 
 Le script active les extensions `pg_cron` et `pg_net`. Si une erreur les mentionne : **Database** > **Extensions**, active-les à la main, puis relance le script (il peut être relancé sans risque).
 
 ### 2.3 Créer ton compte et fermer les inscriptions
 
 1. **Authentication** > **Users** > **Add user** > **Create new user** : ton email, un mot de passe, coche **Auto Confirm User**.
-2. **Authentication** > **Sign In / Providers** : décoche **Allow new users to sign up**. L'app est mono-utilisateur, personne d'autre ne doit pouvoir créer de compte.
+2. **Authentication** > **Sign In / Providers** : décoche **Allow new users to sign up**. Personne ne doit pouvoir créer de compte seul : les comptes suivants sont ajoutés par toi, depuis Réglages > Utilisateurs (voir 2.4 et 7). Le premier compte devient administrateur.
 
-### 2.4 Déployer les deux Edge Functions
+### 2.4 Déployer les trois Edge Functions
 
 Pour chacune : **Edge Functions** > **Deploy a new function** > **Via Editor**, efface le code d'exemple, colle le fichier, puis **Deploy function**. Ensuite, onglet **Details** (ou **Settings**) de la fonction : **désactive** « Verify JWT with legacy secret » (ou « Enforce JWT verification ») et enregistre. Calendrier et pg_cron n'envoient pas de clé, c'est un jeton secret qui protège l'accès.
 
@@ -117,6 +118,7 @@ Pour chacune : **Edge Functions** > **Deploy a new function** > **Via Editor**, 
 |---|---|---|
 | `calendrier` | [`supabase/functions/calendrier/index.ts`](supabase/functions/calendrier/index.ts) | flux ICS de tes tâches pour Calendrier |
 | `send-reminders` | [`supabase/functions/send-reminders/index.ts`](supabase/functions/send-reminders/index.ts) | envoi des notifications ; crée seule ses clés VAPID au premier passage (compte une minute) |
+| `add-user` | [`supabase/functions/add-user/index.ts`](supabase/functions/add-user/index.ts) | création d'un compte depuis Réglages > Utilisateurs. **Laisse « Verify JWT » activé** : la fonction vérifie elle-même que l'appelant est administrateur |
 
 ### 2.5 Brancher l'app sur ton projet
 
@@ -130,7 +132,7 @@ Dépôt GitHub > **Settings** > **Pages** > **Deploy from a branch** > `main` / 
 
 - [ ] `schema.sql` exécuté sans erreur
 - [ ] utilisateur créé, inscriptions fermées
-- [ ] fonctions `calendrier` et `send-reminders` déployées, JWT désactivé
+- [ ] fonctions `calendrier` et `send-reminders` déployées, JWT désactivé ; `add-user` déployée, JWT activé
 - [ ] `config.js` pointe vers ton projet
 - [ ] GitHub Pages actif, l'app s'ouvre et la connexion marche
 
@@ -145,6 +147,7 @@ Base créée avant une version : colle, dans l'ordre, les migrations qui manquen
 | 0.6 | [`004_signets.sql`](supabase/004_signets.sql) | signets et types d'éléments ouverts (sans elle, enregistrer un signet échoue) |
 | 0.8 | [`005_calendrier.sql`](supabase/005_calendrier.sql) | Calendrier Apple (+ fonction `calendrier`) |
 | 0.9 | [`006_notifications.sql`](supabase/006_notifications.sql) | notifications (+ fonction `send-reminders`) |
+| 0.11 | [`007_partage.sql`](supabase/007_partage.sql) | comptes multiples et partage (+ fonction `add-user`) ; sans elle l'app marche, sans partage |
 
 ---
 
@@ -259,6 +262,12 @@ Prérequis côté Supabase : `schema.sql` exécuté (2.2) et fonction `send-remi
 
 ---
 
+### Ajouter un utilisateur et partager
+
+- **Ajouter un compte** (administrateur) : Réglages > Utilisateurs > saisis l'email puis **Créer le compte**. Brain affiche une fois l'email et un mot de passe provisoire à transmettre ; la personne le change dans Réglages > Compte et y choisit son pseudo. Pour supprimer un compte : Supabase > Authentication > Users.
+- **Partager** : bouton **Partager** sur la page d'un projet, ou bloc « Partage » de l'éditeur d'une tâche ou d'une note. Choisis le pseudo dans la liste des comptes (pseudo à définir dans Réglages > Compte) et le droit : **Peut modifier** ou **Lecture seule**. Un projet partagé donne aussi accès à ses tâches et notes.
+- **Côté invité** : les projets reçus apparaissent dans Projets > « Partagés avec moi », et leurs tâches sur la page du projet. Ils n'entrent pas dans tes listes personnelles (Aujourd'hui, Actions) : tes tâches ajoutées à un projet partagé, elles, y restent. « Quitter ce partage » est dans l'éditeur.
+- Le propriétaire garde la main : seul lui partage, change les droits ou retire un partage.
 ## 8. Développement
 
 ### Fichiers

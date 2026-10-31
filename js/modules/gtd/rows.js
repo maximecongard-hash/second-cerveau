@@ -1,5 +1,6 @@
 import { esc, I, today, fmtDate, fmtDur, plural } from '../../core/util.js';
-import { S, ofKind, linkedIds } from '../../core/store.js';
+import { S, ofKindAll, linkedIds } from '../../core/store.js';
+import { shareMeta } from '../../core/share.js';
 import { hasNextAction } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -19,6 +20,8 @@ export function taskRow(t, o = {}) {
   if (t.recurrence) meta.push('<span>↻</span>');
   if (t.remind_at && !done && t.remind_at > new Date().toISOString()) meta.push(`<span class="m-bell" title="Rappel">${I.bell}</span>`);
   if (t.image_path) meta.push('<span>Photo</span>');
+  const sm = shareMeta(t);
+  if (sm) meta.push(sm);
   const lm = linkMeta(t);
   if (lm) meta.push(lm);
   return `<div class="row task ${done ? 'done' : ''}" data-act="edit" data-id="${t.id}">
@@ -30,13 +33,13 @@ export function taskRow(t, o = {}) {
 const linkMeta = it => { const n = linkedIds(it.id).length; return n ? `<span class="m-link" title="Éléments liés">${I.link}${n}</span>` : ''; };
 export const starBtn = (t, day) => `<button class="star ${t.focus && t.scheduled_date === day ? 'on' : ''}" data-act="focus" data-id="${t.id}" aria-label="Top 3">${I.star}</button>`;
 export function projectRow(p) {
-  const n = ofKind('task').filter(t => t.parent_id === p.id && (t.status === 'active' || t.status === 'waiting')).length;
+  const n = ofKindAll('task').filter(t => t.parent_id === p.id && (t.status === 'active' || t.status === 'waiting')).length;
   const warn = p.status === 'active' && !hasNextAction(p);
   const toReview = p.review_date && p.review_date <= today() && p.status !== 'done';
   return `<a class="row" href="#/project/${p.id}">
     <div class="row-icon proj ${p.status}">${I.folder}</div>
     <div class="row-main"><div class="row-title">${esc(p.title) || '<i>Sans titre</i>'}</div>
-    <div class="row-meta"><span>${plural(n, 'action', 'actions')}</span>${p.due_date ? `<span class="m-due ${p.due_date <= today() ? 'late' : ''}">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${warn ? '<span class="warn">Pas de prochaine action</span>' : ''}${toReview ? '<span class="warn">À revoir</span>' : ''}</div>
+    <div class="row-meta"><span>${plural(n, 'action', 'actions')}</span>${shareMeta(p)}${p.due_date ? `<span class="m-due ${p.due_date <= today() ? 'late' : ''}">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${warn ? '<span class="warn">Pas de prochaine action</span>' : ''}${toReview ? '<span class="warn">À revoir</span>' : ''}</div>
     ${p.outcome ? `<div class="row-snippet">${esc(p.outcome)}</div>` : ''}</div>
     <span class="chev">${I.right}</span>
   </a>`;

@@ -4,6 +4,7 @@ import { S, live, savePrefs, resetLocal, persistNow } from './store.js';
 import { sync, syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
 import { pushSettings } from './push.js';
+import { accountForms, usersSettings, isAdmin } from './users.js';
 import { VIEWS, ACTS, FORMS, moduleOrder, enabledModules, getModule, kindOwner } from './modules.js';
 import { queueRender, render, toast } from './ui.js';
 
@@ -62,10 +63,12 @@ VIEWS.settings = () => {
       : '<div class="muted pad">Aucun jeton. Génère-en un pour tes raccourcis.</div>') +
       `<button class="btn block" data-act="token-new">Générer un jeton</button>${S.ui.tokenErr ? `<div class="err pad">${esc(S.ui.tokenErr)}</div>` : ''}`;
   const html =
-    fold('account', I.user, 'Compte', esc(DEMO ? 'Mode démo' : S.user.email),
+    fold('account', I.user, 'Compte', esc(DEMO ? 'Mode démo' : (S.people[S.user.id]?.name || S.user.email)),
       `<div class="kv"><span>${esc(S.user.email)}</span><span class="sync ${syncClass()}"></span></div>
       <div class="muted small pad">${syncLabel()}${S.lastSync ? ` · dernière synchro ${FMT_TIME.format(new Date(S.lastSync))}` : ''}</div>
+      ${accountForms()}
       ${DEMO ? '' : '<div class="btn-row"><button class="btn" data-act="sync-now">Synchroniser</button><button class="btn danger" data-act="logout">Se déconnecter</button></div>'}`) +
+    (isAdmin() ? fold('users', I.users, 'Utilisateurs', Object.keys(S.people).length + ' compte(s)', usersSettings()) : '') +
     fold('notif', I.bell, 'Notifications', 'Rappels des tâches', pushSettings()) +
     fold('modules', I.grid, 'Modules', enabledModules().map(m => esc(m.label)).join(' · '), modulesList()) +
     enabledModules().filter(m => m.settings).map(m => fold('mod-' + m.id, m.icon, esc(m.label), esc(m.settingsMeta || ''), m.settings())).join('') +

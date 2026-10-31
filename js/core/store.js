@@ -1,7 +1,7 @@
 import { LS_KEY } from './config.js';
 import { uuid, nowIso } from './util.js';
 import { scheduleSync } from './sync.js';
-import { queueRender } from './ui.js';
+import { queueRender, toast } from './ui.js';
 import { S, DEFAULT_PREFS } from './state.js';
 export { S, DEFAULT_PREFS, FIELDS, TEXT_FIELDS, NULLABLE } from './state.js';
 
@@ -16,7 +16,7 @@ export function persist() {
 export function persistNow() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      uid: S.uid, items: [...S.items.values()], prefs: S.prefs, dirty: [...S.dirty],
+      uid: S.uid, items: [...S.items.values()], shares: S.shares, people: S.people, prefs: S.prefs, dirty: [...S.dirty],
       prefsDirty: S.prefsDirty, cursor: S.cursor, lastSync: S.lastSync
     }));
   } catch (e) { console.warn('persist', e); }
@@ -28,6 +28,8 @@ export function restore() {
     if (!d) return;
     S.uid = d.uid || null;
     S.items = new Map((d.items || []).map(i => [i.id, i]));
+    S.shares = d.shares || [];
+    S.people = d.people || {};
     S.prefs = { ...DEFAULT_PREFS, ...(d.prefs || {}) };
     S.dirty = new Set(d.dirty || []);
     S.prefsDirty = !!d.prefsDirty;
@@ -36,7 +38,7 @@ export function restore() {
   } catch (e) { console.warn('restore', e); }
 }
 export function resetLocal() {
-  S.items = new Map(); S.dirty = new Set(); S.prefs = { ...DEFAULT_PREFS };
+  S.items = new Map(); S.shares = []; S.people = {}; S.dirty = new Set(); S.prefs = { ...DEFAULT_PREFS };
   S.prefsDirty = false; S.cursor = null; S.lastSync = null;
 }
 
@@ -54,7 +56,26 @@ export function newItem(fields = {}) {
     created_at: now, updated_at: now, ...fields
   };
 }
+// ---------------------------------------------------------------------------
+// Partage : mes éléments, ceux des autres qui m'ont été partagés, et mon droit sur chacun
+// ---------------------------------------------------------------------------
+const meId = () => S.user?.id || S.uid;
+export const isMine = it => !it.user_id || it.user_id === meId();
+// 'owner' (à moi, ou tâche d'un invité dans mon projet), 'edit', 'view' ou null
+export function roleOf(it) {
+  if (isMine(it)) return 'owner';
+  const mine = id => S.shares.find(s => s.item_id === id && s.user_id === meId());
+  const s = mine(it.id) || (it.parent_id && mine(it.parent_id));
+  if (s) return s.role;
+  return it.parent_id && S.items.get(it.parent_id)?.user_id === meId() ? 'owner' : null;
+}
+export const canEdit = it => ['owner', 'edit'].includes(roleOf(it));
+const denied = () => toast('Lecture seule : ce partage ne permet pas de modifier');
+
 export function saveItem(it, { render = true } = {}) {
+  const known = S.items.get(it.id);
+  const parent = it.parent_id && S.items.get(it.parent_id);
+  if (known ? !canEdit(known) : parent && !canEdit(parent)) { denied(); return it; }
   it.updated_at = nowIso();
   S.items.set(it.id, it);
   S.dirty.add(it.id);
@@ -66,6 +87,7 @@ export function saveItem(it, { render = true } = {}) {
 export function patch(id, p, opts) {
   const it = S.items.get(id);
   if (!it) return null;
+  if (!canEdit(it)) { denied(); return it; }
   Object.assign(it, p);
   return saveItem(it, opts);
 }
@@ -76,8 +98,11 @@ export function savePrefs() {
   queueRender();
 }
 
-export const live = () => [...S.items.values()].filter(i => i.status !== 'trashed');
+// live / ofKind : mes éléments (planification personnelle) ; liveAll / ofKindAll y ajoutent ceux qu'on m'a partagés
+export const liveAll = () => [...S.items.values()].filter(i => i.status !== 'trashed');
+export const live = () => liveAll().filter(isMine);
 export const ofKind = k => live().filter(i => i.kind === k);
+export const ofKindAll = k => liveAll().filter(i => i.kind === k);
 export const byTitle = (a, b) => a.title.localeCompare(b.title, 'fr');
 // Tags d'un élément : champ tags + #mots du texte
 export function itemTags(it) {

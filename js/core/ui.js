@@ -1,5 +1,5 @@
 import { $, esc, I, iconChoice, logo } from './util.js';
-import { S, patch } from './store.js';
+import { S, patch, canEdit } from './store.js';
 import { syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
 import { VIEWS, enabledModules, viewOwner, kindOwner, getModule, isEnabled } from './modules.js';
@@ -130,6 +130,8 @@ export function renderEditor() {
   if (!m) { closeSheet(); return; }
   const st = sheet.scrollTop;
   sheet.innerHTML = m.editor(it);
+  // partage en lecture seule : champs et boutons de modification désactivés
+  if (!canEdit(it)) sheet.querySelectorAll('input, textarea, select, .seg button, button.chip, [data-act="trash"], [data-act="kind"], form button').forEach(el => { el.disabled = true; });
   sheet.scrollTop = st;
   hydrateImages(sheet);
 }
