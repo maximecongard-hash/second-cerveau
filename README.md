@@ -2,7 +2,11 @@
 
 PWA personnelle de type GTD : capture rapide depuis l'iPhone, tri de l'Inbox, prochaines actions par contexte, projets, notes liées et planification de la journée. Les données sont synchronisées avec Supabase et l'app fonctionne hors ligne.
 
-Pour essayer sans compte : ouvre l'app avec `?demo=1` à la fin de l'adresse (données fictives, stockées seulement dans le navigateur).
+- **App** : https://maximecongard-hash.github.io/second-cerveau/
+- **Démo sans compte** : https://maximecongard-hash.github.io/second-cerveau/?demo=1 (données fictives, stockées seulement dans le navigateur)
+- **Code** : https://github.com/maximecongard-hash/second-cerveau
+
+L'app est servie par GitHub Pages depuis la branche `main` : chaque push y est publié en quelques minutes.
 
 ---
 
@@ -24,9 +28,11 @@ Le script crée :
 
 Chaque table est protégée par des règles RLS : seul ton compte connecté voit ses données. Les raccourcis ne peuvent qu'**ajouter** dans l'Inbox, et seulement avec un jeton valide.
 
+Base créée avant la version 0.2 : colle aussi [`supabase/002_pack1.sql`](supabase/002_pack1.sql) (Top 3, résultat attendu, date de revue). Le script peut être relancé sans risque. Une installation neuve n'en a pas besoin, `schema.sql` est déjà à jour.
+
 ## 2. Installer l'app sur l'iPhone
 
-1. Ouvre l'adresse de l'app dans **Safari**.
+1. Ouvre https://maximecongard-hash.github.io/second-cerveau/ dans **Safari**.
 2. Connecte-toi avec l'email et le mot de passe créés dans Supabase.
 3. Facultatif : menu **⋯** > **Réglages** > **Icône**, choisis **Encre** (fond sombre) ou **Papier** (fond clair). iOS fige l'icône au moment de l'ajout : pour en changer plus tard, supprime l'app de l'écran d'accueil et ajoute-la de nouveau.
 4. Bouton **Partager** > **Sur l'écran d'accueil** > **Ajouter**.
@@ -141,7 +147,9 @@ Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque modu
 | `config.js` | URL et clé publique Supabase |
 | `sw.js` | cache hors ligne : change `CACHE` à chaque nouvelle version et ajoute chaque nouveau fichier de `js/` à `SHELL` |
 | `manifest.webmanifest`, `icons/` | installation sur l'écran d'accueil |
-| `supabase/schema.sql` | base de données |
+| `supabase/schema.sql` | base de données complète (installation neuve) |
+| `supabase/00N_*.sql` | migrations pour une base existante |
+| `AGENTS.md`, `CLAUDE.md` | consignes pour les agents de code |
 
 ### Ajouter un module
 
@@ -149,4 +157,16 @@ Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque modu
 2. Importe-le dans `js/main.js`.
 3. Ajoute ses fichiers à `SHELL` dans `sw.js` et incrémente `CACHE`.
 
-Pour tester en local : `python3 -m http.server 5173`, puis ouvre `http://localhost:5173/?demo=1`.
+### Tester en local
+
+```bash
+python3 -m http.server 5173
+```
+
+Puis ouvre `http://localhost:5173/?demo=1`.
+
+### Publier une nouvelle version
+
+1. Incrémente `VERSION` dans `js/core/config.js` **et** `CACHE` dans `sw.js` (sinon l'iPhone garde l'ancienne version).
+2. Pousse sur `main` : GitHub Pages publie l'app.
+3. À la prochaine ouverture, l'app installée récupère la nouvelle version et se recharge d'elle-même.

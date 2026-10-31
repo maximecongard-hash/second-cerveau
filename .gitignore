@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Import Notion ponctuel : contient des données personnelles
+build.py
+import-notion.sql
+
+# Sorties d'outils locaux
+graphify-out/
+.claude/settings.local.json

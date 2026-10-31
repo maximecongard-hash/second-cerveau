@@ -22,6 +22,8 @@ RLS), hors ligne via localStorage + service worker.
 
 - Version **0.4.3**, cache SW `sc-v7`.
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
+- En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
+- `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
 - Historique :
   1. Prototype GTD PWA + synchro Supabase.
   2. Pack 1 : Top 3 du jour, revue du soir, projets enrichis, nouveaux domaines (migration `002_pack1.sql`).
