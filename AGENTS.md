@@ -10,6 +10,8 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
 
 - **Organisation** (`gtd`) : capture rapide (app, raccourcis iOS, partage), tri de l'Inbox, prochaines actions
   par contexte, projets, planification de la journée (Top 3, agenda), revues du soir et hebdo.
+- **Agenda** (`agenda`) : grille horaire jour / semaine. Ne possède aucun kind : il lit tous les éléments datés
+  avec une heure et place les tâches via `setField()` du cœur (routé vers le module propriétaire).
 - **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
   Reliés aux tâches et projets par les liens du cœur.
 - **Sport** et **Courses** : en aperçu, désactivés par défaut, contenu prévu en phase 2.
@@ -58,7 +60,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `config.js` | URL et clé **publique** Supabase (`window.SC_CONFIG`) |
 | `js/main.js` | point d'entrée : importe le cœur, puis les modules (ordre = ordre par défaut de la barre), puis `init()` |
 | `js/core/` | cœur commun, voir ci-dessous |
-| `js/modules/<id>/` | un dossier par module (`gtd`, `notes`, `sport`, `courses`) |
+| `js/modules/<id>/` | un dossier par module (`gtd`, `agenda`, `notes`, `sport`, `courses`) |
 | `sw.js` | cache hors ligne, stratégie stale-while-revalidate, liste `SHELL` de tous les fichiers |
 | `manifest.webmanifest`, `manifest-papier.webmanifest`, `icons/` | installation sur l'écran d'accueil ; deux icônes au choix (Encre par défaut, Papier), sources SVG dans `icons/src/`, choix appliqué par `applyIcon()` de `util.js` |
 | `supabase/schema.sql` | schéma complet, idempotent |

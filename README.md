@@ -159,6 +159,7 @@ Le point en haut à droite indique la synchro : vert = synchronisé, orange = en
 L'app est organisée en modules, affichés dans une barre latérale : fixe sur grand écran, ouverte avec le bouton ☰ sur iPhone.
 
 - **Organisation** : le GTD (Inbox, Aujourd'hui, Actions, Projets).
+- **Agenda** : la journée (onglet Jour) et la semaine (3 jours sur iPhone, 7 sur grand écran) en grille horaire. Chaque tâche qui a une heure y devient un bloc, de la hauteur de sa durée (30 min si aucune). Touche un créneau vide pour y placer une tâche du jour sans heure ou une prochaine action, ou pour en créer une. Heures affichées : Réglages > Agenda.
 - **Notes** : notes en Markdown, signets à lire ou lus, éléments épinglés. Chaque note ou signet peut être lié à des tâches et des projets (« Liés », « + Lier à… », « + Action liée »).
 - **Sport** et **Courses** : en aperçu, désactivés par défaut.
 
@@ -172,7 +173,7 @@ Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque modu
 | `js/main.js` | point d'entrée : charge le cœur puis les modules |
 | `js/core/` | cœur commun : état, synchro Supabase, rendu, barre latérale, réglages, recherche |
 | `js/core/modules.js` | registre des modules (la liste des propriétés d'un module y est décrite) |
-| `js/modules/<module>/` | un dossier par module (`gtd`, `notes`, `sport`, `courses`) |
+| `js/modules/<module>/` | un dossier par module (`gtd`, `agenda`, `notes`, `sport`, `courses`) |
 | `config.js` | URL et clé publique Supabase |
 | `sw.js` | cache hors ligne : change `CACHE` à chaque nouvelle version et ajoute chaque nouveau fichier de `js/` à `SHELL` |
 | `manifest.webmanifest`, `icons/` | installation sur l'écran d'accueil |

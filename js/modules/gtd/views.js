@@ -1,6 +1,6 @@
 import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetween, cap, domain, plural, fmtDate, fmtDur, fmtAgo, FMT_LONG } from '../../core/util.js';
 import { S, live, ofKind, byTitle } from '../../core/store.js';
-import { kindOwner } from '../../core/modules.js';
+import { kindOwner, viewOwner, isEnabled } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks } from './model.js';
 import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
@@ -86,7 +86,10 @@ views.today = () => {
       : `<div class="muted pad small">Les 3 tâches qui feront de ${isToday ? 'cette journée' : 'ce jour'} une réussite. Touche l’étoile d’une tâche.</div>`);
   if (late.length) html += sec('En retard', late.map(t => taskRow(t, { showSched: true })).join(''), `<button class="link" data-act="carry">Tout mettre aujourd'hui</button>`);
   if (due.length) html += sec('Échéances', due.map(t => taskRow(t, { extra: planBtn(t) })).join(''));
-  if (timed.length) html += sec('Agenda', `<div class="timeline">${timed.map(t => `<div class="slot"><div class="slot-time">${t.scheduled_time}</div>${taskRow(t, { extra: starBtn(t, day) })}</div>`).join('')}</div>`);
+  // module Agenda actif : lien vers la grille du même jour
+  const ag = viewOwner('agenda');
+  const agLink = ag && isEnabled(ag) ? `<a class="link" href="#/agenda" data-act="ag-open" data-d="${day}">Voir la grille</a>` : '';
+  if (timed.length) html += sec('Agenda', `<div class="timeline">${timed.map(t => `<div class="slot"><div class="slot-time">${t.scheduled_time}</div>${taskRow(t, { extra: starBtn(t, day) })}</div>`).join('')}</div>`, agLink);
 
   const reorderBtn = untimed.length > 1 ? `<button class="link" data-act="reorder">${S.ui.reorder ? 'OK' : 'Réordonner'}</button>` : '';
   const rows = untimed.map((t, i) => taskRow(t, {
