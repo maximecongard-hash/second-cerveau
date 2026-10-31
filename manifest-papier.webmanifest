@@ -1,6 +1,6 @@
 {
-  "name": "Second Cerveau",
-  "short_name": "Cerveau",
+  "name": "Brain",
+  "short_name": "Brain",
   "description": "Capture, tri GTD et planification de la journée.",
   "lang": "fr",
   "start_url": "./#/today",

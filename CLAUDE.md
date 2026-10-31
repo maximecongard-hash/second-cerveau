@@ -20,7 +20,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.4.2**, cache SW `sc-v6`.
+- Version **0.4.3**, cache SW `sc-v7`.
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - Historique :
   1. Prototype GTD PWA + synchro Supabase.
@@ -31,6 +31,8 @@ RLS), hors ligne via localStorage + service worker.
   6. 0.4.1 : correctif de mise à jour de l'app installée.
   7. 0.4.2 : nouvelle icône (cerveau + réseau d'idées qui dessine une coche), en deux versions au choix
      dans Réglages > Icône : Encre (fond bleu-noir, par défaut) et Papier (fond crème).
+  8. 0.4.3 : l'app s'affiche sous le nom « Brain » (logotype « Brain. » en Newsreader italique, point
+     au surligneur) ; l'icône de la barre latérale et de la connexion suit le choix des Réglages.
 
 ## Pistes ouvertes
 

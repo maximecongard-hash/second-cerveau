@@ -126,6 +126,8 @@ export function setIcon(id) {
   try { localStorage.setItem(ICON_KEY, id); } catch {}
   applyIcon();
 }
+// Logotype « Brain. » (point final au surligneur)
+export const logo = () => 'Brain<span class="logo-dot">.</span>';
 export function applyIcon() {
   const ic = iconChoice();
   document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute('href', ic.touch);

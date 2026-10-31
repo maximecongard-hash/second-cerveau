@@ -1,4 +1,4 @@
-import { $, esc, I } from './util.js';
+import { $, esc, I, iconChoice, logo } from './util.js';
 import { S, patch } from './store.js';
 import { syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
@@ -54,7 +54,7 @@ function sidebar(r, mod) {
   }).join('');
   const core = CORE_LINKS.map(([k, l, ic]) => `<a href="#/${k}" class="side-mod ${r.name === k ? 'on' : ''}">${ic}<span>${l}</span></a>`).join('');
   return `<aside class="side" aria-label="Thèmes">
-      <div class="side-head"><img src="icons/icon-192.png" alt=""><b>Second Cerveau</b></div>
+      <div class="side-head"><img src="${iconChoice().touch}" alt=""><b>${logo()}</b></div>
       <div class="side-label">Thèmes</div>
       <nav class="side-nav">${mods}</nav>
       <nav class="side-nav side-foot">${core}</nav>

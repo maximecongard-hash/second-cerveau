@@ -17,6 +17,7 @@
   --proj: #6e5fa0;
   --ctx: #5f7e66;
   --hl: #f3e37c;          /* surligneur */
+  --logo-dot: #d4b400;    /* point du logotype */
   --star: #b8920f;
   --toast-bg: #1a2132;
   --toast-fg: #f1f2ee;
@@ -48,6 +49,7 @@
     --proj: #afa2da;
     --ctx: #8fb197;
     --hl: rgba(222,200,90,.32);
+    --logo-dot: #f3e37c;
     --star: #dec85a;
     --toast-bg: #e6e7e1;
     --toast-fg: #12151c;
@@ -400,7 +402,7 @@ main {
 /* Connexion */
 .login { max-width: 360px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 12vh) 24px 40px; text-align: center; }
 .login-logo img { width: 84px; height: 84px; border-radius: 20px; box-shadow: var(--shadow); }
-.login h1 { margin: 16px 0 4px; font-family: var(--f-display); font-weight: 400; font-size: 34px; letter-spacing: -.02em; }
+.login h1 { margin: 16px 0 4px; font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 38px; letter-spacing: -.02em; }
 .login form { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
 
 /* Top 3 : le surligneur */
@@ -446,7 +448,8 @@ body.side-open .side { transform: none; box-shadow: var(--shadow); }
 body.side-open .side-scrim { opacity: 1; pointer-events: auto; }
 .side-head { display: flex; align-items: center; gap: 10px; padding: 2px 8px 14px; }
 .side-head img { width: 28px; height: 28px; border-radius: 7px; }
-.side-head b { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 21px; letter-spacing: -.01em; }
+.side-head b { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 24px; letter-spacing: -.01em; }
+.logo-dot { color: var(--logo-dot); }
 .side-label { padding: 8px 10px 4px; font: 500 10.5px var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .09em; }
 .side-nav { display: flex; flex-direction: column; gap: 1px; }
 .side-foot { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); }

@@ -1,5 +1,5 @@
 import { VERSION, CFG, DEMO, sb } from './config.js';
-import { $, esc, I, empty, sec, today, nowIso, FMT_TIME, ICONS, iconChoice, setIcon } from './util.js';
+import { $, esc, I, empty, sec, today, nowIso, FMT_TIME, ICONS, iconChoice, setIcon, logo } from './util.js';
 import { S, live, savePrefs, resetLocal, persistNow } from './store.js';
 import { sync, syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
@@ -90,8 +90,8 @@ async function loadTokens() {
 
 export function viewLogin(msg = '') {
   return `<div class="login">
-    <div class="login-logo"><img src="icons/icon-192.png" alt=""></div>
-    <h1>Second Cerveau</h1>
+    <div class="login-logo"><img src="${iconChoice().touch}" alt=""></div>
+    <h1>${logo()}</h1>
     <p class="muted">Capture. Trie. Planifie.</p>
     <form data-form="login">
       <input type="email" id="login-email" autocomplete="username" placeholder="Email" required>
