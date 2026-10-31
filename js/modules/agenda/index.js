@@ -2,12 +2,15 @@ import { esc, I, sec, today, addDays, pad, fmtDate, fmtDur, empty } from '../../
 import { S, live, newItem, saveItem, patch, savePrefs } from '../../core/store.js';
 import { registerModule, kindOwner } from '../../core/modules.js';
 import { SH, sheet, showSheet, closeSheet, setField, route, render, queueRender, toast } from '../../core/ui.js';
+import { DEMO } from '../../core/config.js';
 import { views, untimedOn, weekSpan } from './views.js';
+import { appleActs, appleSettings, loadEvents, seedDemoEvents } from './apple.js';
 
 // ---------------------------------------------------------------------------
 // Module « Agenda » : la journée et la semaine en grille horaire.
 // Il ne possède aucun type d'élément : il place à une heure les tâches du module Organisation
 // via le cœur (setField est routé vers le module propriétaire).
+// Les événements de Calendrier (apple.js) s'affichent à côté, en lecture seule.
 // ---------------------------------------------------------------------------
 let slot = null; // { day, t } de la feuille « Placer à… »
 
@@ -56,7 +59,8 @@ const acts = {
     setField(id, 'scheduled_time', t, false);
     closeSheet();
     toast(`Placé à ${t}`, () => patch(id, prev));
-  }
+  },
+  ...appleActs
 };
 
 const forms = {
@@ -88,7 +92,7 @@ function settings() {
     .map(h => `<option value="${h}" ${S.prefs[k] === h ? 'selected' : ''}>${pad(h)} h</option>`).join('')}</select>`;
   return sec('Agenda', `<div class="muted small pad">Heures affichées dans la grille. Elle s'élargit seule si un créneau en sort.</div>
     <div class="fields"><div class="f-row"><label>Début</label><div class="f-val">${opts('agStart', 0, 12)}</div></div>
-    <div class="f-row"><label>Fin</label><div class="f-val">${opts('agEnd', 13, 24)}</div></div></div>`);
+    <div class="f-row"><label>Fin</label><div class="f-val">${opts('agEnd', 13, 24)}</div></div></div>`) + appleSettings();
 }
 
 // Démo : quelques créneaux (dont deux qui se chevauchent) en plus des tâches du module Organisation
@@ -114,12 +118,15 @@ registerModule({
   ],
   views, acts, forms,
   fab: () => openSlot(S.ui.agDay, defaultTime(S.ui.agDay)),
-  prefs: { agStart: 7, agEnd: 22 },
+  prefs: { agStart: 7, agEnd: 22, agApple: true },
   ui: { agDay: today() },
   settings,
   seedDemo,
   onChange,
+  // après chaque synchro : relit les événements de Calendrier (au plus toutes les 5 minutes)
+  afterSync: () => { if (DEMO) seedDemoEvents(); else loadEvents(); return false; },
   onResume: () => {
+    loadEvents();
     if (S.ui.agDay < today() && ['agenda', 'week'].includes(route().name)) S.ui.agDay = today();
     if (['agenda', 'week'].includes(route().name)) queueRender();
   }

@@ -21,7 +21,8 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.7.0**, cache SW `sc-v10`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.7 n'en demande aucune.
+- Version **0.8.0**, cache SW `sc-v11`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+  `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
@@ -44,11 +45,15 @@ RLS), hors ligne via localStorage + service worker.
   11. 0.7.0 : module Agenda (`js/modules/agenda`) : grille jour, semaine (3 jours sur iPhone, 7 sur grand écran),
      blocs = `scheduled_time` + `duration_min`, chevauchements en colonnes, feuille « Placer à… » sur un créneau,
      heures affichées dans les Réglages, lien « Voir la grille » depuis Aujourd'hui.
+  12. 0.8.0 : Calendrier Apple (iCloud), lecture seule dans les deux sens. Brain vers Calendrier : flux ICS servi par
+     l'Edge Function `supabase/functions/calendrier` (jeton dans `calendar_tokens`, fonction `calendar_feed`).
+     Calendrier vers Brain : raccourci « Agenda Apple » qui envoie les prochains événements à `sync_events`
+     (jeton de capture), table `events`, blocs gris dans la grille (`js/modules/agenda/apple.js`).
 
 ## Pistes ouvertes
 
-- **Feuille de route issue de l'étude du Notion** (31/10/2026) : 0.8 flux ICS vers Apple Calendar puis import des événements par Raccourci. À clarifier :
-  agenda source iCloud ou Google (les Procédures IA du Notion parlent de Google Agenda).
+- **Calendrier 0.8 à valider sur l'iPhone** : raccourci « Agenda Apple » (identifiants d'actions non testés sur
+  l'appareil) et abonnement ICS une fois l'Edge Function déployée.
 - **Phase 2** : remplir les modules Sport et Courses.
 - **Import Notion** : un script ponctuel (`build.py` → `import-notion.sql`) a généré l'import des tâches
   Notion ouvertes. Il contient des données personnelles et n'est volontairement pas dans le dépôt.

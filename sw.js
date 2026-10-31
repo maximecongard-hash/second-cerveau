@@ -1,7 +1,7 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
 // et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v10';
+const CACHE = 'sc-v11';
 const SHELL = [
   './',
   'index.html',
@@ -21,6 +21,7 @@ const SHELL = [
   'js/main.js',
   'js/modules/agenda/index.js',
   'js/modules/agenda/views.js',
+  'js/modules/agenda/apple.js',
   'js/modules/courses/index.js',
   'js/modules/gtd/actions.js',
   'js/modules/gtd/index.js',
