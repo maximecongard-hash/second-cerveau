@@ -1,6 +1,6 @@
 'use strict';
 (() => {
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 const CFG = window.SC_CONFIG || {};
 const DEMO = new URLSearchParams(location.search).has('demo');
 const LS_KEY = DEMO ? 'sc.demo.v1' : 'sc.v1';
@@ -10,14 +10,17 @@ const DEFAULT_PREFS = {
   contexts: ['@maison', '@bureau', '@ordi', '@tél', '@courses', '@dehors'],
   lastReview: null,
   reminderShortcut: 'Rappel GTD',
-  seeded: false
+  lastEvening: null,
+  seeded: false,
+  areasV2: false
 };
-const DEFAULT_AREAS = ['Perso', 'Pro', 'Santé', 'Finances', 'Maison'];
+const DEFAULT_AREAS = ['Sport', 'Finance', 'Travail / Carrière', 'Maison & Administratif', 'Santé',
+  'Apprentissage', 'Relations', 'Loisirs & Voyages', 'Cuisine'];
 const FIELDS = ['id', 'user_id', 'kind', 'status', 'title', 'body', 'url', 'image_path', 'parent_id',
   'contexts', 'tags', 'duration_min', 'energy', 'due_date', 'scheduled_date', 'scheduled_time',
-  'day_order', 'waiting_for', 'recurrence', 'source', 'completed_at', 'created_at'];
-const TEXT_FIELDS = new Set(['title', 'body', 'waiting_for', 'tags', 'url']);
-const NULLABLE = new Set(['parent_id', 'due_date', 'scheduled_date', 'scheduled_time', 'energy', 'recurrence', 'url', 'waiting_for']);
+  'day_order', 'waiting_for', 'recurrence', 'focus', 'outcome', 'review_date', 'source', 'completed_at', 'created_at'];
+const TEXT_FIELDS = new Set(['title', 'body', 'waiting_for', 'tags', 'url', 'outcome']);
+const NULLABLE = new Set(['parent_id', 'due_date', 'scheduled_date', 'scheduled_time', 'energy', 'recurrence', 'url', 'waiting_for', 'outcome', 'review_date']);
 
 // ---------------------------------------------------------------------------
 // Utilitaires
@@ -74,7 +77,9 @@ const I = {
   right: '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
   bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
   camera: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
-  link: '<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'
+  link: '<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>'
 };
 
 // ---------------------------------------------------------------------------
@@ -134,7 +139,7 @@ function newItem(fields = {}) {
     id: uuid(), user_id: S.user?.id || null, kind: 'inbox', status: 'active', title: '', body: '',
     url: null, image_path: null, parent_id: null, contexts: [], tags: [], duration_min: null,
     energy: null, due_date: null, scheduled_date: null, scheduled_time: null, day_order: null,
-    waiting_for: null, recurrence: null, source: 'app', completed_at: null,
+    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, source: 'app', completed_at: null,
     created_at: now, updated_at: now, ...fields
   };
 }
@@ -168,13 +173,33 @@ const areas = () => ofKind('area').sort(byTitle);
 const projectsBy = st => ofKind('project').filter(p => p.status === st).sort(byTitle);
 function projectBlocked(t) {
   const p = t.parent_id && S.items.get(t.parent_id);
-  return !!p && p.kind === 'project' && p.status !== 'active';
+  return !!p && p.kind === 'project' && ['someday', 'done', 'trashed'].includes(p.status);
 }
 const nextActions = () => ofKind('task').filter(t => t.status === 'active' && !projectBlocked(t));
 const hasNextAction = p => ofKind('task').some(t => t.parent_id === p.id && t.status === 'active');
 function nextOrder(day) {
   const os = ofKind('task').filter(t => t.scheduled_date === day && t.day_order != null).map(t => t.day_order);
   return os.length ? Math.max(...os) + 1 : 1;
+}
+const topOf = day => ofKind('task').filter(t => t.scheduled_date === day && t.focus).sort((a, b) => a.focus - b.focus);
+function toggleFocus(id, day) {
+  const t = S.items.get(id);
+  if (!t) return;
+  if (t.focus && t.scheduled_date === day) { patch(id, { focus: null }); return; }
+  const used = topOf(day).filter(x => x.id !== id).map(x => x.focus);
+  const free = [1, 2, 3].find(n => !used.includes(n));
+  if (!free) { toast('Top 3 déjà complet : retire d’abord une étoile'); return; }
+  patch(id, { focus: free, scheduled_date: day, day_order: t.scheduled_date === day ? t.day_order : nextOrder(day) });
+}
+function migrateAreas() {
+  const RENAME = { Pro: 'Travail / Carrière', Finances: 'Finance', Maison: 'Maison & Administratif' };
+  const used = id => ofKind('project').some(p => p.parent_id === id);
+  for (const a of areas()) {
+    if (RENAME[a.title]) patch(a.id, { title: RENAME[a.title] }, { render: false });
+    else if (a.title === 'Perso' && !used(a.id)) patch(a.id, { status: 'trashed' }, { render: false });
+  }
+  const have = new Set(areas().map(a => a.title));
+  DEFAULT_AREAS.filter(t => !have.has(t)).forEach(t => saveItem(newItem({ kind: 'area', title: t }), { render: false }));
 }
 function itemTags(it) {
   const set = new Set(it.tags || []);
@@ -210,7 +235,7 @@ function spawnNext(t) {
   const next = nextOccurrence(base, t.recurrence);
   const shift = s => (s ? addDays(s, daysBetween(base, next)) : null);
   const copy = newItem({
-    ...t, id: uuid(), status: 'active', completed_at: null, day_order: null, created_at: nowIso(),
+    ...t, id: uuid(), status: 'active', completed_at: null, day_order: null, focus: null, created_at: nowIso(),
     scheduled_date: shift(t.scheduled_date), due_date: shift(t.due_date)
   });
   if (!t.scheduled_date && !t.due_date) copy.scheduled_date = next;
@@ -310,6 +335,13 @@ async function sync() {
     if (!S.prefs.seeded) {
       if (!areas().length) DEFAULT_AREAS.forEach(t => saveItem(newItem({ kind: 'area', title: t }), { render: false }));
       S.prefs.seeded = true;
+      S.prefs.areasV2 = true;
+      S.prefsDirty = true;
+      changed = true;
+    }
+    if (!S.prefs.areasV2) {
+      migrateAreas();
+      S.prefs.areasV2 = true;
       S.prefsDirty = true;
       changed = true;
     }
@@ -317,7 +349,9 @@ async function sync() {
     S.lastSync = nowIso();
   } catch (e) {
     console.error('sync', e);
-    S.lastError = e.message || String(e);
+    S.lastError = /column|schema cache|violates check/i.test(e.message || '')
+      ? 'base de données à mettre à jour (supabase/002_pack1.sql)'
+      : (e.message || String(e));
   } finally {
     S.syncing = false;
     persist();
@@ -460,13 +494,16 @@ function noteRow(n) {
     ${n.image_path ? `<img class="thumb" data-img="${esc(n.image_path)}" alt="">` : ''}
   </div>`;
 }
+const starBtn = (t, day) => `<button class="star ${t.focus && t.scheduled_date === day ? 'on' : ''}" data-act="focus" data-id="${t.id}" aria-label="Top 3">${I.star}</button>`;
 function projectRow(p) {
   const n = ofKind('task').filter(t => t.parent_id === p.id && (t.status === 'active' || t.status === 'waiting')).length;
   const warn = p.status === 'active' && !hasNextAction(p);
+  const toReview = p.review_date && p.review_date <= today() && p.status !== 'done';
   return `<a class="row" href="#/project/${p.id}">
     <div class="row-icon proj ${p.status}">${I.folder}</div>
     <div class="row-main"><div class="row-title">${esc(p.title) || '<i>Sans titre</i>'}</div>
-    <div class="row-meta"><span>${plural(n, 'action', 'actions')}</span>${p.due_date ? `<span class="m-due ${p.due_date <= today() ? 'late' : ''}">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${warn ? '<span class="warn">Pas de prochaine action</span>' : ''}</div></div>
+    <div class="row-meta"><span>${plural(n, 'action', 'actions')}</span>${p.due_date ? `<span class="m-due ${p.due_date <= today() ? 'late' : ''}">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${warn ? '<span class="warn">Pas de prochaine action</span>' : ''}${toReview ? '<span class="warn">À revoir</span>' : ''}</div>
+    ${p.outcome ? `<div class="row-snippet">${esc(p.outcome)}</div>` : ''}</div>
     <span class="chev">${I.right}</span>
   </a>`;
 }
@@ -534,9 +571,10 @@ VIEWS.today = () => {
   const late = isToday ? ts.filter(t => t.status === 'active' && t.scheduled_date && t.scheduled_date < day).sort(sortTasks) : [];
   const due = isToday ? ts.filter(t => t.status === 'active' && t.due_date && t.due_date <= day && t.scheduled_date !== day && !(t.scheduled_date && t.scheduled_date < day)).sort(sortTasks) : [];
   const planned = ts.filter(t => t.scheduled_date === day && (t.status === 'active' || t.status === 'waiting'));
-  const timed = planned.filter(t => t.scheduled_time).sort((a, b) => a.scheduled_time.localeCompare(b.scheduled_time));
-  const untimed = planned.filter(t => !t.scheduled_time).sort((a, b) => (a.day_order ?? 1e15) - (b.day_order ?? 1e15) || a.created_at.localeCompare(b.created_at));
-  const doneDay = ts.filter(t => t.status === 'done' && (t.scheduled_date === day || (t.completed_at && ymd(new Date(t.completed_at)) === day)));
+  const top = topOf(day).filter(t => t.status !== 'someday');
+  const timed = planned.filter(t => t.scheduled_time && !t.focus).sort((a, b) => a.scheduled_time.localeCompare(b.scheduled_time));
+  const untimed = planned.filter(t => !t.scheduled_time && !t.focus).sort((a, b) => (a.day_order ?? 1e15) - (b.day_order ?? 1e15) || a.created_at.localeCompare(b.created_at));
+  const doneDay = ts.filter(t => t.status === 'done' && !(t.focus && t.scheduled_date === day) && (t.scheduled_date === day || (t.completed_at && ymd(new Date(t.completed_at)) === day)));
   const total = planned.reduce((s, t) => s + (t.duration_min || 0), 0);
 
   let html = `<div class="daynav">
@@ -550,14 +588,19 @@ VIEWS.today = () => {
   if (isToday && inboxN) html += `<a class="banner" href="#/clarify">${plural(inboxN, 'élément', 'éléments')} dans l'Inbox à trier</a>`;
   const lr = S.prefs.lastReview;
   if (isToday && (!lr || daysBetween(lr, t0) >= 7)) html += `<a class="banner soft" href="#/review">Revue hebdo ${lr ? `(dernière ${fmtAgo(parseYmd(lr).toISOString())})` : 'jamais faite'}</a>`;
+  if (isToday && new Date().getHours() >= 17 && S.prefs.lastEvening !== t0) html += `<a class="banner evening" href="#/evening">${I.moon} Revue du soir · 5 min</a>`;
 
+  const topDone = top.filter(t => t.status === 'done').length;
+  html += sec(`Top 3${top.length ? ` <small>${topDone}/${top.length}</small>` : ''}`,
+    top.length ? `<div class="top3">${top.map(t => taskRow(t, { showTime: true, extra: starBtn(t, day) })).join('')}</div>`
+      : `<div class="muted pad small">Les 3 tâches qui feront de ${isToday ? 'cette journée' : 'ce jour'} une réussite. Touche l’étoile d’une tâche.</div>`);
   if (late.length) html += sec('En retard', late.map(t => taskRow(t, { showSched: true })).join(''), `<button class="link" data-act="carry">Tout mettre aujourd'hui</button>`);
   if (due.length) html += sec('Échéances', due.map(t => taskRow(t, { extra: planBtn(t) })).join(''));
-  if (timed.length) html += sec('Agenda', `<div class="timeline">${timed.map(t => `<div class="slot"><div class="slot-time">${t.scheduled_time}</div>${taskRow(t)}</div>`).join('')}</div>`);
+  if (timed.length) html += sec('Agenda', `<div class="timeline">${timed.map(t => `<div class="slot"><div class="slot-time">${t.scheduled_time}</div>${taskRow(t, { extra: starBtn(t, day) })}</div>`).join('')}</div>`);
 
   const reorderBtn = untimed.length > 1 ? `<button class="link" data-act="reorder">${S.ui.reorder ? 'OK' : 'Réordonner'}</button>` : '';
   const rows = untimed.map((t, i) => taskRow(t, {
-    extra: S.ui.reorder ? `<div class="reorder"><button class="icon-btn" data-act="move" data-dir="-1" data-id="${t.id}" ${i === 0 ? 'disabled' : ''} aria-label="Monter">${I.up}</button><button class="icon-btn" data-act="move" data-dir="1" data-id="${t.id}" ${i === untimed.length - 1 ? 'disabled' : ''} aria-label="Descendre">${I.down}</button></div>` : ''
+    extra: !S.ui.reorder ? starBtn(t, day) : `<div class="reorder"><button class="icon-btn" data-act="move" data-dir="-1" data-id="${t.id}" ${i === 0 ? 'disabled' : ''} aria-label="Monter">${I.up}</button><button class="icon-btn" data-act="move" data-dir="1" data-id="${t.id}" ${i === untimed.length - 1 ? 'disabled' : ''} aria-label="Descendre">${I.down}</button></div>`
   })).join('');
   html += sec('À faire', (rows || `<div class="muted pad">Rien de prévu. Choisis parmi tes prochaines actions.</div>`) +
     `<form class="inline-add" data-form="add-day"><input id="add-day" placeholder="+ Ajouter une tâche pour ce jour" enterkeyhint="done" autocomplete="off"></form>
@@ -587,9 +630,11 @@ VIEWS.projects = () => {
   const act = projectsBy('active');
   const groups = areas().map(a => [a, act.filter(p => p.parent_id === a.id)]).filter(([, ps]) => ps.length);
   const orphan = act.filter(p => !p.parent_id || !S.items.get(p.parent_id) || S.items.get(p.parent_id).kind !== 'area' || S.items.get(p.parent_id).status === 'trashed');
-  let html = groups.map(([a, ps]) => sec(esc(a.title), ps.map(projectRow).join(''))).join('');
+  const clar = projectsBy('clarify');
+  let html = clar.length ? sec('À clarifier', clar.map(projectRow).join('')) : '';
+  html += groups.map(([a, ps]) => sec(esc(a.title), ps.map(projectRow).join(''))).join('');
   if (orphan.length) html += sec(groups.length ? 'Sans domaine' : 'Projets actifs', orphan.map(projectRow).join(''));
-  if (!act.length) html += empty('Aucun projet actif', 'Un projet = tout résultat qui demande plus d’une action.');
+  if (!act.length && !clar.length) html += empty('Aucun projet actif', 'Un projet = tout résultat qui demande plus d’une action.');
   const some = projectsBy('someday'), done = projectsBy('done');
   if (some.length) html += `<details class="done-sec"><summary>Un jour / peut-être (${some.length})</summary>${some.map(projectRow).join('')}</details>`;
   if (done.length) html += `<details class="done-sec"><summary>Terminés (${done.length})</summary>${done.map(projectRow).join('')}</details>`;
@@ -606,15 +651,17 @@ VIEWS.project = id => {
   const done = ts.filter(t => t.status === 'done').sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
   const notes = ofKind('note').filter(n => n.parent_id === id).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
   const area = p.parent_id && S.items.get(p.parent_id);
-  const statusLabel = { active: 'Actif', someday: 'Un jour', done: 'Terminé', waiting: 'En attente' }[p.status];
+  const statusLabel = { active: 'Actif', someday: 'Un jour', done: 'Terminé', waiting: 'En attente', clarify: 'À clarifier' }[p.status];
   let html = `<a class="back" href="#/projects">${I.left} Projets</a>
     <div class="proj-head">
       <h2 class="proj-title">${esc(p.title) || '<i>Sans titre</i>'}</h2>
-      <div class="row-meta"><span>${statusLabel}</span>${area ? `<span class="m-proj">${esc(area.title)}</span>` : ''}${p.due_date ? `<span class="m-due">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}</div>
+      <div class="row-meta"><span>${statusLabel}</span>${area ? `<span class="m-proj">${esc(area.title)}</span>` : ''}${p.due_date ? `<span class="m-due">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${p.review_date ? `<span class="${p.review_date <= today() ? 'warn' : ''}">Revue ${fmtDate(p.review_date).toLowerCase()}</span>` : ''}</div>
+      ${p.outcome ? `<div class="outcome"><span>Résultat attendu</span>${esc(p.outcome)}</div>` : ''}
       ${p.body ? `<div class="md">${md(p.body)}</div>` : ''}
       <div class="btn-row"><button class="btn" data-act="edit" data-id="${p.id}">Modifier</button>${p.status !== 'done' ? `<button class="btn" data-act="proj-done" data-id="${p.id}">Projet terminé</button>` : ''}</div>
     </div>`;
-  if (p.status === 'active' && !active.length) html += `<div class="banner warn">Aucune prochaine action : quelle est la prochaine étape concrète ?</div>`;
+  if (p.status === 'clarify') html += `<div class="banner warn">À clarifier : précise le résultat attendu et la prochaine action, puis passe le projet en Actif. <button class="link" data-act="proj-activate" data-id="${p.id}">Activer</button></div>`;
+  else if (p.status === 'active' && !active.length) html += `<div class="banner warn">Aucune prochaine action : quelle est la prochaine étape concrète ?</div>`;
   html += sec('Actions', active.map(t => taskRow(t, { noProject: true, showSched: true })).join('') +
     `<form class="inline-add" data-form="add-proj" data-id="${p.id}"><input id="add-proj" placeholder="+ Ajouter une action" enterkeyhint="done" autocomplete="off"></form>`);
   if (waiting.length) html += sec('En attente', waiting.map(t => taskRow(t, { noProject: true })).join(''));
@@ -668,6 +715,8 @@ VIEWS.logbook = () => {
 VIEWS.review = () => {
   const r = S.ui.review;
   const noNext = projectsBy('active').filter(p => !hasNextAction(p));
+  const clar = projectsBy('clarify');
+  const dueReview = ofKind('project').filter(p => p.review_date && p.review_date <= today() && p.status !== 'done');
   const waitingN = ofKind('task').filter(t => t.status === 'waiting').length;
   const someN = live().filter(i => i.status === 'someday').length;
   const lateN = ofKind('task').filter(t => t.status === 'active' && ((t.scheduled_date && t.scheduled_date < today()) || (t.due_date && t.due_date < today()))).length;
@@ -678,13 +727,44 @@ VIEWS.review = () => {
     step('late', 'Retards et échéances', `${plural(lateN, 'tâche', 'tâches')} en retard ou échue(s). <a href="#/today">Voir</a>`),
     step('calendar', 'Calendrier', 'Revois la semaine passée et les 2 semaines à venir : quelque chose à préparer ?'),
     step('actions', 'Prochaines actions', 'Coche ce qui est fait, supprime ce qui n’a plus de sens. <a href="#/actions">Voir</a>'),
-    step('projects', 'Projets', noNext.length ? `Sans prochaine action : ${noNext.map(p => `<a href="#/project/${p.id}">${esc(p.title)}</a>`).join(', ')}` : 'Chaque projet a une prochaine action.'),
+    step('projects', 'Projets', [
+      noNext.length ? `Sans prochaine action : ${noNext.map(p => `<a href="#/project/${p.id}">${esc(p.title)}</a>`).join(', ')}` : 'Chaque projet actif a une prochaine action.',
+      clar.length ? `À clarifier : ${clar.map(p => `<a href="#/project/${p.id}">${esc(p.title)}</a>`).join(', ')}` : '',
+      dueReview.length ? `Date de revue atteinte : ${dueReview.map(p => `<a href="#/project/${p.id}">${esc(p.title)}</a>`).join(', ')}` : ''
+    ].filter(Boolean).join('<br>')),
     step('waiting', 'En attente', `${waitingN} élément(s). Faut-il relancer quelqu’un ? <a href="#/waiting">Voir</a>`),
     step('someday', 'Un jour / peut-être', `${someN} élément(s). Quelque chose à activer ? <a href="#/someday">Voir</a>`),
     step('ideas', 'Nouvelles idées', 'Une dernière minute pour capturer ce qui te vient.')
   ].join('');
   const last = S.prefs.lastReview ? `Dernière revue : ${fmtDate(S.prefs.lastReview).toLowerCase()}` : 'Première revue';
   return { title: 'Revue hebdo', html: `<div class="muted small pad">${last}</div><div class="list">${steps}</div><button class="btn primary block" data-act="review-done">Revue terminée</button>` };
+};
+
+VIEWS.evening = () => {
+  const t0 = today();
+  const open = ofKind('task').filter(t => (t.status === 'active' || t.status === 'waiting') && t.scheduled_date && t.scheduled_date <= t0)
+    .sort((a, b) => (a.focus || 9) - (b.focus || 9) || a.scheduled_date.localeCompare(b.scheduled_date) || (a.day_order ?? 1e15) - (b.day_order ?? 1e15));
+  const doneToday = ofKind('task').filter(t => t.status === 'done' && t.completed_at && ymd(new Date(t.completed_at)) === t0);
+  const top = topOf(t0);
+  const inboxN = inboxItems().length;
+  const card = t => `<div class="ev-card">${taskRow(t, { showSched: t.scheduled_date < t0 })}
+    <div class="ev-actions">
+      <button class="chip" data-act="ev" data-v="done" data-id="${t.id}">Fait</button>
+      <button class="chip" data-act="ev" data-v="tomorrow" data-id="${t.id}">Demain</button>
+      <button class="chip" data-act="ev" data-v="next" data-id="${t.id}">Sans date</button>
+      <button class="chip" data-act="ev" data-v="waiting" data-id="${t.id}">En attente</button>
+      <input type="date" class="ev-date" data-evdate="${t.id}" min="${addDays(t0, 1)}" aria-label="Autre date">
+    </div></div>`;
+  let html = `<div class="ev-summary"><div><b>${doneToday.length}</b><span>faite${doneToday.length > 1 ? 's' : ''}</span></div>
+      <div><b>${top.filter(t => t.status === 'done').length}/${top.length || 0}</b><span>Top 3</span></div>
+      <div><b>${open.length}</b><span>restante${open.length > 1 ? 's' : ''}</span></div></div>`;
+  html += sec('1. Ce qui reste', open.length ? open.map(card).join('') + (open.length > 1 ? `<button class="btn block" data-act="ev-all">Tout reporter à demain</button>` : '')
+    : '<div class="muted pad">Tout est traité ✓</div>');
+  html += sec('2. Inbox', inboxN ? `<a class="btn block" href="#/clarify">Trier ${plural(inboxN, 'élément', 'éléments')}</a>` : '<div class="muted pad">Inbox vide ✓</div>');
+  html += sec('3. Demain', `<div class="muted pad small">${plural(ofKind('task').filter(t => t.scheduled_date === addDays(t0, 1) && t.status === 'active').length, 'tâche prévue', 'tâches prévues')}. Choisis ton Top 3 dès maintenant pour démarrer vite.</div>
+    <button class="btn block" data-act="plan-tomorrow">Préparer demain</button>`);
+  html += `<button class="btn primary block" data-act="evening-done">Revue du soir terminée</button>`;
+  return { title: 'Revue du soir', html };
 };
 
 VIEWS.search = () => ({
@@ -752,7 +832,7 @@ function viewLogin(msg = '') {
 // ---------------------------------------------------------------------------
 const app = $('#app');
 const TABS = [['inbox', 'Inbox', I.inbox], ['today', "Aujourd'hui", I.sun], ['actions', 'Actions', I.list], ['projects', 'Projets', I.folder], ['notes', 'Notes', I.note]];
-const TAB_OF = { clarify: 'inbox', project: 'projects' };
+const TAB_OF = { clarify: 'inbox', project: 'projects', evening: 'today' };
 function route() {
   const [name, arg] = location.hash.replace(/^#\/?/, '').split('/');
   return { name: VIEWS[name] ? name : 'today', arg };
@@ -820,7 +900,7 @@ const seg = (f, cur, opts) => `<div class="seg">${opts.map(([v, l]) => `<button 
 const sel = (f, cur, opts) => `<select data-f="${f}">${opts.map(([v, l]) => `<option value="${esc(v)}" ${String(cur ?? '') === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
 
 function projectOptions(cur) {
-  const ps = ofKind('project').filter(p => p.status === 'active' || p.status === 'someday' || p.id === cur).sort(byTitle);
+  const ps = ofKind('project').filter(p => ['active', 'someday', 'clarify'].includes(p.status) || p.id === cur).sort(byTitle);
   return [['', 'Aucun'], ...ps.map(p => [p.id, p.title + (p.status === 'someday' ? ' (un jour)' : '')])];
 }
 function media(it) {
@@ -849,11 +929,13 @@ function editorHTML(it) {
   if (it.kind === 'project') {
     const ts = ofKind('task').filter(t => t.parent_id === it.id && t.status === 'active');
     return head + title('Nom du projet (résultat voulu)') +
-      `<textarea class="notes-input" data-f="body" rows="4" placeholder="Objectif, notes, idées (markdown)">${esc(it.body)}</textarea>${media(it)}
+      `<textarea class="outcome-input" data-f="outcome" rows="2" placeholder="Résultat attendu : à quoi ressemble « terminé » ?">${esc(it.outcome || '')}</textarea>
+      <textarea class="notes-input" data-f="body" rows="3" placeholder="Notes, idées (markdown)">${esc(it.body)}</textarea>${media(it)}
       <div class="fields">
-        ${fRow('Statut', seg('status', it.status, [['active', 'Actif'], ['someday', 'Un jour'], ['done', 'Terminé']]))}
+        ${fRow('Statut', seg('status', it.status, [['clarify', 'À clarifier'], ['active', 'Actif'], ['someday', 'Un jour'], ['done', 'Terminé']]))}
         ${fRow('Domaine', sel('parent_id', it.parent_id, [['', 'Aucun'], ...areas().map(a => [a.id, a.title])]))}
         ${fRow('Échéance', `<input type="date" data-f="due_date" value="${it.due_date || ''}">`)}
+        ${fRow('Revue le', `<input type="date" data-f="review_date" value="${it.review_date || ''}">`)}
         ${tagsF}
       </div>
       <div class="sub-list"><div class="sub-title">Actions (${ts.length})</div>${ts.map(t => `<div class="sub-item">${esc(t.title)}</div>`).join('')}
@@ -876,6 +958,7 @@ function editorHTML(it) {
     `<textarea class="notes-input" data-f="body" rows="3" placeholder="Notes">${esc(it.body)}</textarea>${media(it)}
     <div class="fields">
       ${fRow('Statut', seg('status', it.status, [['active', 'À faire'], ['waiting', 'En attente'], ['someday', 'Un jour'], ['done', 'Fait']]))}
+      ${fRow('Top 3', `<button class="chip ${it.focus ? 'on' : ''}" data-act="focus-ed">${I.star} ${it.focus ? `n° ${it.focus} · ${fmtDate(it.scheduled_date).toLowerCase()}` : `Ajouter (${fmtDate(it.scheduled_date || today()).toLowerCase()})`}</button>`)}
       ${it.status === 'waiting' ? fRow('Attendu de', `<input data-f="waiting_for" id="f-waiting_for" value="${esc(it.waiting_for || '')}" placeholder="Personne, organisme…" autocomplete="off">`) : ''}
       ${fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}
       ${fRow('Contextes', `<div class="chips wrap">${ctxs.map(c => chip(esc(c), (it.contexts || []).includes(c), 'ctx', c)).join('')}</div>`)}
@@ -921,6 +1004,7 @@ function setField(id, f, v, rerender) {
   else if (NULLABLE.has(f)) val = v || null;
   const p = { [f]: val };
   if (f === 'scheduled_date') {
+    if (it.scheduled_date !== val) p.focus = null;
     if (val && it.scheduled_date !== val) p.day_order = nextOrder(val);
     if (!val) p.scheduled_time = null;
   }
@@ -989,7 +1073,7 @@ function openMenu() {
   };
   const item = (href, label, count = '') => `<a class="row" href="${href}" data-act="close-go"><div class="row-main"><div class="row-title">${label}</div></div>${count !== '' ? `<span class="muted">${count}</span>` : ''}<span class="chev">${I.right}</span></a>`;
   sheet.innerHTML = `<div class="sheet-head"><span></span><span class="sheet-kind">Menu</span><button class="link strong" data-act="close">Fermer</button></div>
-    <div class="list">${item('#/waiting', 'En attente', n.waiting)}${item('#/someday', 'Un jour / peut-être', n.someday)}${item('#/review', 'Revue hebdo')}${item('#/logbook', 'Terminé')}${item('#/search', 'Recherche')}${item('#/settings', 'Réglages')}</div>`;
+    <div class="list">${item('#/evening', 'Revue du soir')}${item('#/waiting', 'En attente', n.waiting)}${item('#/someday', 'Un jour / peut-être', n.someday)}${item('#/review', 'Revue hebdo')}${item('#/logbook', 'Terminé')}${item('#/search', 'Recherche')}${item('#/settings', 'Réglages')}</div>`;
   showSheet();
 }
 
@@ -1033,6 +1117,16 @@ function moveInDay(id, dir) {
   [list[i], list[j]] = [list[j], list[i]];
   list.forEach((t, k) => { if (t.day_order !== k + 1) { t.day_order = k + 1; saveItem(t, { render: false }); } });
   queueRender();
+}
+function evening(id, v) {
+  const t = S.items.get(id);
+  if (!t) return;
+  const prev = { status: t.status, scheduled_date: t.scheduled_date, scheduled_time: t.scheduled_time, day_order: t.day_order, focus: t.focus };
+  const undo = () => patch(id, prev);
+  if (v === 'done') { complete(id); return; }
+  if (v === 'tomorrow') { const d = addDays(today(), 1); patch(id, { scheduled_date: d, day_order: nextOrder(d), focus: null }); toast('Reporté à demain', undo); }
+  if (v === 'next') { patch(id, { status: 'active', scheduled_date: null, scheduled_time: null, day_order: null, focus: null }); toast('Remis en prochaine action', undo); }
+  if (v === 'waiting') { patch(id, { status: 'waiting', scheduled_date: null, scheduled_time: null, day_order: null, focus: null }); openEditor(id, { focus: 'waiting_for' }); }
 }
 function createReminder(id) {
   const t = S.items.get(id);
@@ -1078,6 +1172,8 @@ const ACTS = {
     if (kind === 'project' && it.status === 'waiting') p.status = 'active';
     if (kind === 'project' && it.parent_id && S.items.get(it.parent_id)?.kind !== 'area') p.parent_id = null;
     if (kind !== 'project' && it.parent_id && S.items.get(it.parent_id)?.kind === 'area') p.parent_id = null;
+    if (kind !== 'project' && it.status === 'clarify') p.status = 'active';
+    if (kind !== 'task') p.focus = null;
     patch(editingId, p);
     renderEditor();
   },
@@ -1122,12 +1218,30 @@ const ACTS = {
   carry: () => {
     const t0 = today();
     ofKind('task').filter(t => t.status === 'active' && t.scheduled_date && t.scheduled_date < t0)
-      .forEach(t => { t.scheduled_date = t0; t.day_order = nextOrder(t0); saveItem(t, { render: false }); });
+      .forEach(t => { t.scheduled_date = t0; t.day_order = nextOrder(t0); t.focus = null; saveItem(t, { render: false }); });
     queueRender();
   },
   plan: el => patch(el.dataset.id, { scheduled_date: S.ui.day, day_order: nextOrder(S.ui.day) }),
   'plan-today': el => { patch(el.dataset.id, { scheduled_date: today(), day_order: nextOrder(today()) }); toast("Prévu aujourd'hui"); },
   'pick-open': () => openPicker(),
+  focus: el => toggleFocus(el.dataset.id, S.items.get(el.dataset.id)?.scheduled_date === S.ui.day || route().name === 'today' ? S.ui.day : today()),
+  'focus-ed': () => {
+    const it = S.items.get(editingId);
+    toggleFocus(editingId, it.scheduled_date || today());
+    renderEditor();
+  },
+  ev: el => evening(el.dataset.id, el.dataset.v),
+  'ev-all': () => {
+    const t0 = today(), t1 = addDays(t0, 1);
+    let o = nextOrder(t1);
+    ofKind('task').filter(t => (t.status === 'active' || t.status === 'waiting') && t.scheduled_date && t.scheduled_date <= t0)
+      .forEach(t => { t.scheduled_date = t1; t.day_order = o++; t.focus = null; saveItem(t, { render: false }); });
+    queueRender();
+    toast('Tout est reporté à demain');
+  },
+  'plan-tomorrow': () => { S.ui.day = addDays(today(), 1); location.hash = '#/today'; },
+  'evening-done': () => { S.prefs.lastEvening = today(); savePrefs(); toast('Bonne soirée ✓'); location.hash = '#/today'; },
+  'proj-activate': el => { patch(el.dataset.id, { status: 'active' }); toast('Projet activé'); },
   pick: el => { const id = el.dataset.id; pickSel.has(id) ? pickSel.delete(id) : pickSel.add(id); renderPicker(); },
   'pick-save': () => {
     const day = S.ui.day;
@@ -1229,6 +1343,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'cap-file') { $('#cap-file-name').textContent = t.files[0] ? t.files[0].name : ''; return; }
+  if (t.dataset.evdate && t.value) { patch(t.dataset.evdate, { scheduled_date: t.value, day_order: nextOrder(t.value), focus: null }); toast(`Prévu ${fmtDate(t.value).toLowerCase()}`); return; }
   if (sheetMode === 'editor' && t.dataset.f && !TEXT_FIELDS.has(t.dataset.f)) setField(editingId, t.dataset.f, t.value, true);
 });
 document.addEventListener('keydown', e => {
@@ -1252,13 +1367,14 @@ setInterval(() => { if (document.visibilityState === 'visible') sync(); }, 60000
 function seedDemo() {
   const t0 = today();
   const a = DEFAULT_AREAS.map(t => saveItem(newItem({ kind: 'area', title: t }), { render: false }));
-  const p1 = saveItem(newItem({ kind: 'project', title: 'Préparer les vacances de Noël', parent_id: a[0].id, body: 'Objectif : billets et logement réservés avant le 15/11.' }), { render: false });
-  const p2 = saveItem(newItem({ kind: 'project', title: 'Refaire le site perso', parent_id: a[1].id }), { render: false });
+  const p1 = saveItem(newItem({ kind: 'project', title: 'Préparer les vacances de Noël', parent_id: a[7].id, outcome: 'Billets et logement réservés avant le 15/11.' }), { render: false });
+  const p2 = saveItem(newItem({ kind: 'project', title: 'Refaire le site perso', parent_id: a[2].id, review_date: t0 }), { render: false });
+  saveItem(newItem({ kind: 'project', title: 'Changer de mutuelle', status: 'clarify', parent_id: a[4].id }), { render: false });
   const add = f => saveItem(newItem(f), { render: false });
   add({ kind: 'inbox', title: 'Idée : podcast sur la productivité', source: 'shortcut' });
   add({ kind: 'inbox', title: 'https://example.com/article-gtd', url: 'https://example.com/article-gtd', source: 'shortcut' });
   add({ kind: 'inbox', title: 'Appeler le garagiste pour le contrôle technique' });
-  add({ kind: 'task', title: 'Comparer les prix des billets de train', parent_id: p1.id, contexts: ['@ordi'], duration_min: 30, scheduled_date: t0, day_order: 1 });
+  add({ kind: 'task', title: 'Comparer les prix des billets de train', parent_id: p1.id, contexts: ['@ordi'], duration_min: 30, scheduled_date: t0, day_order: 1, focus: 1 });
   add({ kind: 'task', title: 'Courses pour le dîner', contexts: ['@courses'], scheduled_date: t0, scheduled_time: '18:30', duration_min: 45 });
   add({ kind: 'task', title: 'Répondre au mail de Julie', contexts: ['@ordi'], scheduled_date: t0, day_order: 2, duration_min: 15 });
   add({ kind: 'task', title: 'Payer la facture d’électricité', contexts: ['@ordi'], due_date: addDays(t0, 2), recurrence: 'monthly' });
@@ -1268,6 +1384,7 @@ function seedDemo() {
   add({ kind: 'note', title: 'Principes GTD', body: '# Les 5 étapes\n1. **Capturer**\n2. Clarifier\n3. Organiser\n4. Réfléchir (revue)\n5. Agir\n\nVoir aussi [[Idées de projets]] #productivité' });
   add({ kind: 'note', title: 'Idées de projets', body: '- Newsletter mensuelle\n- [ ] Atelier photo\n\n#idées' });
   S.prefs.seeded = true;
+  S.prefs.areasV2 = true;
 }
 
 async function init() {
@@ -1276,6 +1393,7 @@ async function init() {
   if (DEMO) {
     S.user = { id: 'demo', email: 'Mode démo (données locales)' };
     if (!S.items.size) seedDemo();
+    if (!S.prefs.areasV2) { migrateAreas(); S.prefs.areasV2 = true; }
     persist();
     render();
     return;

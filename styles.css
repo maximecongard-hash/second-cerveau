@@ -340,3 +340,32 @@ main {
 .login-logo img { width: 84px; height: 84px; border-radius: 20px; box-shadow: var(--shadow); }
 .login h1 { margin: 16px 0 4px; font-size: 26px; }
 .login form { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+
+/* Top 3 */
+.star { flex: none; color: color-mix(in srgb, var(--muted) 60%, transparent); padding: 1px; }
+.star svg { width: 21px; height: 21px; }
+.star.on { color: #e8a317; }
+.star.on svg { fill: #e8a317; }
+.top3 .row { border-bottom-color: transparent; background: color-mix(in srgb, #e8a317 7%, transparent); border-radius: 10px; padding-left: 8px; padding-right: 8px; margin-bottom: 6px; }
+.sec-head h2 small { color: var(--muted); font-weight: 500; margin-left: 4px; }
+.chip svg { width: 15px; height: 15px; }
+.chip.on svg { fill: currentColor; }
+
+/* Revue du soir */
+.banner.evening { display: flex; align-items: center; gap: 8px; background: #2c2a4a; color: #e6e3ff; }
+.banner.evening svg { width: 18px; height: 18px; }
+.ev-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 4px; }
+.ev-summary div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; text-align: center; }
+.ev-summary b { display: block; font-size: 22px; }
+.ev-summary span { font-size: 12px; color: var(--muted); }
+.ev-card { border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.ev-card .row { border-bottom: 0; padding-bottom: 6px; }
+.ev-actions { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 38px; }
+.ev-actions .chip { padding: 5px 10px; font-size: 13px; }
+.ev-date { font-size: 13px; padding: 4px 8px; border-radius: 16px; border: 0; background: var(--surface-2); color: var(--text); max-width: 140px; }
+
+/* Projets */
+.outcome { margin: 8px 0; padding: 10px 12px; border-left: 3px solid var(--proj); background: var(--surface-2); border-radius: 0 10px 10px 0; font-size: 15px; }
+.outcome span { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+.outcome-input { width: 100%; border: 0; outline: none; resize: none; padding: 8px 10px; margin: 2px 0 6px; border-radius: 8px; background: var(--surface-2); color: var(--text); font-size: 15px; }
+#toast span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

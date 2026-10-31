@@ -1,6 +1,6 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour.
-const CACHE = 'sc-v1';
+const CACHE = 'sc-v2';
 const SHELL = [
   './',
   'index.html',
