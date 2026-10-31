@@ -1,0 +1,343 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="3552" viewBox="0 0 1280 3552" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1280" height="3552" fill="#161618" rx="28"/>
+<rect width="660" height="3552" fill="#000" rx="28"/>
+<rect x="191" y="38" width="279" height="56" rx="16" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="330" y="77" font-size="31" fill="#fff" font-weight="600" text-anchor="middle">Capturer photo</text>
+<text x="696" y="62" font-size="26" fill="#fff" font-weight="600" text-anchor="start">Nom du raccourci</text>
+<text x="696" y="94" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">Nom libre. L’app ne l’appelle pas.</text>
+<text x="330" y="128" font-size="18" fill="#8e8e93" font-weight="400" text-anchor="middle">Cadre vert = à taper exactement</text>
+<rect x="22" y="150" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="177" width="32" height="32" rx="8" fill="#0a84ff"/>
+<rect x="53" y="184" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="202" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Receive</text>
+<rect x="189" y="174" width="98" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="200" y="202" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Images</text>
+<text x="297" y="202" font-size="24" fill="#fff" font-weight="400" text-anchor="start">from</text>
+<rect x="358" y="174" width="162" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="369" y="202" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Share Sheet</text>
+<text x="44" y="252" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">If there’s no input:</text>
+<rect x="308" y="224" width="124" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="319" y="252" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Continue</text>
+<circle cx="713" cy="186" r="17" fill="#0a84ff"/>
+<text x="713" y="193" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">1</text>
+<text x="744" y="193" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Active ⓘ &gt; Show in Share Sheet,</text>
+<text x="744" y="221" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">puis garde seulement Images.</text>
+<line x1="330.0" y1="280" x2="330.0" y2="304" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="304" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="331" width="32" height="32" rx="8" fill="#8e8e93"/>
+<rect x="53" y="338" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="356" font-size="24" fill="#fff" font-weight="400" text-anchor="start">If</text>
+<rect x="125" y="328" width="232" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="136" y="336" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="142" y="341" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="168" y="356" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Shortcut Input</text>
+<rect x="368" y="328" width="315" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="379" y="356" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">does not have any value</text>
+<circle cx="713" cy="340" r="17" fill="#0a84ff"/>
+<text x="713" y="347" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">2</text>
+<text x="744" y="347" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">If. Rien de partagé : on prend</text>
+<text x="744" y="375" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">une photo.</text>
+<line x1="330.0" y1="386" x2="330.0" y2="410" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="410" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="437" width="32" height="32" rx="8" fill="#ff375f"/>
+<rect x="53" y="444" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="462" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Take</text>
+<rect x="151" y="434" width="35" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="162" y="462" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">1</text>
+<rect x="196" y="434" width="86" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="207" y="462" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">photo</text>
+<circle cx="713" cy="446" r="17" fill="#0a84ff"/>
+<text x="713" y="453" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">3</text>
+<text x="744" y="453" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Take Photo (ou Select Photos</text>
+<text x="744" y="481" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">pour la photothèque).</text>
+<line x1="330.0" y1="492" x2="330.0" y2="516" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="516" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="543" width="32" height="32" rx="8" fill="#ff9f0a"/>
+<rect x="53" y="550" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="568" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Set variable</text>
+<rect x="253" y="540" width="80" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="249" y="536" width="88" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="264" y="566" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Photo</text>
+<text x="343" y="568" font-size="24" fill="#fff" font-weight="400" text-anchor="start">to</text>
+<rect x="44" y="590" width="118" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="55" y="598" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="61" y="603" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="87" y="618" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Photo</text>
+<circle cx="713" cy="552" r="17" fill="#0a84ff"/>
+<text x="713" y="559" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">4</text>
+<text x="744" y="559" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Set Variable.</text>
+<text x="744" y="587" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Nom de variable : Photo</text>
+<line x1="330.0" y1="646" x2="330.0" y2="670" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="670" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="697" width="32" height="32" rx="8" fill="#8e8e93"/>
+<rect x="53" y="704" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="722" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Otherwise</text>
+<circle cx="713" cy="706" r="17" fill="#0a84ff"/>
+<text x="713" y="713" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">5</text>
+<text x="744" y="713" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Ajouté tout seul avec If.</text>
+<line x1="330.0" y1="750" x2="330.0" y2="774" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="774" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="801" width="32" height="32" rx="8" fill="#ff9f0a"/>
+<rect x="53" y="808" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="826" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Set variable</text>
+<rect x="253" y="798" width="80" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="249" y="794" width="88" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="264" y="824" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Photo</text>
+<text x="343" y="826" font-size="24" fill="#fff" font-weight="400" text-anchor="start">to</text>
+<rect x="44" y="848" width="232" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="55" y="856" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="61" y="861" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="87" y="876" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Shortcut Input</text>
+<circle cx="713" cy="810" r="17" fill="#0a84ff"/>
+<text x="713" y="817" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">6</text>
+<text x="744" y="817" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Set Variable, même nom : Photo.</text>
+<line x1="330.0" y1="904" x2="330.0" y2="928" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="928" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="955" width="32" height="32" rx="8" fill="#8e8e93"/>
+<rect x="53" y="962" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="980" font-size="24" fill="#fff" font-weight="400" text-anchor="start">End If</text>
+<circle cx="713" cy="964" r="17" fill="#0a84ff"/>
+<text x="713" y="971" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">7</text>
+<text x="744" y="971" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Ajouté tout seul avec If.</text>
+<line x1="330.0" y1="1008" x2="330.0" y2="1032" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1032" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1059" width="32" height="32" rx="8" fill="#ff375f"/>
+<rect x="53" y="1066" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1084" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Resize</text>
+<rect x="176" y="1056" width="118" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="187" y="1064" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="193" y="1069" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="219" y="1084" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Photo</text>
+<text x="304" y="1084" font-size="24" fill="#fff" font-weight="400" text-anchor="start">to</text>
+<rect x="44" y="1106" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="1102" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="1134" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">1600</text>
+<text x="127" y="1134" font-size="24" fill="#fff" font-weight="400" text-anchor="start">×</text>
+<rect x="150" y="1106" width="162" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="161" y="1134" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Auto Height</text>
+<circle cx="713" cy="1068" r="17" fill="#0a84ff"/>
+<text x="713" y="1075" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">8</text>
+<text x="744" y="1075" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Resize Image. Largeur 1600.</text>
+<line x1="330.0" y1="1162" x2="330.0" y2="1186" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1186" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1213" width="32" height="32" rx="8" fill="#ff375f"/>
+<rect x="53" y="1220" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1238" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Convert</text>
+<rect x="189" y="1210" width="219" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="200" y="1218" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="206" y="1223" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="232" y="1238" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Resized Image</text>
+<text x="418" y="1238" font-size="24" fill="#fff" font-weight="400" text-anchor="start">to</text>
+<rect x="454" y="1210" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="450" y="1206" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="465" y="1238" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">JPEG</text>
+<text x="44" y="1288" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Quality</text>
+<rect x="143" y="1260" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="154" y="1288" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">70 %</text>
+<circle cx="713" cy="1222" r="17" fill="#0a84ff"/>
+<text x="713" y="1229" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">9</text>
+<text x="744" y="1229" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Convert Image.</text>
+<text x="744" y="1257" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Touche ⌄ pour Quality.</text>
+<line x1="330.0" y1="1316" x2="330.0" y2="1340" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1340" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1367" width="32" height="32" rx="8" fill="#8e8e93"/>
+<rect x="53" y="1374" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1392" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Current Date</text>
+<circle cx="713" cy="1376" r="17" fill="#0a84ff"/>
+<text x="713" y="1383" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">10</text>
+<text x="744" y="1383" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Current Date.</text>
+<line x1="330.0" y1="1420" x2="330.0" y2="1444" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1444" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1471" width="32" height="32" rx="8" fill="#8e8e93"/>
+<rect x="53" y="1478" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1496" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Format</text>
+<rect x="176" y="1468" width="105" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="187" y="1476" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="193" y="1481" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="219" y="1496" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Date</text>
+<text x="291" y="1496" font-size="24" fill="#fff" font-weight="400" text-anchor="start">with</text>
+<rect x="352" y="1468" width="98" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="363" y="1496" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Custom</text>
+<text x="44" y="1546" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Format String</text>
+<rect x="219" y="1518" width="196" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="215" y="1514" width="204" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="230" y="1544" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">yyyyMMdd-HHmmss</text>
+<circle cx="713" cy="1480" r="17" fill="#0a84ff"/>
+<text x="713" y="1487" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">11</text>
+<text x="744" y="1487" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Format Date.</text>
+<text x="744" y="1515" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Date Format : Custom, puis Time</text>
+<text x="744" y="1543" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Format : None si proposé.</text>
+<line x1="330.0" y1="1574" x2="330.0" y2="1598" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1598" width="616" height="180" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1625" width="32" height="32" rx="8" fill="#ffd60a"/>
+<rect x="53" y="1632" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1650" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Text</text>
+<rect x="44" y="1672" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="1668" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="1698" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">inbox/</text>
+<rect x="146" y="1672" width="126" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="157" y="1698" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">TON_JETON</text>
+<rect x="282" y="1672" width="34" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="278" y="1668" width="42" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="293" y="1698" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">/</text>
+<rect x="78" y="1722" width="232" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="89" y="1730" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="95" y="1735" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="121" y="1750" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Formatted Date</text>
+<rect x="320" y="1722" width="68" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="316" y="1718" width="76" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="331" y="1748" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">.jpg</text>
+<circle cx="713" cy="1634" r="17" fill="#0a84ff"/>
+<text x="713" y="1641" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">12</text>
+<text x="744" y="1641" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Text, sur une seule ligne :</text>
+<text x="744" y="1669" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">inbox/TON_JETON/ + date + .jpg</text>
+<text x="744" y="1697" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Aucun espace.</text>
+<line x1="330.0" y1="1778" x2="330.0" y2="1802" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1802" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1829" width="32" height="32" rx="8" fill="#ff9f0a"/>
+<rect x="53" y="1836" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1854" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Set variable</text>
+<rect x="253" y="1826" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="249" y="1822" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="264" y="1852" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Chemin</text>
+<text x="354" y="1854" font-size="24" fill="#fff" font-weight="400" text-anchor="start">to</text>
+<rect x="44" y="1876" width="105" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="55" y="1884" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="61" y="1889" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="87" y="1904" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Text</text>
+<circle cx="713" cy="1838" r="17" fill="#0a84ff"/>
+<text x="713" y="1845" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">13</text>
+<text x="744" y="1845" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Set Variable.</text>
+<text x="744" y="1873" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Nom de variable : Chemin</text>
+<line x1="330.0" y1="1932" x2="330.0" y2="1956" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1956" width="616" height="630" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1983" width="32" height="32" rx="8" fill="#30b0c7"/>
+<rect x="53" y="1990" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="2008" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Get contents of</text>
+<rect x="44" y="2030" width="486" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="2026" width="494" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="2056" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">https://zqdvtbkjvfzkjqtaffbb.supabase.co</text>
+<rect x="44" y="2080" width="347" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="2076" width="355" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="2106" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">/storage/v1/object/captures/</text>
+<rect x="401" y="2080" width="130" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="412" y="2088" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="418" y="2093" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="444" y="2108" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Chemin</text>
+<line x1="44" y1="2148" x2="616" y2="2148" stroke="#3a3a3c" stroke-width="2"/>
+<text x="44" y="2208" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Method</text>
+<rect x="130" y="2180" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="126" y="2176" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="141" y="2208" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">POST</text>
+<text x="44" y="2258" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Headers</text>
+<text x="78" y="2308" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Key</text>
+<rect x="126" y="2280" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="122" y="2276" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="137" y="2306" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">apikey</text>
+<rect x="78" y="2330" width="555" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="74" y="2326" width="563" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="89" y="2356" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp</text>
+<text x="78" y="2408" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Key</text>
+<rect x="126" y="2380" width="161" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="122" y="2376" width="169" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="137" y="2406" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">Content-Type</text>
+<rect x="78" y="2430" width="138" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="74" y="2426" width="146" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="89" y="2456" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">image/jpeg</text>
+<text x="44" y="2508" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Request Body</text>
+<rect x="207" y="2480" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="203" y="2476" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="218" y="2508" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">File</text>
+<text x="78" y="2558" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">File</text>
+<rect x="139" y="2530" width="245" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="150" y="2538" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="156" y="2543" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="182" y="2558" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Converted Image</text>
+<circle cx="713" cy="1992" r="17" fill="#0a84ff"/>
+<text x="713" y="1999" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">14</text>
+<text x="744" y="1999" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Get Contents of URL.</text>
+<text x="744" y="2027" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">URL d’un seul tenant, sans espace,</text>
+<text x="744" y="2055" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">avec la variable Chemin à la fin.</text>
+<text x="744" y="2083" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Deux en-têtes : apikey et</text>
+<text x="744" y="2111" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Content-Type = image/jpeg</text>
+<line x1="330.0" y1="2586" x2="330.0" y2="2610" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="2610" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="2637" width="32" height="32" rx="8" fill="#ff453a"/>
+<rect x="53" y="2644" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="2662" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Ask for</text>
+<rect x="189" y="2634" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="200" y="2662" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Text</text>
+<text x="272" y="2662" font-size="24" fill="#fff" font-weight="400" text-anchor="start">with</text>
+<rect x="44" y="2684" width="136" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="55" y="2712" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Légende ?</text>
+<circle cx="713" cy="2646" r="17" fill="#0a84ff"/>
+<text x="713" y="2653" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">15</text>
+<text x="744" y="2653" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Ask for Input. Tu pourras</text>
+<text x="744" y="2681" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">laisser vide.</text>
+<line x1="330.0" y1="2740" x2="330.0" y2="2764" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="2764" width="616" height="630" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="2791" width="32" height="32" rx="8" fill="#30b0c7"/>
+<rect x="53" y="2798" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="2816" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Get contents of</text>
+<rect x="44" y="2838" width="486" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="2834" width="494" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="2864" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">https://zqdvtbkjvfzkjqtaffbb.supabase.co</text>
+<rect x="44" y="2888" width="254" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="2884" width="262" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="2914" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">/rest/v1/rpc/capture</text>
+<line x1="44" y1="2956" x2="616" y2="2956" stroke="#3a3a3c" stroke-width="2"/>
+<text x="44" y="3016" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Method</text>
+<rect x="130" y="2988" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="126" y="2984" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="141" y="3016" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">POST</text>
+<text x="44" y="3066" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Headers</text>
+<text x="78" y="3116" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Key</text>
+<rect x="126" y="3088" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="122" y="3084" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="137" y="3114" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">apikey</text>
+<rect x="78" y="3138" width="555" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="74" y="3134" width="563" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="89" y="3164" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp</text>
+<text x="44" y="3216" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Request Body</text>
+<rect x="207" y="3188" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="203" y="3184" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="218" y="3216" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">JSON</text>
+<text x="78" y="3266" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
+<rect x="139" y="3238" width="103" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="135" y="3234" width="111" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="150" y="3264" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_token</text>
+<rect x="252" y="3238" width="126" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="263" y="3264" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">TON_JETON</text>
+<text x="78" y="3316" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
+<rect x="139" y="3288" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="135" y="3284" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="150" y="3314" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_text</text>
+<rect x="240" y="3288" width="232" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="251" y="3296" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="257" y="3301" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="283" y="3316" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Provided Input</text>
+<text x="78" y="3366" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
+<rect x="139" y="3338" width="161" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="135" y="3334" width="169" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="150" y="3364" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_image_path</text>
+<rect x="310" y="3338" width="130" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="321" y="3346" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="327" y="3351" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="353" y="3366" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Chemin</text>
+<circle cx="713" cy="2800" r="17" fill="#0a84ff"/>
+<text x="713" y="2807" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">16</text>
+<text x="744" y="2807" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Get Contents of URL, comme dans</text>
+<text x="744" y="2835" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Capturer, avec un 3e champ.</text>
+<text x="744" y="2863" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Clés exactes : p_token, p_text,</text>
+<text x="744" y="2891" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">p_image_path</text>
+<line x1="330.0" y1="3394" x2="330.0" y2="3418" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="3418" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="3445" width="32" height="32" rx="8" fill="#ff453a"/>
+<rect x="53" y="3452" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="3470" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Show notification</text>
+<rect x="316" y="3442" width="213" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="327" y="3470" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Photo ajoutée ✓</text>
+<circle cx="713" cy="3454" r="17" fill="#0a84ff"/>
+<text x="713" y="3461" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">17</text>
+<text x="744" y="3461" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Show Notification. Texte libre.</text>
+</svg>

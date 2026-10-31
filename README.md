@@ -59,6 +59,10 @@ Valeurs dont tu auras besoin dans les raccourcis (boutons « Copier » dans les 
 
 App **Raccourcis** (*Shortcuts*) > **+** > nomme-le **Capturer**.
 
+Dans les images, un **cadre vert** signale ce qu'il faut taper exactement (nom, clé, URL) ; le reste est à choisir dans les menus. Remplace `TON_JETON` par ton jeton (étape 3).
+
+![Raccourci Capturer terminé](docs/raccourci-capturer.svg)
+
 1. Touche le **ⓘ** en bas et active **Afficher dans la feuille de partage** (*Show in Share Sheet*).
    En haut du raccourci apparaît « Recevoir **N'importe quoi** de **Feuille de partage** » (*Receive Any input from Share Sheet*). Touche « N'importe quoi » (*Any*) et garde seulement **Texte** (*Text*) et **URL** (*URLs*).
    Touche ensuite « Si aucune entrée » (*If there's no input*) et choisis **Demander** (*Ask For*) > **Texte** (*Text*). Sans partage, le raccourci te demandera de taper ou dicter ton idée.
@@ -82,6 +86,8 @@ Utilisation :
 Un lien seul est reconnu automatiquement. Pour un texte sur plusieurs lignes, la première ligne devient le titre et le reste les détails.
 
 ## 5. Raccourci « Capturer photo »
+
+![Raccourci Capturer photo terminé](docs/raccourci-capturer-photo.svg)
 
 Nouveau raccourci **Capturer photo**, avec **Afficher dans la feuille de partage** (*Show in Share Sheet*) activé et le type **Images** seulement (« Si aucune entrée » : **Continuer**, soit *If there's no input: Continue*).
 
@@ -112,7 +118,7 @@ Nouveau raccourci **Capturer photo**, avec **Afficher dans la feuille de partage
 
 Dans l'éditeur d'une tâche qui a une date, le bouton **Créer un rappel Apple** lance ce raccourci avec le titre, la date et l'heure.
 
-Nouveau raccourci, nommé exactement **Rappel GTD** (ou change le nom dans Réglages > Rappels Apple).
+Nouveau raccourci, nommé exactement **Rappel GTD**. L'app lance ce raccourci par son nom : si tu l'appelles autrement (par exemple « Rappel BRAIN »), tape ce même nom dans l'app, Réglages > Rappels Apple.
 
 Voici le raccourci terminé (iPhone en anglais) :
 
@@ -124,17 +130,17 @@ Voici le raccourci terminé (iPhone en anglais) :
 2. **Get Dictionary from Input** : la valeur doit être **Shortcut Input**.
 3. **Get Dictionary Value** : Value for `titre` in **Dictionary**.
 4. **Get Dictionary Value** : Value for `date` in **Dictionary**.
-5. **Get Dates from Input** : choisis la sortie de l'étape 4.
+5. **Get Dates from Input** : choisis la sortie de l'étape 4 (`Date texte`).
 6. **Get Dictionary Value** : Value for `notes` in **Dictionary**.
 7. **Add New Reminder** :
-   - Remplace « Reminder » par la sortie de l'étape 3.
+   - Remplace « Reminder » par `Titre` (sortie de l'étape 3).
    - Touche la flèche **⌄** de l'action pour afficher les options.
-   - **Notes** : la sortie de l'étape 6.
-   - **Alert** : **At Time**, puis la sortie de l'étape 5.
+   - **Notes** : `Notes` (sortie de l'étape 6).
+   - **Alert** : **At Time**, puis `Quand` (sortie de l'étape 5).
 
 Aux étapes 3, 4 et 6, le champ après « in » doit toujours être **Dictionary**, c'est-à-dire la sortie de l'étape 2. Pour le choisir, touche ce champ, puis **Select Variable**, puis touche l'action « Get dictionary from ».
 
-Renommer les sorties (facultatif) évite de confondre les trois « Dictionary Value ». Touche la puce orange d'une sortie là où elle est utilisée, choisis **Rename**, puis tape `Titre`, `Date texte`, `Quand` ou `Notes`.
+Renomme les sorties pour ne pas confondre les trois « Dictionary Value » : touche la puce orange d'une sortie là où elle est utilisée, choisis **Rename**, puis tape `Titre` (étape 3), `Date texte` (étape 4), `Quand` (étape 5) ou `Notes` (étape 6). Ces noms-là sont libres ; seules les clés `titre`, `date` et `notes` doivent être exactes.
 
 Pour tester, crée dans l'app une tâche avec une date et une heure, puis touche **Créer un rappel Apple**. Un rappel doit apparaître dans l'app Rappels. Sans heure dans l'app, le rappel sonne à 9 h 00.
 
