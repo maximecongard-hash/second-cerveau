@@ -512,3 +512,50 @@ body.side-open .side-scrim { opacity: 1; pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   Agenda : grille horaire (jour, semaine)
+   --------------------------------------------------------------------------- */
+.ag-grid { display: grid; grid-template-columns: 34px 1fr; margin-top: 8px; }
+.ag-gutter, .ag-col { position: relative; }
+.ag-hour { position: absolute; right: 6px; transform: translateY(-50%); font: 500 10.5px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.ag-hour:first-child { transform: none; }
+.ag-cols { display: grid; grid-template-columns: repeat(var(--ag-n, 1), minmax(0, 1fr)); border-left: 1px solid var(--line); }
+.ag-col + .ag-col { border-left: 1px solid var(--line); }
+.ag-grid.multi .ag-col.is-today { background: color-mix(in srgb, var(--accent-soft) 35%, transparent); }
+.ag-cell { position: absolute; left: 0; right: 0; height: 24px; border-top: 1px solid var(--line); cursor: pointer; }
+.ag-cell.half { border-top-style: dotted; border-top-color: color-mix(in srgb, var(--line) 70%, transparent); }
+.ag-cell:active { background: var(--accent-soft); }
+.ag-ev {
+  position: absolute; z-index: 1; overflow: hidden; display: flex; flex-direction: column; gap: 1px;
+  padding: 3px 6px; text-align: left; border-radius: 4px;
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  box-shadow: 0 1px 0 var(--line);
+}
+.ag-ev.short { flex-direction: row; align-items: baseline; gap: 6px; padding-top: 2px; }
+.ag-ev.top { border-left-color: var(--text); background-image: linear-gradient(var(--hl), var(--hl)); background-size: 100% 100%; }
+.ag-ev.done { opacity: .55; }
+.ag-ev.done .ag-title { text-decoration: line-through; }
+.ag-time { font: 500 10.5px var(--f-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ag-title { font-size: 13.5px; line-height: 1.25; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+.ag-ev.short .ag-title { white-space: nowrap; }
+.ag-kind { margin-right: 5px; font: 500 9.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ag-now { position: absolute; left: -4px; right: 0; z-index: 2; height: 0; border-top: 1.5px solid var(--accent); pointer-events: none; }
+.ag-now::before { content: ""; position: absolute; left: 0; top: -4.5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.ag-band { margin: 6px 0 4px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius); }
+.ag-band-title { font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.ag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ag-chip { max-width: 100%; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-chip.top { background-image: linear-gradient(var(--hl), var(--hl)); }
+.ag-due { margin-right: 6px; font: 500 10px var(--f-mono); text-transform: uppercase; color: var(--warn); }
+.ag-grid.multi .ag-gutter-head { grid-column: 1; }
+.ag-heads { display: grid; grid-template-columns: repeat(var(--ag-n), minmax(0, 1fr)); position: sticky; top: 0; z-index: 3; background: var(--bg); border-bottom: 1px solid var(--line); }
+.ag-head { display: flex; flex-direction: column; align-items: center; padding: 6px 2px; font: 500 12px var(--f-mono); text-transform: capitalize; color: var(--muted); }
+.ag-head.is-today { color: var(--accent); }
+.ag-head small { font: 10px var(--f-mono); text-transform: none; color: var(--muted); }
+.ag-grid.multi .ag-ev { padding: 2px 4px; }
+.ag-grid.multi .ag-title { font-size: 12px; }
+.ag-slot-time { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.ag-slot-time label { font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ag-slot-time input { flex: 1; }
+main:has(.ag-grid.multi) { max-width: 1100px; }

@@ -12,6 +12,7 @@ en **modules** (thèmes) dans une barre latérale.
 
 - **Organisation** (`gtd`) : le cœur actuel. Capture rapide (app, bouton Action, Siri, partage, photo),
   tri de l'Inbox, prochaines actions par contexte, projets, Top 3 du jour, agenda, revue du soir et revue hebdo.
+- **Agenda** (`agenda`) : grille horaire jour / semaine des tâches qui ont une heure, placement d'une tâche sur un créneau.
 - **Notes** (`notes`) : notes Markdown, signets à lire / lus, épinglés, liés aux tâches et projets.
 - **Sport** et **Courses** : coquilles en aperçu, désactivées par défaut. Contenu prévu en phase 2.
 
@@ -20,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.6.0**, cache SW `sc-v9`. Migrations à jour sur Supabase : 003 (passée le 31/10/2026) ; 004 à coller avant de publier la 0.6.
+- Version **0.7.0**, cache SW `sc-v10`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.7 n'en demande aucune.
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
@@ -40,11 +41,13 @@ RLS), hors ligne via localStorage + service worker.
      `[[wikiliens]]` vers notes, projets et tâches, épingle des notes (colonne `pinned`).
   10. 0.6.0 : module Notes séparé (`js/modules/notes`) avec notes, signets (kind `bookmark`) et épinglés ;
      choix « Signet » au tri de l'Inbox ; bouton + routé par module (`fab`) ; migration 004 qui ouvre `kind`.
+  11. 0.7.0 : module Agenda (`js/modules/agenda`) : grille jour, semaine (3 jours sur iPhone, 7 sur grand écran),
+     blocs = `scheduled_time` + `duration_min`, chevauchements en colonnes, feuille « Placer à… » sur un créneau,
+     heures affichées dans les Réglages, lien « Voir la grille » depuis Aujourd'hui.
 
 ## Pistes ouvertes
 
-- **Feuille de route issue de l'étude du Notion** (31/10/2026) : 0.7 agenda visuel jour / semaine (`scheduled_time` +
-  `duration_min`) ; 0.8 flux ICS vers Apple Calendar puis import des événements par Raccourci. À clarifier :
+- **Feuille de route issue de l'étude du Notion** (31/10/2026) : 0.8 flux ICS vers Apple Calendar puis import des événements par Raccourci. À clarifier :
   agenda source iCloud ou Google (les Procédures IA du Notion parlent de Google Agenda).
 - **Phase 2** : remplir les modules Sport et Courses.
 - **Import Notion** : un script ponctuel (`build.py` → `import-notion.sql`) a généré l'import des tâches
