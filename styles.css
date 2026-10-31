@@ -586,3 +586,32 @@ main:has(.ag-grid.multi) { max-width: 1100px; }
 .ag-chip.ext { background: var(--surface-2); color: var(--muted); }
 .ag-head small.ext { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
 .ag-ev-title { margin: 12px 0 8px; font: 500 22px/1.25 var(--f-display); }
+
+/* Agenda : panneau de tâches et glisser-déposer (tablette et ordinateur) */
+.ag-side { display: none; }
+.ag-ev, .ag-task { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.ag-rs { position: absolute; left: 0; right: 0; bottom: 0; height: 10px; cursor: ns-resize; touch-action: none; display: none; }
+.ag-rs::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 22px; height: 3px; margin-left: -11px; border-radius: 2px; background: var(--muted); opacity: .5; }
+.ag-ev:hover .ag-rs, .ag-ev:focus-visible .ag-rs { display: block; }
+@media (pointer: coarse) { .ag-rs { display: block; height: 16px; } }
+.ag-ev[data-drag] { cursor: grab; }
+.ag-lifted { opacity: .35; }
+body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
+.ag-ghost { position: fixed; z-index: 60; left: 0; top: 0; max-width: 240px; padding: 5px 10px; border-radius: 6px; pointer-events: none;
+  background: var(--surface); border: 1px solid var(--accent); box-shadow: 0 6px 18px rgb(0 0 0 / .18); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ag-drop { position: absolute; left: 1px; right: 1px; z-index: 2; padding: 2px 6px; border-radius: 4px; pointer-events: none;
+  background: color-mix(in srgb, var(--accent) 22%, transparent); border: 1.5px dashed var(--accent); font: 500 10.5px var(--f-mono); color: var(--text); }
+@media (min-width: 700px) {
+  .ag-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 20px; align-items: start; }
+  .ag-side { display: block; position: sticky; top: 8px; max-height: calc(100vh - 24px); overflow-y: auto; margin-top: 8px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .ag-side.over { border-color: var(--accent); background: var(--accent-soft); }
+  main:has(.ag-layout) { max-width: 1000px; }
+  main:has(.ag-grid.multi):has(.ag-layout) { max-width: 1400px; }
+}
+.ag-side-title { font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ag-side-hint { margin: 6px 0 10px; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.ag-side-sub { margin: 12px 0 6px; font: 500 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ag-task { padding: 7px 10px; margin-bottom: 6px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 4px; background: var(--bg); cursor: grab; }
+.ag-task.top { background-image: linear-gradient(var(--hl), var(--hl)); }
+.ag-task-title { font-size: 13.5px; line-height: 1.3; }
+.ag-task-meta { margin-top: 2px; font: 10.5px var(--f-mono); color: var(--muted); }

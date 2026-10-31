@@ -4,6 +4,7 @@ import { registerModule, kindOwner } from '../../core/modules.js';
 import { SH, sheet, showSheet, closeSheet, setField, route, render, queueRender, toast } from '../../core/ui.js';
 import { DEMO } from '../../core/config.js';
 import { views, untimedOn, weekSpan } from './views.js';
+import './dnd.js';
 import { appleActs, appleSettings, loadEvents, seedDemoEvents } from './apple.js';
 
 // ---------------------------------------------------------------------------

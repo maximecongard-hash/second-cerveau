@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.9.2**, cache SW `sc-v14`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.10.0**, cache SW `sc-v15`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -61,6 +61,9 @@ RLS), hors ligne via localStorage + service worker.
      Sélecteurs date / heure de l'éditeur : l'éditeur se redessine à leur fermeture (sinon iOS les refermait).
   16. 0.9.2 : répétitions « le 25 de chaque mois » (`monthday:25`) et « 1er samedi du mois » (`nth:1:6`), proposées dans
      « Répéter » d'après la date de la tâche ; une tâche terminée en retard saute au prochain créneau futur (`nextFuture`).
+  17. 0.10.0 : Agenda sur tablette et ordinateur (≥ 700 px) : panneau « Tâches à placer » à côté de la grille, glisser-déposer aux
+     pointeurs (`js/modules/agenda/dnd.js`, appui long au doigt), poignée en bas d'un créneau pour changer la durée
+     (pas de 15 min), dépôt sur le panneau pour retirer l'heure. Semaine : 7 jours si la place le permet, sinon 5.
 
 ## Pistes ouvertes
 
@@ -86,8 +89,7 @@ Pas de tests automatisés : vérifier à la main en largeur mobile (~390 px), en
 - Changement de schéma : préparer le SQL, l'utilisateur le colle lui-même dans le SQL Editor Supabase.
 - Interface en français, ton calme, pas de point d'exclamation.
 - Raccourcis iOS : fichiers signés dans `raccourcis/`, refaits sur Mac par `python3 raccourcis/build.py`
-  (jeton demandé à l'installation, jamais dans les fichiers). Images du README : `python3 docs/build_images.py docs`,
-  à garder identiques aux raccourcis. Le raccourci « Rappel GTD » n'existe plus (remplacé par les notifications). Si `capture()`, l'URL ou la clé publique changent, refaire les deux.
+  (jeton demandé à l'installation, jamais dans les fichiers). Le raccourci « Rappel GTD » n'existe plus (remplacé par les notifications). Si `capture()`, l'URL ou la clé publique changent, refaire les raccourcis.
 - Committer et pousser seulement sur demande.
 
 ## Tenir ce fichier à jour

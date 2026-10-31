@@ -12,6 +12,7 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
   par contexte, projets, planification de la journée (Top 3, agenda), revues du soir et hebdo.
 - **Agenda** (`agenda`) : grille horaire jour / semaine. Ne possède aucun kind : il lit tous les éléments datés
   avec une heure et place les tâches via `setField()` du cœur (routé vers le module propriétaire).
+  `dnd.js` : glisser-déposer et redimensionnement des créneaux (pointer events, attributs `data-drag`, `.ag-rs`).
   `apple.js` : événements de Calendrier (table `events`, lecture seule, cache localStorage à part des éléments)
   et réglages du lien d'abonnement ICS.
 - **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
