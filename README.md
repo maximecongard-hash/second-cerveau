@@ -48,104 +48,85 @@ Dans l'app : menu **⋯** > **Réglages** > **Capture iPhone** > **Générer un 
 
 Ce jeton permet d'ajouter des éléments dans ton Inbox. Garde-le pour toi ; s'il fuit, révoque-le dans les Réglages et génères-en un autre.
 
-Valeurs dont tu auras besoin dans les raccourcis (boutons « Copier » dans les Réglages) :
+Tu colleras ce jeton en installant les raccourcis (étape 4). Si tu le révoques, réinstalle Capturer et Capturer photo avec le nouveau jeton.
 
-- **URL du projet** : `https://zqdvtbkjvfzkjqtaffbb.supabase.co`
-- **Clé publique** : `sb_publishable_…`
-- **Jeton** : celui que tu viens de générer
+## 4. Installer les raccourcis iPhone
 
-> Les noms des actions et des menus sont donnés en français, avec entre parenthèses leur nom quand l'iPhone est en anglais : **Obtenir le contenu de l'URL** (*Get Contents of URL*). Dans l'app Raccourcis, tape ce nom dans la recherche d'actions pour la trouver.
+Les trois raccourcis sont déjà prêts. Tu n'as rien à construire : tu les installes, tu colles ton jeton, c'est tout.
 
-## 4. Raccourci « Capturer » (texte, dictée, liens)
+| Raccourci | À quoi il sert |
+|---|---|
+| **Capturer** | Noter une idée (texte ou dictée) ou un lien partagé, qui arrive dans l'Inbox. |
+| **Capturer photo** | Prendre ou partager une photo, avec une légende, qui arrive dans l'Inbox. |
+| **Rappel GTD** | Lancé par l'app quand tu touches « Créer un rappel Apple » dans une tâche. |
 
-App **Raccourcis** (*Shortcuts*) > **+** > nomme-le **Capturer**.
+### Avant : supprime tes anciens raccourcis
 
-Dans les images, un **cadre vert** signale ce qu'il faut taper exactement (nom, clé, URL) ; le reste est à choisir dans les menus. Remplace `TON_JETON` par ton jeton (étape 3).
+Si tu avais déjà construit des raccourcis à la main (par exemple « CAPTURER », « Capturer_photo », « Rappel BRAIN »), supprime-les pour ne pas les confondre : app **Raccourcis**, appui long sur le raccourci > **Supprimer** (*Delete*).
 
-![Raccourci Capturer terminé](docs/raccourci-capturer.svg)
+### Installer
 
-1. Touche le **ⓘ** en bas et active **Afficher dans la feuille de partage** (*Show in Share Sheet*).
-   En haut du raccourci apparaît « Recevoir **N'importe quoi** de **Feuille de partage** » (*Receive Any input from Share Sheet*). Touche « N'importe quoi » (*Any*) et garde seulement **Texte** (*Text*) et **URL** (*URLs*).
-   Touche ensuite « Si aucune entrée » (*If there's no input*) et choisis **Demander** (*Ask For*) > **Texte** (*Text*). Sans partage, le raccourci te demandera de taper ou dicter ton idée.
-2. Ajoute l'action **Obtenir le contenu de l'URL** (*Get Contents of URL*) :
-   - URL : `https://zqdvtbkjvfzkjqtaffbb.supabase.co/rest/v1/rpc/capture`
-   - Touche **Afficher plus** (*Show More*) :
-     - Méthode (*Method*) : **POST**
-     - En-têtes (*Headers*) : ajoute `apikey` = ta clé publique
-     - Corps de la requête (*Request Body*) : **JSON**, avec deux champs de type Texte (*Text*) :
-       - `p_token` = ton jeton
-       - `p_text` = variable **Entrée du raccourci** (*Shortcut Input*)
-3. Ajoute **Afficher la notification** (*Show Notification*) avec le texte « Ajouté à l'Inbox ✓ ».
+Pour chaque raccourci, **sur l'iPhone, dans Safari** :
 
-Utilisation :
+1. Touche le lien :
+   - [Capturer](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Capturer.shortcut)
+   - [Capturer photo](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Capturer%20photo.shortcut)
+   - [Rappel GTD](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Rappel%20GTD.shortcut)
+2. Safari demande s'il faut télécharger le fichier : touche **Télécharger** (*Download*).
+3. Touche l'icône de téléchargement (flèche bleue dans la barre d'adresse), puis le fichier. L'app Raccourcis s'ouvre.
+4. Touche **Configurer le raccourci** (*Set Up Shortcut*). Pour Capturer et Capturer photo, l'iPhone te demande ton jeton : dans l'app Brain, menu **⋯** > **Réglages** > **Capture iPhone** > **Copier**, puis colle-le ici.
+5. Touche **Ajouter le raccourci** (*Add Shortcut*).
 
-- **Bouton Action** (*Action Button*, iPhone 15 Pro et plus) : Réglages > Bouton Action > Raccourci > Capturer (*Settings > Action Button > Shortcut > Capturer*).
-- **Siri** : « Dis Siri, Capturer » (*« Hey Siri, Capturer »*).
-- **Widget** sur l'écran d'accueil ou l'écran verrouillé.
-- **Partage** depuis Safari, YouTube, X… : Partager > Capturer (*Share > Capturer*). Le lien arrive dans l'Inbox.
+Le nom **Rappel GTD** doit rester tel quel : l'app lance ce raccourci par son nom. Si tu le renommes, tape le nouveau nom dans l'app, Réglages > Rappels Apple.
+
+### Essayer
+
+- **Capturer** : lance-le, tape « test », valide. « test » apparaît dans l'Inbox de l'app.
+- **Capturer photo** : lance-le, prends une photo, laisse la légende vide. Elle apparaît dans l'Inbox.
+- **Rappel GTD** : dans l'app, ouvre une tâche avec une date, touche **Créer un rappel Apple**. Un rappel apparaît dans l'app Rappels (à 9 h 00 si la tâche n'a pas d'heure).
+
+La première fois, l'iPhone demande s'il peut se connecter à `supabase.co` ou accéder à tes Rappels : touche **Toujours autoriser** (*Always Allow*).
+
+### Utiliser Capturer au quotidien
+
+- **Bouton Action** (iPhone 15 Pro et plus) : Réglages > Bouton Action > Raccourci > Capturer.
+- **Siri** : « Dis Siri, Capturer ».
+- **Widget** Raccourcis sur l'écran d'accueil ou l'écran verrouillé.
+- **Partage** depuis Safari, YouTube, X… : Partager > Capturer. Le lien arrive dans l'Inbox.
 
 Un lien seul est reconnu automatiquement. Pour un texte sur plusieurs lignes, la première ligne devient le titre et le reste les détails.
 
-## 5. Raccourci « Capturer photo »
+## 5. Ce qu'il y a dans chaque raccourci
 
-![Raccourci Capturer photo terminé](docs/raccourci-capturer-photo.svg)
+Tu n'as pas besoin de lire cette partie pour utiliser les raccourcis. Elle montre ce que tu vois si tu ouvres un raccourci dans l'app Raccourcis, et sert si un jour il faut en réparer un.
 
-Nouveau raccourci **Capturer photo**, avec **Afficher dans la feuille de partage** (*Show in Share Sheet*) activé et le type **Images** seulement (« Si aucune entrée » : **Continuer**, soit *If there's no input: Continue*).
+### Trois mots à connaître
 
-1. **Si** [Entrée du raccourci] **n'a aucune valeur** (*If [Shortcut Input] does not have any value*) :
-   - **Prendre une photo** (*Take Photo*) ou **Sélectionner des photos** (*Select Photos*)
-   - **Définir la variable** (*Set Variable*) `Photo` sur le résultat
-   - **Sinon** (*Otherwise*) : **Définir la variable** `Photo` sur Entrée du raccourci (*Shortcut Input*)
-   - **Fin si** (*End If*)
-2. **Redimensionner l'image** (*Resize Image*) `Photo` : largeur 1600 (hauteur automatique).
-3. **Convertir l'image** (*Convert Image*) en **JPEG**, qualité (*Quality*) 70 %.
-4. **Date actuelle** (*Current Date*), puis **Formater la date** (*Format Date*) : format personnalisé (*Custom*) `yyyyMMdd-HHmmss`.
-5. **Texte** (*Text*) : `inbox/TON_JETON/` suivi de la date formatée et de `.jpg`.
-   Exemple de résultat : `inbox/3f9a…/20261031-104512.jpg`.
-   **Définir la variable** (*Set Variable*) `Chemin` sur ce texte.
-6. **Obtenir le contenu de l'URL** (*Get Contents of URL*) :
-   - URL : `https://zqdvtbkjvfzkjqtaffbb.supabase.co/storage/v1/object/captures/` suivie de la variable `Chemin`
-   - Méthode (*Method*) **POST**
-   - En-têtes (*Headers*) : `apikey` = ta clé publique, et `Content-Type` = `image/jpeg`
-   - Corps de la requête (*Request Body*) : **Fichier** (*File*) = l'image convertie
-7. **Demander une entrée** (*Ask for Input*), type Texte (*Text*) : « Légende ? » (tu peux laisser vide).
-8. **Obtenir le contenu de l'URL** (*Get Contents of URL*) :
-   - URL : `https://zqdvtbkjvfzkjqtaffbb.supabase.co/rest/v1/rpc/capture`
-   - Méthode (*Method*) **POST**, en-tête (*Headers*) `apikey` = ta clé publique
-   - Corps (*Request Body*) **JSON** : `p_token` = ton jeton, `p_text` = la réponse à l'étape 7, `p_image_path` = la variable `Chemin`
-9. **Afficher la notification** (*Show Notification*) : « Photo ajoutée ✓ ».
+- **Action** : une étape du raccourci (une carte grise). Les actions s'exécutent de haut en bas.
+- **Résultat** (Apple dit *output*, parfois traduit par « sortie ») : ce que produit une action. Par exemple, l'action « Format Date » produit un texte comme `20261031-154512`. Les actions suivantes peuvent réutiliser ce résultat : il apparaît alors comme une **puce avec une petite icône orange** et un nom (`Jeton`, `Chemin`, `Titre`…).
+- **Shortcut Input** (entrée du raccourci) : ce que le raccourci reçoit au départ, par exemple le texte ou le lien que tu partages.
 
-## 6. Raccourci « Rappel GTD » (notifications)
+Dans les images, un **cadre vert** entoure ce qui doit être exactement comme ça pour que l'app fonctionne (adresse, clés, noms). Le jeton n'est jamais montré : c'est toi qui l'as collé à l'installation.
 
-Dans l'éditeur d'une tâche qui a une date, le bouton **Créer un rappel Apple** lance ce raccourci avec le titre, la date et l'heure.
+### Capturer
 
-Nouveau raccourci, nommé exactement **Rappel GTD**. L'app lance ce raccourci par son nom : si tu l'appelles autrement (par exemple « Rappel BRAIN »), tape ce même nom dans l'app, Réglages > Rappels Apple.
+![Raccourci Capturer](docs/raccourci-capturer.svg)
 
-Voici le raccourci terminé (iPhone en anglais) :
+### Capturer photo
 
-![Raccourci Rappel GTD terminé](docs/raccourci-rappel-gtd.svg)
+![Raccourci Capturer photo](docs/raccourci-capturer-photo.svg)
 
-Étapes (noms des actions en anglais) :
+### Rappel GTD
 
-1. **Receive** : laisse « Any from Nowhere » et « If there's no input: Continue ».
-2. **Get Dictionary from Input** : la valeur doit être **Shortcut Input**.
-3. **Get Dictionary Value** : Value for `titre` in **Dictionary**.
-4. **Get Dictionary Value** : Value for `date` in **Dictionary**.
-5. **Get Dates from Input** : choisis la sortie de l'étape 4 (`Date texte`).
-6. **Get Dictionary Value** : Value for `notes` in **Dictionary**.
-7. **Add New Reminder** :
-   - Remplace « Reminder » par `Titre` (sortie de l'étape 3).
-   - Touche la flèche **⌄** de l'action pour afficher les options.
-   - **Notes** : `Notes` (sortie de l'étape 6).
-   - **Alert** : **At Time**, puis `Quand` (sortie de l'étape 5).
+L'app envoie au raccourci trois informations : `titre`, `date` et `notes`. Le raccourci les lit une par une, puis crée le rappel.
 
-Aux étapes 3, 4 et 6, le champ après « in » doit toujours être **Dictionary**, c'est-à-dire la sortie de l'étape 2. Pour le choisir, touche ce champ, puis **Select Variable**, puis touche l'action « Get dictionary from ».
+![Raccourci Rappel GTD](docs/raccourci-rappel-gtd.svg)
 
-Renomme les sorties pour ne pas confondre les trois « Dictionary Value » : touche la puce orange d'une sortie là où elle est utilisée, choisis **Rename**, puis tape `Titre` (étape 3), `Date texte` (étape 4), `Quand` (étape 5) ou `Notes` (étape 6). Ces noms-là sont libres ; seules les clés `titre`, `date` et `notes` doivent être exactes.
+### Refaire les fichiers des raccourcis
 
-Pour tester, crée dans l'app une tâche avec une date et une heure, puis touche **Créer un rappel Apple**. Un rappel doit apparaître dans l'app Rappels. Sans heure dans l'app, le rappel sonne à 9 h 00.
+Les fichiers de `raccourcis/` sont fabriqués par [`raccourcis/build.py`](raccourcis/build.py), sur un Mac : `python3 raccourcis/build.py`. Le script les signe avec l'outil `shortcuts` du Mac, ce qui permet de les installer sur n'importe quel iPhone.
 
-## 7. Utilisation au quotidien
+## 6. Utilisation au quotidien
 
 - **Dans la journée** : tu captures tout avec le bouton Action, Siri ou le partage. Pas besoin de trier.
 - **Le soir** : onglet Inbox > **Trier**. Pour chaque élément : fait, aujourd'hui, prochaine action, projet, en attente, un jour, note, signet ou suppression. Un élément partagé avec un lien propose d'emblée « Signet ».
@@ -154,7 +135,7 @@ Pour tester, crée dans l'app une tâche avec une date et une heure, puis touche
 
 Le point en haut à droite indique la synchro : vert = synchronisé, orange = en cours, gris = hors ligne (tes modifications restent sur le téléphone et partent au retour du réseau), rouge = erreur (détail dans Réglages).
 
-## 8. Modules (thèmes)
+## 7. Modules (thèmes)
 
 L'app est organisée en modules, affichés dans une barre latérale : fixe sur grand écran, ouverte avec le bouton ☰ sur iPhone.
 

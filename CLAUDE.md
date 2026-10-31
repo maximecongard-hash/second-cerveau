@@ -65,6 +65,9 @@ Pas de tests automatisés : vérifier à la main en largeur mobile (~390 px), en
 - Chaque nouveau fichier JS : l'ajouter à `SHELL` dans `sw.js`.
 - Changement de schéma : préparer le SQL, l'utilisateur le colle lui-même dans le SQL Editor Supabase.
 - Interface en français, ton calme, pas de point d'exclamation.
+- Raccourcis iOS : fichiers signés dans `raccourcis/`, refaits sur Mac par `python3 raccourcis/build.py`
+  (jeton demandé à l'installation, jamais dans les fichiers). Images du README : `python3 docs/build_images.py docs`,
+  à garder identiques aux raccourcis. Si `capture()`, l'URL ou la clé publique changent, refaire les deux.
 - Committer et pousser seulement sur demande.
 
 ## Tenir ce fichier à jour

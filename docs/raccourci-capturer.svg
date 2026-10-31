@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1162" viewBox="0 0 1280 1162" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
-<rect width="1280" height="1162" fill="#161618" rx="28"/>
-<rect width="660" height="1162" fill="#000" rx="28"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1316" viewBox="0 0 1280 1316" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1280" height="1316" fill="#161618" rx="28"/>
+<rect width="660" height="1316" fill="#000" rx="28"/>
 <rect x="242" y="38" width="176" height="56" rx="16" fill="none" stroke="#34c759" stroke-width="3"/>
 <text x="330" y="77" font-size="31" fill="#fff" font-weight="600" text-anchor="middle">Capturer</text>
 <text x="696" y="62" font-size="26" fill="#fff" font-weight="600" text-anchor="start">Nom du raccourci</text>
 <text x="696" y="94" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">Nom libre (c’est ce que tu dis à Siri).</text>
 <text x="696" y="122" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">L’app ne l’appelle pas.</text>
-<text x="330" y="148" font-size="18" fill="#8e8e93" font-weight="400" text-anchor="middle">Cadre vert = à taper exactement</text>
+<text x="330" y="148" font-size="18" fill="#8e8e93" font-weight="400" text-anchor="middle">Cadre vert = doit être exactement ça</text>
 <rect x="22" y="170" width="616" height="230" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="197" width="32" height="32" rx="8" fill="#0a84ff"/>
 <rect x="53" y="204" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
@@ -23,72 +23,81 @@
 <text x="176" y="372" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Text</text>
 <circle cx="713" cy="206" r="17" fill="#0a84ff"/>
 <text x="713" y="213" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">1</text>
-<text x="744" y="213" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Active d’abord ⓘ &gt; Show in Share Sheet.</text>
-<text x="744" y="241" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Touche « Any » et garde seulement</text>
-<text x="744" y="269" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Text et URLs.</text>
-<text x="744" y="297" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">« Ask For Text » : sans partage,</text>
-<text x="744" y="325" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">le raccourci te demande l’idée.</text>
+<text x="744" y="213" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Ce que le raccourci reçoit : un texte</text>
+<text x="744" y="241" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">ou un lien partagé. Si tu le lances</text>
+<text x="744" y="269" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">sans rien partager, il te demande</text>
+<text x="744" y="297" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">de taper ou dicter ton idée.</text>
 <line x1="330.0" y1="400" x2="330.0" y2="424" stroke="#3a3a3c" stroke-width="3"/>
-<rect x="22" y="424" width="616" height="580" rx="28" fill="#2c2c2e"/>
-<rect x="44" y="451" width="32" height="32" rx="8" fill="#30b0c7"/>
+<rect x="22" y="424" width="616" height="130" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="451" width="32" height="32" rx="8" fill="#ffd60a"/>
 <rect x="53" y="458" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
-<text x="90" y="476" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Get contents of</text>
-<rect x="44" y="498" width="486" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="40" y="494" width="494" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="55" y="524" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">https://zqdvtbkjvfzkjqtaffbb.supabase.co</text>
-<rect x="44" y="548" width="254" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="40" y="544" width="262" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="55" y="574" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">/rest/v1/rpc/capture</text>
-<line x1="44" y1="616" x2="616" y2="616" stroke="#3a3a3c" stroke-width="2"/>
-<text x="44" y="676" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Method</text>
-<rect x="130" y="648" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="126" y="644" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="141" y="676" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">POST</text>
-<text x="44" y="726" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Headers</text>
-<text x="78" y="776" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Key</text>
-<rect x="126" y="748" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="122" y="744" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="137" y="774" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">apikey</text>
-<rect x="78" y="798" width="555" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="74" y="794" width="563" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="89" y="824" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp</text>
-<text x="44" y="876" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Request Body</text>
-<rect x="207" y="848" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="203" y="844" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="218" y="876" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">JSON</text>
-<text x="78" y="926" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
-<rect x="139" y="898" width="103" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="135" y="894" width="111" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="150" y="924" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_token</text>
-<rect x="252" y="898" width="126" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<text x="263" y="924" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">TON_JETON</text>
-<text x="78" y="976" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
-<rect x="139" y="948" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="135" y="944" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
-<text x="150" y="974" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_text</text>
-<rect x="240" y="948" width="232" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<rect x="251" y="956" width="22" height="22" rx="6" fill="#ff9f0a"/>
-<rect x="257" y="961" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
-<text x="283" y="976" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Shortcut Input</text>
+<text x="90" y="476" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Text</text>
+<rect x="44" y="498" width="126" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="55" y="524" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">ton jeton</text>
 <circle cx="713" cy="460" r="17" fill="#0a84ff"/>
 <text x="713" y="467" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">2</text>
-<text x="744" y="467" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Get Contents of URL.</text>
-<text x="744" y="495" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Touche la flèche ⌄ pour voir Method,</text>
-<text x="744" y="523" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Headers et Request Body.</text>
-<text x="744" y="551" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">URL en une seule ligne, sans espace.</text>
-<text x="744" y="579" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Clés exactes : apikey, p_token, p_text</text>
-<text x="744" y="607" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">TON_JETON : copie-le dans l’app,</text>
-<text x="744" y="635" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Réglages &gt; Capture iPhone.</text>
-<text x="744" y="663" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">p_text : touche le champ &gt;</text>
-<text x="744" y="691" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Select Variable &gt; Shortcut Input.</text>
-<line x1="330.0" y1="1004" x2="330.0" y2="1028" stroke="#3a3a3c" stroke-width="3"/>
-<rect x="22" y="1028" width="616" height="80" rx="28" fill="#2c2c2e"/>
-<rect x="44" y="1055" width="32" height="32" rx="8" fill="#ff453a"/>
-<rect x="53" y="1062" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
-<text x="90" y="1080" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Show notification</text>
-<rect x="316" y="1052" width="251" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<text x="327" y="1080" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Ajouté à l’Inbox ✓</text>
-<circle cx="713" cy="1064" r="17" fill="#0a84ff"/>
-<text x="713" y="1071" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">3</text>
-<text x="744" y="1071" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Show Notification. Texte libre.</text>
+<text x="744" y="467" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Ton jeton. L’iPhone te le demande</text>
+<text x="744" y="495" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">quand tu installes le raccourci.</text>
+<text x="744" y="523" font-size="20" fill="#ff9f0a" font-weight="400" text-anchor="start">Résultat de cette action : Jeton</text>
+<line x1="330.0" y1="554" x2="330.0" y2="578" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="578" width="616" height="580" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="605" width="32" height="32" rx="8" fill="#30b0c7"/>
+<rect x="53" y="612" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="630" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Get contents of</text>
+<rect x="44" y="652" width="486" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="648" width="494" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="678" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">https://zqdvtbkjvfzkjqtaffbb.supabase.co</text>
+<rect x="44" y="702" width="254" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="40" y="698" width="262" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="55" y="728" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">/rest/v1/rpc/capture</text>
+<line x1="44" y1="770" x2="616" y2="770" stroke="#3a3a3c" stroke-width="2"/>
+<text x="44" y="830" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Method</text>
+<rect x="130" y="802" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="126" y="798" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="141" y="830" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">POST</text>
+<text x="44" y="880" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Headers</text>
+<text x="78" y="930" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Key</text>
+<rect x="126" y="902" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="122" y="898" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="137" y="928" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">apikey</text>
+<rect x="78" y="952" width="555" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="74" y="948" width="563" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="89" y="978" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp</text>
+<text x="44" y="1030" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Request Body</text>
+<rect x="207" y="1002" width="73" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="203" y="998" width="81" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="218" y="1030" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">JSON</text>
+<text x="78" y="1080" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
+<rect x="139" y="1052" width="103" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="135" y="1048" width="111" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="150" y="1078" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_token</text>
+<rect x="252" y="1052" width="118" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="263" y="1060" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="269" y="1065" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="295" y="1080" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Jeton</text>
+<text x="78" y="1130" font-size="24" fill="#8e8e93" font-weight="400" text-anchor="start">Text</text>
+<rect x="139" y="1102" width="92" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="135" y="1098" width="100" height="46" rx="14" fill="none" stroke="#34c759" stroke-width="3"/>
+<text x="150" y="1128" font-size="19" fill="#0a84ff" font-weight="400" text-anchor="start" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace">p_text</text>
+<rect x="240" y="1102" width="232" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<rect x="251" y="1110" width="22" height="22" rx="6" fill="#ff9f0a"/>
+<rect x="257" y="1115" width="10" height="12" rx="2" fill="#fff" opacity=".85"/>
+<text x="283" y="1130" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Shortcut Input</text>
+<circle cx="713" cy="614" r="17" fill="#0a84ff"/>
+<text x="713" y="621" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">3</text>
+<text x="744" y="621" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Envoie ton idée à ta base Supabase.</text>
+<text x="744" y="649" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Touche la flèche ⌄ pour voir</text>
+<text x="744" y="677" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Method, Headers et Request Body.</text>
+<text x="744" y="705" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Shortcut Input = ce que tu as tapé</text>
+<text x="744" y="733" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">ou partagé.</text>
+<line x1="330.0" y1="1158" x2="330.0" y2="1182" stroke="#3a3a3c" stroke-width="3"/>
+<rect x="22" y="1182" width="616" height="80" rx="28" fill="#2c2c2e"/>
+<rect x="44" y="1209" width="32" height="32" rx="8" fill="#ff453a"/>
+<rect x="53" y="1216" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
+<text x="90" y="1234" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Show notification</text>
+<rect x="316" y="1206" width="251" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
+<text x="327" y="1234" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Ajouté à l’Inbox ✓</text>
+<circle cx="713" cy="1218" r="17" fill="#0a84ff"/>
+<text x="713" y="1225" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">4</text>
+<text x="744" y="1225" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Petit message de confirmation.</text>
 </svg>

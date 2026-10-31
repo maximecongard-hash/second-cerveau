@@ -8,7 +8,7 @@
 <text x="696" y="122" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">par son nom. Si tu en veux un autre</text>
 <text x="696" y="150" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">(ex. Rappel BRAIN), tape-le aussi dans</text>
 <text x="696" y="178" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">l’app : Réglages &gt; Rappels Apple.</text>
-<text x="330" y="204" font-size="18" fill="#8e8e93" font-weight="400" text-anchor="middle">Cadre vert = à taper exactement</text>
+<text x="330" y="204" font-size="18" fill="#8e8e93" font-weight="400" text-anchor="middle">Cadre vert = doit être exactement ça</text>
 <rect x="22" y="226" width="616" height="130" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="253" width="32" height="32" rx="8" fill="#0a84ff"/>
 <rect x="53" y="260" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
@@ -57,7 +57,7 @@
 <text x="744" y="577" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Get Dictionary Value.</text>
 <text x="744" y="605" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Clé exacte : titre (minuscules)</text>
 <text x="744" y="633" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">« in » = Dictionary (sortie de 2).</text>
-<text x="744" y="661" font-size="20" fill="#ffd60a" font-weight="400" text-anchor="start">Renomme la sortie : Titre</text>
+<text x="744" y="661" font-size="20" fill="#ff9f0a" font-weight="400" text-anchor="start">Résultat de cette action : Titre</text>
 <line x1="330.0" y1="672" x2="330.0" y2="696" stroke="#3a3a3c" stroke-width="3"/>
 <rect x="22" y="696" width="616" height="130" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="723" width="32" height="32" rx="8" fill="#ff9f0a"/>
@@ -78,7 +78,7 @@
 <text x="713" y="739" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">4</text>
 <text x="744" y="739" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Clé exacte : date</text>
 <text x="744" y="767" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">« in » = Dictionary.</text>
-<text x="744" y="795" font-size="20" fill="#ffd60a" font-weight="400" text-anchor="start">Renomme la sortie : Date texte</text>
+<text x="744" y="795" font-size="20" fill="#ff9f0a" font-weight="400" text-anchor="start">Résultat : Date texte</text>
 <line x1="330.0" y1="826" x2="330.0" y2="850" stroke="#3a3a3c" stroke-width="3"/>
 <rect x="22" y="850" width="616" height="80" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="877" width="32" height="32" rx="8" fill="#ff453a"/>
@@ -91,7 +91,7 @@
 <circle cx="713" cy="886" r="17" fill="#0a84ff"/>
 <text x="713" y="893" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">5</text>
 <text x="744" y="893" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Get Dates from Input.</text>
-<text x="744" y="921" font-size="20" fill="#ffd60a" font-weight="400" text-anchor="start">Renomme la sortie : Quand</text>
+<text x="744" y="921" font-size="20" fill="#ff9f0a" font-weight="400" text-anchor="start">Résultat : Quand</text>
 <line x1="330.0" y1="932" x2="330.0" y2="956" stroke="#3a3a3c" stroke-width="3"/>
 <rect x="22" y="956" width="616" height="130" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="983" width="32" height="32" rx="8" fill="#ff9f0a"/>
@@ -112,7 +112,7 @@
 <text x="713" y="999" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">6</text>
 <text x="744" y="999" font-size="20" fill="#34c759" font-weight="400" text-anchor="start">✓ Clé exacte : notes</text>
 <text x="744" y="1027" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">« in » = Dictionary.</text>
-<text x="744" y="1055" font-size="20" fill="#ffd60a" font-weight="400" text-anchor="start">Renomme la sortie : Notes</text>
+<text x="744" y="1055" font-size="20" fill="#ff9f0a" font-weight="400" text-anchor="start">Résultat : Notes</text>
 <line x1="330.0" y1="1086" x2="330.0" y2="1110" stroke="#3a3a3c" stroke-width="3"/>
 <rect x="22" y="1110" width="616" height="280" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="1137" width="32" height="32" rx="8" fill="#ffd60a"/>
