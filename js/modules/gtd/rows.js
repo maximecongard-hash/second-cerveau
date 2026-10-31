@@ -20,7 +20,7 @@ export function taskRow(t, o = {}) {
   if (t.image_path) meta.push('<span>Photo</span>');
   return `<div class="row task ${done ? 'done' : ''}" data-act="edit" data-id="${t.id}">
     <button class="check" data-act="toggle" data-id="${t.id}" aria-label="${done ? 'Rouvrir' : 'Terminer'}"></button>
-    <div class="row-main"><div class="row-title">${esc(t.title) || '<i>Sans titre</i>'}</div>${meta.length ? `<div class="row-meta">${meta.join('')}</div>` : ''}</div>
+    <div class="row-main"><div class="row-title"><span class="rt">${esc(t.title) || '<i>Sans titre</i>'}</span></div>${meta.length ? `<div class="row-meta">${meta.join('')}</div>` : ''}</div>
     ${o.extra || ''}
   </div>`;
 }

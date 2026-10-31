@@ -1,7 +1,7 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
 // et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v3';
+const CACHE = 'sc-v4';
 const SHELL = [
   './',
   'index.html',
@@ -51,14 +51,15 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const isShell = url.origin === location.origin || url.hostname === 'cdn.jsdelivr.net';
+  // polices Google : mises en cache au premier chargement pour rester disponibles hors ligne
+  const isShell = url.origin === location.origin || url.hostname === 'cdn.jsdelivr.net' || /^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (!isShell) return;
   const key = req.mode === 'navigate' ? 'index.html' : req;
   e.respondWith(
     caches.open(CACHE).then(async cache => {
       const cached = await cache.match(key, { ignoreSearch: req.mode === 'navigate' });
       const network = fetch(req)
-        .then(res => { if (res.ok) cache.put(key, res.clone()); return res; })
+        .then(res => { if (res.ok || res.type === 'opaque') cache.put(key, res.clone()); return res; })
         .catch(() => cached);
       return cached || network;
     })

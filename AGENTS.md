@@ -156,13 +156,19 @@ L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'u
 
 ## Direction artistique
 
-Une proposition de DA (nom de travail « Marge ») est en cours de validation :
+La DA « carnet » est appliquée depuis la version 0.4.0. Document de référence :
 https://claude.ai/artifact/GDJhpTebTDvzqBzd2wZQ3g
 
-Principes retenus : papier mat, encre bleu-noir, encre bleue pour ce qui se clique, surligneur jaune réservé
-à une seule chose du jour, contextes en teintes sourdes, serif (Newsreader) pour titres et notes, sans (Instrument Sans)
-pour l'interface, mono (IBM Plex Mono) pour heures et durées, colonne de « marge » à gauche des listes.
-**Tant qu'elle n'est pas validée, `styles.css` reste la référence.** Ne pas l'appliquer sans demande explicite.
+- **Couleurs** : papier mat (`--bg`), feuille (`--surface`), encre bleu-noir (`--text`), encre bleue (`--accent`)
+  réservée à ce qui se clique, surligneur (`--hl`) réservé au Top 3. Pas de rouge pour les compteurs.
+- **Typo** : Newsreader (`--f-display`) pour les titres d'écran, les notes, la capture et les questions de tri ;
+  Instrument Sans (`--f-ui`) pour l'interface ; IBM Plex Mono (`--f-mono`) pour les heures, durées, contextes,
+  compteurs et en-têtes de section (petites capitales espacées). Polices chargées depuis Google Fonts dans
+  `index.html` et mises en cache par `sw.js`.
+- **Formes** : filets fins plutôt que cartes, rayon 8 px maximum, ombres discrètes. Action principale en encre pleine
+  (`.btn.primary`, `.fab`), filtres actifs en encre pleine (`.chip.on`).
+- Le surligneur ne s'anime que sur la classe `.hl.draw` : le rendu reconstruit le DOM à chaque changement,
+  une animation permanente rejouerait à chaque saisie.
 
 ## Git
 
