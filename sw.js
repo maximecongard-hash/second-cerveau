@@ -1,7 +1,7 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
 // et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v5';
+const CACHE = 'sc-v6';
 const SHELL = [
   './',
   'index.html',
@@ -28,8 +28,10 @@ const SHELL = [
   'js/modules/sport/index.js',
   'config.js',
   'manifest.webmanifest',
+  'manifest-papier.webmanifest',
   'icons/icon-180.png',
   'icons/icon-192.png',
+  'icons/papier-180.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js'
 ];
 

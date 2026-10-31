@@ -58,7 +58,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `js/core/` | cœur commun, voir ci-dessous |
 | `js/modules/<id>/` | un dossier par module (`gtd`, `sport`, `courses`) |
 | `sw.js` | cache hors ligne, stratégie stale-while-revalidate, liste `SHELL` de tous les fichiers |
-| `manifest.webmanifest`, `icons/` | installation sur l'écran d'accueil |
+| `manifest.webmanifest`, `manifest-papier.webmanifest`, `icons/` | installation sur l'écran d'accueil ; deux icônes au choix (Encre par défaut, Papier), sources SVG dans `icons/src/`, choix appliqué par `applyIcon()` de `util.js` |
 | `supabase/schema.sql` | schéma complet, idempotent |
 | `supabase/00X_*.sql` | migrations incrémentales, idempotentes |
 

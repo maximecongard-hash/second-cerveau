@@ -28,8 +28,9 @@ Chaque table est protégée par des règles RLS : seul ton compte connecté voit
 
 1. Ouvre l'adresse de l'app dans **Safari**.
 2. Connecte-toi avec l'email et le mot de passe créés dans Supabase.
-3. Bouton **Partager** > **Sur l'écran d'accueil** > **Ajouter**.
-4. Ouvre l'app depuis l'icône : elle s'affiche en plein écran, comme une app native.
+3. Facultatif : menu **⋯** > **Réglages** > **Icône**, choisis **Encre** (fond sombre) ou **Papier** (fond clair). iOS fige l'icône au moment de l'ajout : pour en changer plus tard, supprime l'app de l'écran d'accueil et ajoute-la de nouveau.
+4. Bouton **Partager** > **Sur l'écran d'accueil** > **Ajouter**.
+5. Ouvre l'app depuis l'icône : elle s'affiche en plein écran, comme une app native.
 
 ## 3. Générer ton jeton de capture
 

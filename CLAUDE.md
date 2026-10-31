@@ -20,7 +20,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.4.1**, cache SW `sc-v5`, branche `main` à jour avec `origin`.
+- Version **0.4.2**, cache SW `sc-v6`.
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - Historique :
   1. Prototype GTD PWA + synchro Supabase.
@@ -29,11 +29,12 @@ RLS), hors ligne via localStorage + service worker.
   4. AGENTS.md pour les agents de code.
   5. 0.4.0 : DA « carnet » (papier, encre, surligneur ; Newsreader / Instrument Sans / IBM Plex Mono).
   6. 0.4.1 : correctif de mise à jour de l'app installée.
+  7. 0.4.2 : nouvelle icône (cerveau + réseau d'idées qui dessine une coche), en deux versions au choix
+     dans Réglages > Icône : Encre (fond bleu-noir, par défaut) et Papier (fond crème).
 
 ## Pistes ouvertes
 
 - **Phase 2** : remplir les modules Sport et Courses.
-- **Nouvelle icône** de l'app : explorée dans une conversation, non intégrée dans `icons/`.
 - **Import Notion** : un script ponctuel (`build.py` → `import-notion.sql`) a généré l'import des tâches
   Notion ouvertes. Il contient des données personnelles et n'est volontairement pas dans le dépôt.
 

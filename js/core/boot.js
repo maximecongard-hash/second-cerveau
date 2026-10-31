@@ -1,5 +1,5 @@
 import { DEMO, sb } from './config.js';
-import { empty } from './util.js';
+import { empty, applyIcon } from './util.js';
 import { S, restore, resetLocal, persist } from './store.js';
 import { sync } from './sync.js';
 import { MODULES } from './modules.js';
@@ -9,6 +9,7 @@ import { app, render, queueRender } from './ui.js';
 // Démarrage (appelé une fois tous les modules enregistrés)
 // ---------------------------------------------------------------------------
 export async function init() {
+  applyIcon();
   restore();
   registerSW();
   if (DEMO) {

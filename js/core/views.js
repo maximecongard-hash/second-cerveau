@@ -1,5 +1,5 @@
 import { VERSION, CFG, DEMO, sb } from './config.js';
-import { $, esc, I, empty, sec, today, nowIso, FMT_TIME } from './util.js';
+import { $, esc, I, empty, sec, today, nowIso, FMT_TIME, ICONS, iconChoice, setIcon } from './util.js';
 import { S, live, savePrefs, resetLocal, persistNow } from './store.js';
 import { sync, syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
@@ -67,10 +67,20 @@ VIEWS.settings = () => {
       <div class="kv"><span>URL du projet</span><button class="btn" data-act="copy" data-v="${esc(CFG.url)}">Copier</button></div>
       <div class="kv"><span>Clé publique</span><button class="btn" data-act="copy" data-v="${esc(CFG.key)}">Copier</button></div>
       <div class="muted small pad">Jeton de capture (secret, ne le partage pas) :</div>${tokenHtml}`) +
+    sec('Icône', iconSettings()) +
     sec('Données', `<div class="btn-row"><button class="btn" data-act="export">Exporter (JSON)</button></div>
       <div class="muted small pad">Version ${VERSION}${DEMO ? ' · mode démo' : ''}</div>`);
   return { title: 'Réglages', html };
 };
+// iOS lit l'icône au moment de « Sur l'écran d'accueil » puis la fige
+function iconSettings() {
+  const cur = iconChoice().id;
+  const installed = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  return `<div class="icon-pick">${ICONS.map(i => `<button class="icon-opt ${i.id === cur ? 'on' : ''}" data-act="icon-set" data-v="${i.id}" aria-pressed="${i.id === cur}"><img src="${i.touch}" alt="" width="60" height="60"><span>${i.label}</span></button>`).join('')}</div>
+    <div class="muted small pad">${installed
+      ? 'L’icône est fixée à l’ajout sur l’écran d’accueil. Pour en changer : choisis-la ici, supprime l’app de l’écran d’accueil, puis ajoute-la à nouveau depuis Safari. Tes données restent synchronisées.'
+      : 'Choisis l’icône avant de faire Partager > Sur l’écran d’accueil dans Safari.'}</div>`;
+}
 async function loadTokens() {
   const { data, error } = await sb.from('capture_tokens').select('token, created_at').order('created_at');
   S.ui.tokens = error ? [] : data;
@@ -148,6 +158,7 @@ Object.assign(ACTS, {
     if (error) { toast('Erreur : ' + error.message); return; }
     S.ui.tokens = undefined; render();
   },
+  'icon-set': el => { setIcon(el.dataset.v); render(); toast('Icône choisie'); },
   export: () => exportJSON()
 });
 

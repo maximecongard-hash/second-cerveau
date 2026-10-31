@@ -108,3 +108,26 @@ export const chip = (label, on, act, v, extra = '') => `<button class="chip ${on
 export const fRow = (label, inner) => `<div class="f-row"><label>${label}</label><div class="f-val">${inner}</div></div>`;
 export const seg = (f, cur, opts) => `<div class="seg">${opts.map(([v, l]) => `<button type="button" class="${String(cur ?? '') === String(v) ? 'on' : ''}" data-act="set" data-f="${f}" data-v="${v}">${l}</button>`).join('')}</div>`;
 export const sel = (f, cur, opts) => `<select data-f="${f}">${opts.map(([v, l]) => `<option value="${esc(v)}" ${String(cur ?? '') === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+
+// ---------------------------------------------------------------------------
+// Icône de l'écran d'accueil (choix propre à l'appareil, lu par iOS au moment de l'ajout)
+// ---------------------------------------------------------------------------
+export const ICONS = [
+  { id: 'encre', label: 'Encre', touch: 'icons/icon-180.png', manifest: 'manifest.webmanifest' },
+  { id: 'papier', label: 'Papier', touch: 'icons/papier-180.png', manifest: 'manifest-papier.webmanifest' }
+];
+const ICON_KEY = 'sc.icon';
+export const iconChoice = () => {
+  let id = null;
+  try { id = localStorage.getItem(ICON_KEY); } catch {}
+  return ICONS.find(i => i.id === id) || ICONS[0];
+};
+export function setIcon(id) {
+  try { localStorage.setItem(ICON_KEY, id); } catch {}
+  applyIcon();
+}
+export function applyIcon() {
+  const ic = iconChoice();
+  document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute('href', ic.touch);
+  document.querySelector('link[rel="manifest"]')?.setAttribute('href', ic.manifest);
+}
