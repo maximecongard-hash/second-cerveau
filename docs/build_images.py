@@ -215,3 +215,31 @@ render(os.path.join(DOCS, "raccourci-rappel-gtd.svg"), "Rappel GTD",
                                       [("g", "Date"), ("v", "Quand")]],
                 note=["Add New Reminder.", "Touche ⌄ pour Notes et Alert.", "Alert : At Time, puis Quand."]),
        ])
+
+# ---------- Agenda Apple ----------
+DATE_FMT = "yyyy-MM-dd'T'HH:mm"
+render(os.path.join(DOCS, "raccourci-agenda-apple.svg"), "Agenda Apple",
+       ["Nom libre. L’app ne l’appelle pas :", "une automatisation le lance chaque matin."],
+       [
+           JETON_CARD,
+           dict(icon="red", lines=[[("t", "Get"), ("b", "150"), ("t", "upcoming events from")], [("b", "All Calendars")]],
+                note=["Get Upcoming Events.", "Résultat : Upcoming Events"]),
+           dict(icon="grey", lines=[[("t", "Repeat with each item in")], [("v", "Upcoming Events")]],
+                note=["Pour chaque événement…"]),
+           dict(icon="yellow", lines=[[("t", "Text")],
+                                      [">", ("v", "Calendar"), ("m!", "⇥"), ("v", "Start Date"), ("m!", "⇥")],
+                                      [">", ("v", "End Date"), ("m!", "⇥"), ("v", "Is All Day"), ("m!", "⇥")],
+                                      [">", ("v", "Title"), ("m!", "⇥"), ("v", "Location")]],
+                note=["… une ligne de texte.", "Chaque puce = Repeat Item, touche-la", "pour choisir la propriété.",
+                      "⇥ = une tabulation.", "Start Date et End Date : format", "Custom " + DATE_FMT]),
+           dict(icon="grey", lines=[[("t", "End Repeat")]], note=["Résultat : Repeat Results"]),
+           dict(icon="yellow", lines=[[("t", "Combine"), ("v", "Repeat Results"), ("t", "with")], [("b", "Custom"), ("m!", "␞")]],
+                note=["Met les lignes bout à bout,", "séparées par ␞.", "Résultat : Combined Text"]),
+           http_card([URL, "/rest/v1/rpc/sync_events"], [("apikey", KEY)],
+                     [[("g", "Request Body"), ("b!", "JSON")],
+                      [">", ("g", "Text"), ("m!", "p_token"), ("v", "Jeton")],
+                      [">", ("g", "Text"), ("m!", "p_lines"), ("v", "Combined Text")]],
+                     ["Remplace tes prochains événements", "dans Brain. La réponse est", "le nombre d’événements reçus."]),
+           dict(icon="red", lines=[[("t", "Show notification")], [("b", "Brain a reçu"), ("v", "Contents of URL"), ("b", "événements…")]],
+                note=["Petit message de confirmation."]),
+       ])

@@ -59,10 +59,22 @@ def token_question():
              'Text': 'Colle ton jeton de capture (app Brain : Réglages > Capture iPhone > Copier).'}]
 
 
-def capture_call(token_uuid, fields):
-    return act('downloadurl', WFURL=URL + '/rest/v1/rpc/capture', WFHTTPMethod='POST', ShowHeaders=True,
+def rpc_call(fn, token_uuid, fields, **extra):
+    return act('downloadurl', WFURL=URL + '/rest/v1/rpc/' + fn, WFHTTPMethod='POST', ShowHeaders=True,
                WFHTTPHeaders=dictionary([('apikey', KEY)]), WFHTTPBodyType='JSON',
-               WFJSONValues=dictionary([('p_token', text(out(token_uuid, 'Jeton')))] + fields))
+               WFJSONValues=dictionary([('p_token', text(out(token_uuid, 'Jeton')))] + fields), **extra)
+
+
+def capture_call(token_uuid, fields):
+    return rpc_call('capture', token_uuid, fields)
+
+
+def repeat_item(prop, date_format=None):
+    """Propriété de l'élément de la boucle « Répéter avec chaque », date éventuellement formatée."""
+    agg = [{'Type': 'WFPropertyVariableAggrandizement', 'PropertyName': prop}]
+    if date_format:
+        agg.append({'Type': 'WFDateFormatVariableAggrandizement', 'WFDateFormatStyle': 'Custom', 'WFDateFormat': date_format})
+    return {'Type': 'Variable', 'VariableName': 'Repeat Item', 'Aggrandizements': agg}
 
 
 def workflow(actions, inputs, types, no_input=None, questions=(), glyph=59511, color=4282601983):
@@ -139,8 +151,29 @@ rappel = workflow(
          WFAlertEnabled='Alert', WFAlertCondition='At Time', WFAlertCustomTime=text(out(quand, 'Quand')))],
     ['WFStringContentItem'], [], glyph=59784, color=4271458815)
 
+# ---------- Agenda Apple : envoie les prochains événements de Calendrier à Brain ----------
+# Une ligne par événement, séparées par ␞, champs séparés par une tabulation :
+# calendrier, début, fin, journée entière, titre, lieu (voir sync_events dans supabase/005_calendrier.sql)
+tok, events, rep, rep_end, joined, sent = uid(), uid(), uid(), uid(), uid(), uid()
+DATE = "yyyy-MM-dd'T'HH:mm"
+agenda_apple = workflow(
+    [token_action(tok),
+     act('getupcomingevents', UUID=events, WFGetUpcomingItemCount=150),
+     act('repeat.each', GroupingIdentifier=rep, WFControlFlowMode=0, WFInput=var(out(events, 'Upcoming Events'))),
+     act('gettext', WFTextActionText=text(repeat_item('Calendar'), '\t', repeat_item('Start Date', DATE), '\t',
+                                          repeat_item('End Date', DATE), '\t', repeat_item('Is All Day'), '\t',
+                                          repeat_item('Title'), '\t', repeat_item('Location'))),
+     act('repeat.each', GroupingIdentifier=rep, WFControlFlowMode=2, UUID=rep_end),
+     act('text.combine', UUID=joined, WFTextSeparator='Custom', WFTextCustomSeparator='␞',
+         text=var(out(rep_end, 'Repeat Results'))),
+     rpc_call('sync_events', tok, [('p_lines', text(out(joined, 'Combined Text')))], UUID=sent),
+     act('notification', WFNotificationActionBody=text('Brain a reçu ', out(sent, 'Contents of URL'), ' événements de Calendrier'),
+         WFNotificationActionSound=False)],
+    [], [], questions=token_question(), glyph=59784, color=4292093695)
+
 os.makedirs(os.path.join(HERE, 'src'), exist_ok=True)
-for name, w in [('Capturer', capturer), ('Capturer photo', capturer_photo), ('Rappel GTD', rappel)]:
+for name, w in [('Capturer', capturer), ('Capturer photo', capturer_photo), ('Rappel GTD', rappel),
+                ('Agenda Apple', agenda_apple)]:
     w['WFWorkflowName'] = name
     src = os.path.join(HERE, 'src', name + '.shortcut')
     with open(src, 'wb') as f:

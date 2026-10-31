@@ -12,6 +12,8 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
   par contexte, projets, planification de la journée (Top 3, agenda), revues du soir et hebdo.
 - **Agenda** (`agenda`) : grille horaire jour / semaine. Ne possède aucun kind : il lit tous les éléments datés
   avec une heure et place les tâches via `setField()` du cœur (routé vers le module propriétaire).
+  `apple.js` : événements de Calendrier (table `events`, lecture seule, cache localStorage à part des éléments)
+  et réglages du lien d'abonnement ICS.
 - **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
   Reliés aux tâches et projets par les liens du cœur.
 - **Sport** et **Courses** : en aperçu, désactivés par défaut, contenu prévu en phase 2.
@@ -65,6 +67,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `manifest.webmanifest`, `manifest-papier.webmanifest`, `icons/` | installation sur l'écran d'accueil ; deux icônes au choix (Encre par défaut, Papier), sources SVG dans `icons/src/`, choix appliqué par `applyIcon()` de `util.js` |
 | `supabase/schema.sql` | schéma complet, idempotent |
 | `supabase/00X_*.sql` | migrations incrémentales, idempotentes |
+| `supabase/functions/calendrier/index.ts` | Edge Function du flux ICS (abonnement Calendrier), déployée à la main par l'utilisateur, « Verify JWT » désactivé ; `buildIcs` testable avec node |
 
 ### Cœur (`js/core/`)
 
@@ -152,9 +155,11 @@ L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'u
 - `config.js` ne contient que la clé **publishable**. Ne jamais y mettre, ni committer, une clé `service_role` / secret.
 - Toute nouvelle table : `enable row level security` + politique `user_id = auth.uid()`.
 - Les raccourcis iOS passent par la fonction `capture()` (security definer, jeton dans `capture_tokens`) et ne peuvent
-  qu'ajouter dans l'Inbox. Ne pas élargir ce que l'accès `anon` peut faire.
+  qu'ajouter dans l'Inbox. Seules autres portes `anon`, toutes derrière un jeton : `sync_events()` (jeton de capture,
+  remplace la copie des événements de Calendrier dans `events`) et `calendar_feed()` (jeton de `calendar_tokens`,
+  lecture des créneaux pour le flux ICS). Ne pas élargir ce que l'accès `anon` peut faire au-delà.
 - Le bucket `captures` est privé ; les images s'affichent via URL signée (`js/core/images.js`).
-- Ne jamais afficher ni recopier un jeton de capture réel dans le code, les logs ou les commits.
+- Ne jamais afficher ni recopier un jeton de capture ou de calendrier réel dans le code, les logs ou les commits.
 
 ## Style de code
 

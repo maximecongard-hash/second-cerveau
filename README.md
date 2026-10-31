@@ -25,14 +25,17 @@ Le script crée :
 | table `capture_tokens` | jetons secrets utilisés par les raccourcis iPhone |
 | fonction `capture()` | ajoute un élément dans l'Inbox à partir d'un jeton |
 | bucket `captures` | photos (privé) |
+| table `calendar_tokens`, fonction `calendar_feed()` | lien d'abonnement de Calendrier (lecture seule de tes créneaux) |
+| table `events`, fonction `sync_events()` | événements de Calendrier envoyés par le raccourci Agenda Apple |
 
-Chaque table est protégée par des règles RLS : seul ton compte connecté voit ses données. Les raccourcis ne peuvent qu'**ajouter** dans l'Inbox, et seulement avec un jeton valide.
+Chaque table est protégée par des règles RLS : seul ton compte connecté voit ses données. Les raccourcis ne peuvent qu'**ajouter** dans l'Inbox et remplacer la copie de tes événements de Calendrier, et seulement avec un jeton valide.
 
 Base créée avant une mise à jour : colle aussi, dans l'ordre, les migrations qui manquent. Chaque script peut être relancé sans risque. Une installation neuve n'en a pas besoin, `schema.sql` est déjà à jour.
 
 - Avant la version 0.2 : [`supabase/002_pack1.sql`](supabase/002_pack1.sql) (Top 3, résultat attendu, date de revue).
 - Avant la version 0.5 : [`supabase/003_liens.sql`](supabase/003_liens.sql) (liens entre tâches, notes et projets, épingle). Sans elle, la pastille de synchro passe en erreur.
 - Avant la version 0.6 : [`supabase/004_signets.sql`](supabase/004_signets.sql) (signets, et types d'éléments ouverts aux nouveaux modules). Sans elle, enregistrer un signet échoue.
+- Avant la version 0.8 : [`supabase/005_calendrier.sql`](supabase/005_calendrier.sql) (Calendrier Apple, voir la partie 5). Sans elle, le reste de l'app marche, seule la partie Calendrier reste vide.
 
 ## 2. Installer l'app sur l'iPhone
 
@@ -48,17 +51,18 @@ Dans l'app : menu **⋯** > **Réglages** > **Capture iPhone** > **Générer un 
 
 Ce jeton permet d'ajouter des éléments dans ton Inbox. Garde-le pour toi ; s'il fuit, révoque-le dans les Réglages et génères-en un autre.
 
-Tu colleras ce jeton en installant les raccourcis (étape 4). Si tu le révoques, réinstalle Capturer et Capturer photo avec le nouveau jeton.
+Tu colleras ce jeton en installant les raccourcis (étape 4). Si tu le révoques, réinstalle Capturer, Capturer photo et Agenda Apple avec le nouveau jeton.
 
 ## 4. Installer les raccourcis iPhone
 
-Les trois raccourcis sont déjà prêts. Tu n'as rien à construire : tu les installes, tu colles ton jeton, c'est tout.
+Les quatre raccourcis sont déjà prêts. Tu n'as rien à construire : tu les installes, tu colles ton jeton, c'est tout.
 
 | Raccourci | À quoi il sert |
 |---|---|
 | **Capturer** | Noter une idée (texte ou dictée) ou un lien partagé, qui arrive dans l'Inbox. |
 | **Capturer photo** | Prendre ou partager une photo, avec une légende, qui arrive dans l'Inbox. |
 | **Rappel GTD** | Lancé par l'app quand tu touches « Créer un rappel Apple » dans une tâche. |
+| **Agenda Apple** | Envoie tes prochains événements de Calendrier à Brain (voir la partie 5). |
 
 ### Avant : supprime tes anciens raccourcis
 
@@ -72,9 +76,10 @@ Pour chaque raccourci, **sur l'iPhone, dans Safari** :
    - [Capturer](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Capturer.shortcut)
    - [Capturer photo](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Capturer%20photo.shortcut)
    - [Rappel GTD](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Rappel%20GTD.shortcut)
+   - [Agenda Apple](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Agenda%20Apple.shortcut)
 2. Safari demande s'il faut télécharger le fichier : touche **Télécharger** (*Download*).
 3. Touche l'icône de téléchargement (flèche bleue dans la barre d'adresse), puis le fichier. L'app Raccourcis s'ouvre.
-4. Touche **Configurer le raccourci** (*Set Up Shortcut*). Pour Capturer et Capturer photo, l'iPhone te demande ton jeton : dans l'app Brain, menu **⋯** > **Réglages** > **Capture iPhone** > **Copier**, puis colle-le ici.
+4. Touche **Configurer le raccourci** (*Set Up Shortcut*). Pour Capturer, Capturer photo et Agenda Apple, l'iPhone te demande ton jeton : dans l'app Brain, menu **⋯** > **Réglages** > **Capture iPhone** > **Copier**, puis colle-le ici.
 5. Touche **Ajouter le raccourci** (*Add Shortcut*).
 
 Le nom **Rappel GTD** doit rester tel quel : l'app lance ce raccourci par son nom. Si tu le renommes, tape le nouveau nom dans l'app, Réglages > Rappels Apple.
@@ -96,7 +101,32 @@ La première fois, l'iPhone demande s'il peut se connecter à `supabase.co` ou a
 
 Un lien seul est reconnu automatiquement. Pour un texte sur plusieurs lignes, la première ligne devient le titre et le reste les détails.
 
-## 5. Ce qu'il y a dans chaque raccourci
+## 5. Calendrier Apple (iCloud)
+
+Brain et Calendrier se voient l'un l'autre, en lecture seule dans les deux sens : chaque élément se modifie là où il a été créé.
+
+### Voir Brain dans Calendrier
+
+Tes tâches qui ont une heure apparaissent dans un calendrier « Brain », sur l'iPhone et le Mac.
+
+1. **Une seule fois, dans Supabase** : Edge Functions > **Deploy a new function** > **Via Editor**. Nom : `calendrier`. Remplace le code par tout le contenu de [`supabase/functions/calendrier/index.ts`](supabase/functions/calendrier/index.ts), puis **Deploy function**. Dans l'onglet **Details** de la fonction, désactive **Verify JWT with legacy secret** (ou « Enforce JWT verification ») et enregistre : Calendrier n'envoie pas de clé, c'est le jeton du lien qui protège l'accès.
+2. Dans l'app : **Réglages** > **Calendrier Apple** > **Créer le lien d'abonnement**.
+3. Sur l'iPhone, touche **S'abonner**, puis **S'abonner** à nouveau dans Calendrier. Sur le Mac : **Copier**, puis Calendrier > Fichier > **Nouvel abonnement au calendrier**, colle le lien, et choisis **iCloud** comme emplacement pour le retrouver sur tous tes appareils.
+4. Dans les réglages de l'abonnement, choisis une actualisation **toutes les heures**.
+
+Le lien donne accès à tes créneaux : garde-le pour toi. **Révoquer** le coupe, et le calendrier se vide.
+
+### Voir Calendrier dans Brain
+
+Le raccourci **Agenda Apple** lit tes 150 prochains événements (tous les calendriers, sauf « Brain ») et les envoie à l'app. Ils s'affichent en gris dans la grille de l'Agenda, et les journées entières dans le bandeau « Sans heure ». Touche un événement pour voir son heure, son lieu et son calendrier.
+
+1. Installe le raccourci (partie 4) et lance-le une fois. L'iPhone demande l'accès à ton Calendrier et à `supabase.co` : **Toujours autoriser**.
+2. Pour qu'il tourne seul : app Raccourcis > **Automatisation** > **+** > **Heure de la journée**, par exemple 6 h 00, chaque jour, **Exécuter immédiatement**, action **Exécuter le raccourci** > Agenda Apple. Ajoute une deuxième automatisation à midi si tu veux voir les changements de la journée.
+3. L'app relit les événements à chaque ouverture (au plus toutes les 5 minutes). **Réglages** > **Calendrier Apple** montre combien d'événements sont arrivés, et permet de les masquer dans la grille.
+
+Si tu renommes le calendrier « Brain » dans Calendrier, l'app reconnaît quand même ses propres créneaux et ne les affiche pas en double.
+
+## 6. Ce qu'il y a dans chaque raccourci
 
 Tu n'as pas besoin de lire cette partie pour utiliser les raccourcis. Elle montre ce que tu vois si tu ouvres un raccourci dans l'app Raccourcis, et sert si un jour il faut en réparer un.
 
@@ -122,11 +152,17 @@ L'app envoie au raccourci trois informations : `titre`, `date` et `notes`. Le ra
 
 ![Raccourci Rappel GTD](docs/raccourci-rappel-gtd.svg)
 
+### Agenda Apple
+
+Une boucle écrit une ligne par événement (calendrier, début, fin, journée entière, titre, lieu), puis l'ensemble part vers `sync_events`, qui remplace tes prochains événements dans Brain.
+
+![Raccourci Agenda Apple](docs/raccourci-agenda-apple.svg)
+
 ### Refaire les fichiers des raccourcis
 
 Les fichiers de `raccourcis/` sont fabriqués par [`raccourcis/build.py`](raccourcis/build.py), sur un Mac : `python3 raccourcis/build.py`. Le script les signe avec l'outil `shortcuts` du Mac, ce qui permet de les installer sur n'importe quel iPhone.
 
-## 6. Utilisation au quotidien
+## 7. Utilisation au quotidien
 
 - **Dans la journée** : tu captures tout avec le bouton Action, Siri ou le partage. Pas besoin de trier.
 - **Le soir** : onglet Inbox > **Trier**. Pour chaque élément : fait, aujourd'hui, prochaine action, projet, en attente, un jour, note, signet ou suppression. Un élément partagé avec un lien propose d'emblée « Signet ».
@@ -135,12 +171,12 @@ Les fichiers de `raccourcis/` sont fabriqués par [`raccourcis/build.py`](raccou
 
 Le point en haut à droite indique la synchro : vert = synchronisé, orange = en cours, gris = hors ligne (tes modifications restent sur le téléphone et partent au retour du réseau), rouge = erreur (détail dans Réglages).
 
-## 7. Modules (thèmes)
+## 8. Modules (thèmes)
 
 L'app est organisée en modules, affichés dans une barre latérale : fixe sur grand écran, ouverte avec le bouton ☰ sur iPhone.
 
 - **Organisation** : le GTD (Inbox, Aujourd'hui, Actions, Projets).
-- **Agenda** : la journée (onglet Jour) et la semaine (3 jours sur iPhone, 7 sur grand écran) en grille horaire. Chaque tâche qui a une heure y devient un bloc, de la hauteur de sa durée (30 min si aucune). Touche un créneau vide pour y placer une tâche du jour sans heure ou une prochaine action, ou pour en créer une. Heures affichées : Réglages > Agenda.
+- **Agenda** : la journée (onglet Jour) et la semaine (3 jours sur iPhone, 7 sur grand écran) en grille horaire. Chaque tâche qui a une heure y devient un bloc, de la hauteur de sa durée (30 min si aucune). Touche un créneau vide pour y placer une tâche du jour sans heure ou une prochaine action, ou pour en créer une. Les événements de Calendrier s'y ajoutent en gris (partie 5). Heures affichées et Calendrier Apple : Réglages > Agenda.
 - **Notes** : notes en Markdown, signets à lire ou lus, éléments épinglés. Chaque note ou signet peut être lié à des tâches et des projets (« Liés », « + Lier à… », « + Action liée »).
 - **Sport** et **Courses** : en aperçu, désactivés par défaut.
 
@@ -160,6 +196,7 @@ Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque modu
 | `manifest.webmanifest`, `icons/` | installation sur l'écran d'accueil |
 | `supabase/schema.sql` | base de données complète (installation neuve) |
 | `supabase/00N_*.sql` | migrations pour une base existante |
+| `supabase/functions/calendrier/` | Edge Function du lien d'abonnement de Calendrier (flux ICS) |
 | `AGENTS.md`, `CLAUDE.md` | consignes pour les agents de code |
 
 ### Ajouter un module
