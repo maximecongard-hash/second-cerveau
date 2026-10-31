@@ -10,7 +10,7 @@ import { app, render, queueRender } from './ui.js';
 // ---------------------------------------------------------------------------
 export async function init() {
   restore();
-  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  registerSW();
   if (DEMO) {
     S.user = { id: 'demo', email: 'Mode démo (données locales)' };
     if (!S.items.size) MODULES.forEach(m => m.seedDemo?.());
@@ -24,6 +24,20 @@ export async function init() {
   setUser(session?.user || null);
   sb.auth.onAuthStateChange((_ev, s) => setUser(s?.user || null));
   render();
+}
+// Service worker : quand une nouvelle version prend la main, on recharge une fois pour l'afficher
+function registerSW() {
+  if (!('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+    .then(reg => document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); }))
+    .catch(() => {});
 }
 function setUser(u) {
   const prev = S.user?.id || null;
