@@ -109,15 +109,31 @@ Nouveau raccourci **Capturer photo**, avec **Afficher dans la feuille de partage
 
 Dans l'éditeur d'une tâche qui a une date, le bouton **Créer un rappel Apple** lance ce raccourci avec le titre, la date et l'heure.
 
-Nouveau raccourci, nommé exactement **Rappel GTD** (ou change le nom dans Réglages > Rappels Apple) :
+Nouveau raccourci, nommé exactement **Rappel GTD** (ou change le nom dans Réglages > Rappels Apple).
 
-1. **Obtenir le dictionnaire de** [Entrée du raccourci] (*Get Dictionary from [Shortcut Input]*).
-2. **Obtenir la valeur pour** `titre` dans le Dictionnaire (*Get Value for `titre` in Dictionary*). **Définir la variable** (*Set Variable*) `Titre`.
-3. **Obtenir la valeur pour** `date` dans le Dictionnaire (*Get Value for `date` in Dictionary*), puis **Obtenir les dates de** cette valeur (*Get Dates from*). **Définir la variable** (*Set Variable*) `Quand`.
-4. **Obtenir la valeur pour** `notes` dans le Dictionnaire (*Get Value for `notes` in Dictionary*). **Définir la variable** (*Set Variable*) `Notes`.
-5. **Ajouter un nouveau rappel** (*Add New Reminder*) : titre `Titre`, notes `Notes`, active **Alerte** (*Alert*) et choisis la variable `Quand`.
+Voici le raccourci terminé (iPhone en anglais) :
 
-Sans heure dans l'app, le rappel sonne à 9 h 00.
+![Raccourci Rappel GTD terminé](docs/raccourci-rappel-gtd.svg)
+
+Étapes (noms des actions en anglais) :
+
+1. **Receive** : laisse « Any from Nowhere » et « If there's no input: Continue ».
+2. **Get Dictionary from Input** : la valeur doit être **Shortcut Input**.
+3. **Get Dictionary Value** : Value for `titre` in **Dictionary**.
+4. **Get Dictionary Value** : Value for `date` in **Dictionary**.
+5. **Get Dates from Input** : choisis la sortie de l'étape 4.
+6. **Get Dictionary Value** : Value for `notes` in **Dictionary**.
+7. **Add New Reminder** :
+   - Remplace « Reminder » par la sortie de l'étape 3.
+   - Touche la flèche **⌄** de l'action pour afficher les options.
+   - **Notes** : la sortie de l'étape 6.
+   - **Alert** : **At Time**, puis la sortie de l'étape 5.
+
+Aux étapes 3, 4 et 6, le champ après « in » doit toujours être **Dictionary**, c'est-à-dire la sortie de l'étape 2. Pour le choisir, touche ce champ, puis **Select Variable**, puis touche l'action « Get dictionary from ».
+
+Renommer les sorties (facultatif) évite de confondre les trois « Dictionary Value ». Touche la puce orange d'une sortie là où elle est utilisée, choisis **Rename**, puis tape `Titre`, `Date texte`, `Quand` ou `Notes`.
+
+Pour tester, crée dans l'app une tâche avec une date et une heure, puis touche **Créer un rappel Apple**. Un rappel doit apparaître dans l'app Rappels. Sans heure dans l'app, le rappel sonne à 9 h 00.
 
 ## 7. Utilisation au quotidien
 
