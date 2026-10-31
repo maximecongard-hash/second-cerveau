@@ -4,7 +4,7 @@ import { uploadImage } from '../../core/images.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { kindOwner } from '../../core/modules.js';
-import { areas, nextActions, nextOrder, sortTasks, spawnNext, toLocalInput, fromLocalInput } from './model.js';
+import { areas, nextActions, nextOrder, sortTasks, spawnNext, recOptions, toLocalInput, fromLocalInput } from './model.js';
 import { pushHint } from '../../core/push.js';
 
 // ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ export function editorHTML(it) {
       ${fRow('Échéance', `<input type="date" data-f="due_date" value="${it.due_date || ''}">`)}
       ${fRow('Durée', sel('duration_min', it.duration_min, [['', '—'], [5, '5 min'], [10, '10 min'], [15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 h'], [90, '1 h 30'], [120, '2 h'], [180, '3 h'], [240, '4 h']]))}
       ${fRow('Énergie', seg('energy', it.energy, [['low', 'Faible'], ['medium', 'Moyenne'], ['high', 'Forte']]))}
-      ${fRow('Répéter', sel('recurrence', it.recurrence, [['', 'Jamais'], ['daily', 'Chaque jour'], ['weekdays', 'Jours ouvrés'], ['weekly', 'Chaque semaine'], ['monthly', 'Chaque mois'], ['yearly', 'Chaque année']]))}
+      ${fRow('Répéter', sel('recurrence', it.recurrence, recOptions(it.scheduled_date || it.due_date, it.recurrence)))}
       ${tagsF}${urlF}
     </div>
     ${linksBlock(it)}

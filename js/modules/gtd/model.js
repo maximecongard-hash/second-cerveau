@@ -49,25 +49,72 @@ export function sortTasks(a, b) {
   return a.created_at.localeCompare(b.created_at);
 }
 
+const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const ORD = { 1: '1er', 2: '2e', 3: '3e', 4: '4e', 5: 'dernier' };
+const dim = (y, m) => new Date(y, m + 1, 0).getDate();
+
+// Règles de répétition : daily, weekdays, weekly, monthly, yearly,
+// monthday:25 (le 25 de chaque mois), nth:1:6 (1er samedi de chaque mois ; 5 = dernier)
+function nthDay(y, m, n, wd) {
+  if (n >= 5) { const last = dim(y, m); return last - ((new Date(y, m, last).getDay() - wd + 7) % 7); }
+  return 1 + ((wd - new Date(y, m, 1).getDay() + 7) % 7) + 7 * (n - 1);
+}
+// Première occurrence d'une règle mensuelle strictement après s
+function monthlyAfter(s, pick) {
+  const d = parseYmd(s);
+  for (let k = 0; k < 3; k++) {
+    const y = d.getFullYear(), m = d.getMonth() + k;
+    const c = ymd(new Date(y, m, pick(new Date(y, m, 1).getFullYear(), new Date(y, m, 1).getMonth())));
+    if (c > s) return c;
+  }
+}
 function nextOccurrence(s, rec) {
   const d = parseYmd(s);
-  switch (rec) {
+  const [kind, a, b] = String(rec).split(':');
+  switch (kind) {
     case 'daily': d.setDate(d.getDate() + 1); break;
     case 'weekdays': do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6); break;
     case 'weekly': d.setDate(d.getDate() + 7); break;
     case 'monthly': {
       const day = d.getDate();
       d.setDate(1); d.setMonth(d.getMonth() + 1);
-      d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+      d.setDate(Math.min(day, dim(d.getFullYear(), d.getMonth())));
       break;
     }
+    case 'monthday': return monthlyAfter(s, (y, m) => Math.min(+a, dim(y, m)));
+    case 'nth': return monthlyAfter(s, (y, m) => nthDay(y, m, +a, +b));
     case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
   }
   return ymd(d);
 }
+// Prochaine occurrence après s, jamais dans le passé : une tâche terminée en retard saute au prochain créneau
+export function nextFuture(s, rec) {
+  let n = nextOccurrence(s, rec);
+  for (let k = 0; n < today() && k < 400; k++) n = nextOccurrence(n, rec);
+  return n;
+}
+
+export function recLabel(rec) {
+  const [kind, a, b] = String(rec).split(':');
+  if (kind === 'monthday') return `Chaque mois, le ${a === '1' ? '1er' : a}`;
+  if (kind === 'nth') return `Chaque mois, le ${ORD[a]} ${DAYS[b]}`;
+  return null;
+}
+// Choix proposés dans l'éditeur, calculés depuis la date de la tâche
+export function recOptions(base, current) {
+  const d = parseYmd(base || today());
+  const opts = [['', 'Jamais'], ['daily', 'Chaque jour'], ['weekdays', 'Jours ouvrés'], ['weekly', 'Chaque semaine'], ['monthly', 'Chaque mois'],
+    [`monthday:${d.getDate()}`, recLabel(`monthday:${d.getDate()}`)]];
+  const n = Math.min(5, Math.ceil(d.getDate() / 7)), nthRec = `nth:${n}:${d.getDay()}`;
+  opts.push([nthRec, recLabel(nthRec)]);
+  if (n < 5 && d.getDate() + 7 > dim(d.getFullYear(), d.getMonth())) opts.push([`nth:5:${d.getDay()}`, recLabel(`nth:5:${d.getDay()}`)]);
+  opts.push(['yearly', 'Chaque année']);
+  if (current && !opts.some(o => o[0] === current)) opts.push([current, recLabel(current) || current]);
+  return opts;
+}
 export function spawnNext(t) {
   const base = t.scheduled_date || t.due_date || today();
-  const next = nextOccurrence(base, t.recurrence);
+  const next = nextFuture(base, t.recurrence);
   const shift = s => (s ? addDays(s, daysBetween(base, next)) : null);
   const copy = newItem({
     ...t, id: uuid(), status: 'active', completed_at: null, day_order: null, focus: null, created_at: nowIso(),

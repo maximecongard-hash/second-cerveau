@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.9.1**, cache SW `sc-v13`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.9.2**, cache SW `sc-v14`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -59,6 +59,8 @@ RLS), hors ligne via localStorage + service worker.
   15. 0.9.1 : Réglages en groupes repliables (Compte, Notifications, Modules, un groupe par module actif, Capture,
      Icône, Données) ; la liste des modules vit dans les Réglages, plus de lien « Modules » dans la barre latérale.
      Sélecteurs date / heure de l'éditeur : l'éditeur se redessine à leur fermeture (sinon iOS les refermait).
+  16. 0.9.2 : répétitions « le 25 de chaque mois » (`monthday:25`) et « 1er samedi du mois » (`nth:1:6`), proposées dans
+     « Répéter » d'après la date de la tâche ; une tâche terminée en retard saute au prochain créneau futur (`nextFuture`).
 
 ## Pistes ouvertes
 
