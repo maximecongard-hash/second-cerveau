@@ -2,6 +2,7 @@ import { $, esc, I, chip, fRow, seg, sel, plural, today, fmtDate, fmtDur, domain
 import { S, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '../../core/store.js';
 import { uploadImage } from '../../core/images.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/ui.js';
+import { linksBlock } from '../../core/links.js';
 import { areas, nextActions, nextOrder, sortTasks, spawnNext } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -51,17 +52,19 @@ export function editorHTML(it) {
       </div>
       <div class="sub-list"><div class="sub-title">Actions (${ts.length})</div>${ts.map(t => `<div class="sub-item">${esc(t.title)}</div>`).join('')}
         <form class="inline-add" data-form="add-proj" data-id="${it.id}"><input id="ed-next" placeholder="+ Prochaine action" enterkeyhint="done" autocomplete="off"></form></div>
+      ${linksBlock(it)}
       <a class="btn block" href="#/project/${it.id}" data-act="close-go">Ouvrir le projet</a>`;
   }
   if (it.kind === 'note') {
-    const backlinks = ofKind('note').filter(n => n.id !== it.id && it.title && n.body.toLowerCase().includes(`[[${it.title.toLowerCase()}]]`));
+    const linkTask = `<form class="inline-add" data-form="link-task" data-id="${it.id}"><input id="ed-link-task" placeholder="+ Action liée à cette note" enterkeyhint="done" autocomplete="off"></form>`;
     return head + title('Titre de la note') +
       `<div class="seg small mode">${[['0', 'Écrire'], ['1', 'Aperçu']].map(([v, l]) => `<button class="${(S.ui.preview ? '1' : '0') === v ? 'on' : ''}" data-act="preview" data-v="${v}">${l}</button>`).join('')}</div>
       ${S.ui.preview ? `<div class="md note-preview">${md(it.body) || '<p class="muted">Vide</p>'}</div>`
-        : `<textarea class="notes-input big" data-f="body" rows="12" placeholder="Écris librement… [[Autre note]] pour lier, #tag pour classer">${esc(it.body)}</textarea>`}
+        : `<textarea class="notes-input big" data-f="body" rows="12" placeholder="Écris librement… [[Titre]] pour citer une note, une tâche ou un projet, #tag pour classer">${esc(it.body)}</textarea>`}
       ${media(it)}
-      <div class="fields">${fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}${tagsF}${urlF}</div>
-      ${backlinks.length ? `<div class="sub-list"><div class="sub-title">Mentionnée dans</div>${backlinks.map(n => `<button class="sub-item link" data-act="edit" data-id="${n.id}">${esc(n.title)}</button>`).join('')}</div>` : ''}`;
+      <div class="fields">${fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}${tagsF}${urlF}
+        ${fRow('Épingle', `<button class="chip ${it.pinned ? 'on' : ''}" data-act="pin" data-id="${it.id}">${it.pinned ? 'Épinglée' : 'Épingler en haut'}</button>`)}</div>
+      ${linksBlock(it, linkTask)}`;
   }
   // tâche
   const ctxs = [...new Set([...S.prefs.contexts, ...(it.contexts || [])])];
@@ -81,6 +84,7 @@ export function editorHTML(it) {
       ${fRow('Répéter', sel('recurrence', it.recurrence, [['', 'Jamais'], ['daily', 'Chaque jour'], ['weekdays', 'Jours ouvrés'], ['weekly', 'Chaque semaine'], ['monthly', 'Chaque mois'], ['yearly', 'Chaque année']]))}
       ${tagsF}${urlF}
     </div>
+    ${linksBlock(it)}
     ${it.scheduled_date || it.due_date ? `<button class="btn block" data-act="reminder" data-id="${it.id}">${I.bell} Créer un rappel Apple</button>` : '<div class="muted small pad center">Ajoute une date pour pouvoir créer un rappel Apple.</div>'}`;
 }
 

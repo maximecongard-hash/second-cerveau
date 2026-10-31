@@ -20,7 +20,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.4.3**, cache SW `sc-v7`.
+- Version **0.5.0**, cache SW `sc-v8`. Migration `003_liens.sql` à coller dans Supabase avant d'utiliser la 0.5.
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
@@ -35,9 +35,16 @@ RLS), hors ligne via localStorage + service worker.
      dans Réglages > Icône : Encre (fond bleu-noir, par défaut) et Papier (fond crème).
   8. 0.4.3 : l'app s'affiche sous le nom « Brain » (logotype « Brain. » en Newsreader italique, point
      au surligneur) ; l'icône de la barre latérale et de la connexion suit le choix des Réglages.
+  9. 0.5.0 : liens entre éléments de tous les modules (colonne `links`, `core/links.js`) : bloc « Liés » dans
+     les éditeurs, feuille « Lier à… », section « Liés » sur la fiche projet, « + Action liée » depuis une note,
+     `[[wikiliens]]` vers notes, projets et tâches, épingle des notes (colonne `pinned`).
 
 ## Pistes ouvertes
 
+- **Feuille de route issue de l'étude du Notion** (31/10/2026) : 0.6 module Notes séparé avec signets
+  (kind `bookmark`, choix « Signet » au tri de l'Inbox) ; 0.7 agenda visuel jour / semaine (`scheduled_time` +
+  `duration_min`) ; 0.8 flux ICS vers Apple Calendar puis import des événements par Raccourci. À clarifier :
+  agenda source iCloud ou Google (les Procédures IA du Notion parlent de Google Agenda).
 - **Phase 2** : remplir les modules Sport et Courses.
 - **Import Notion** : un script ponctuel (`build.py` → `import-notion.sql`) a généré l'import des tâches
   Notion ouvertes. Il contient des données personnelles et n'est volontairement pas dans le dépôt.

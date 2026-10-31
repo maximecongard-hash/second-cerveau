@@ -11,6 +11,7 @@ import { S, DEFAULT_PREFS } from './state.js';
 //   tabOf                          { vue: onglet } pour les sous-vues
 //   views, acts, forms             vues (#/nom/arg), actions data-act, formulaires data-form
 //   kinds                          types d'éléments dont il gère l'éditeur et l'affichage
+//   kindLabel                      { kind: libellé } affiché dans les liens (« Tâche », « Note »…)
 //   editor(it), setField(id, f, v) éditeur des éléments de ses kinds
 //   row(it), searchable(it)        ligne de résultat de recherche
 //   prefs, ui                      valeurs par défaut ajoutées à S.prefs et S.ui

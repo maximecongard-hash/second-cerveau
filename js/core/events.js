@@ -4,6 +4,7 @@ import { sync, setSyncState } from './sync.js';
 import { MODULES, ACTS, FORMS } from './modules.js';
 import { app, render, flushPendingRender, SH, closeSheet, openEditor, setField, openMenu, openSide, closeSide, runUndo } from './ui.js';
 import { liveSearch } from './views.js';
+import { liveLinkSearch } from './links.js';
 
 // ---------------------------------------------------------------------------
 // Actions communes (les modules ajoutent les leurs via registerModule)
@@ -37,6 +38,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.dataset.live === 'search') { liveSearch(t.value); return; }
+  if (t.dataset.live === 'link') { liveLinkSearch(t.value); return; }
   if (MODULES.some(m => m.onInput?.(t))) return;
   if (t.dataset.inline && t.dataset.id) { patch(t.dataset.id, { [t.dataset.inline]: t.value }, { render: false }); return; }
   if (SH.mode === 'editor' && t.dataset.f && TEXT_FIELDS.has(t.dataset.f)) setField(SH.editingId, t.dataset.f, t.value, false);

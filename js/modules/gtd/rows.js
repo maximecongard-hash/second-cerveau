@@ -1,5 +1,5 @@
 import { esc, I, today, fmtDate, fmtDur, fmtAgo, plain, plural } from '../../core/util.js';
-import { S, ofKind } from '../../core/store.js';
+import { S, ofKind, linkedIds } from '../../core/store.js';
 import { itemTags, hasNextAction } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -18,21 +18,24 @@ export function taskRow(t, o = {}) {
   if (t.due_date) meta.push(`<span class="m-due ${t.due_date <= today() && !done ? 'late' : ''}">Échéance ${fmtDate(t.due_date).toLowerCase()}</span>`);
   if (t.recurrence) meta.push('<span>↻</span>');
   if (t.image_path) meta.push('<span>Photo</span>');
+  const lm = linkMeta(t);
+  if (lm) meta.push(lm);
   return `<div class="row task ${done ? 'done' : ''}" data-act="edit" data-id="${t.id}">
     <button class="check" data-act="toggle" data-id="${t.id}" aria-label="${done ? 'Rouvrir' : 'Terminer'}"></button>
     <div class="row-main"><div class="row-title"><span class="rt">${esc(t.title) || '<i>Sans titre</i>'}</span></div>${meta.length ? `<div class="row-meta">${meta.join('')}</div>` : ''}</div>
     ${o.extra || ''}
   </div>`;
 }
+const linkMeta = it => { const n = linkedIds(it.id).length; return n ? `<span class="m-link" title="Éléments liés">${I.link}${n}</span>` : ''; };
 export function noteRow(n) {
   const snippet = plain(n.body).slice(0, 110);
   const tags = itemTags(n);
   const p = n.parent_id && S.items.get(n.parent_id);
   return `<div class="row" data-act="edit" data-id="${n.id}">
     <div class="row-icon">${I.note}</div>
-    <div class="row-main"><div class="row-title">${esc(n.title) || '<i>Sans titre</i>'}</div>
+    <div class="row-main"><div class="row-title">${n.pinned ? `<span class="pin-mark" aria-label="Épinglée">${I.pin}</span>` : ''}${esc(n.title) || '<i>Sans titre</i>'}</div>
     ${snippet ? `<div class="row-snippet">${esc(snippet)}</div>` : ''}
-    <div class="row-meta">${p ? `<span class="m-proj">${esc(p.title)}</span>` : ''}${tags.map(t => `<span class="m-tag">#${esc(t)}</span>`).join('')}<span>${fmtAgo(n.updated_at)}</span></div></div>
+    <div class="row-meta">${p ? `<span class="m-proj">${esc(p.title)}</span>` : ''}${tags.map(t => `<span class="m-tag">#${esc(t)}</span>`).join('')}${linkMeta(n)}<span>${fmtAgo(n.updated_at)}</span></div></div>
     ${n.image_path ? `<img class="thumb" data-img="${esc(n.image_path)}" alt="">` : ''}
   </div>`;
 }

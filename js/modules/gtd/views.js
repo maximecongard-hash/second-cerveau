@@ -2,6 +2,7 @@ import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetwee
 import { S, live, ofKind, byTitle } from '../../core/store.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, itemTags, sortTasks } from './model.js';
 import { taskRow, noteRow, starBtn, projectRow, planBtn } from './rows.js';
+import { linkedSection } from '../../core/links.js';
 
 // ---------------------------------------------------------------------------
 // Vues GTD (adresses inchangées : #/inbox, #/today, #/project/<id>…)
@@ -153,6 +154,7 @@ views.project = id => {
   if (waiting.length) html += sec('En attente', waiting.map(t => taskRow(t, { noProject: true })).join(''));
   if (some.length) html += sec('Un jour / peut-être', some.map(t => taskRow(t, { noProject: true })).join(''));
   html += sec('Notes', notes.map(noteRow).join('') || '<div class="muted pad">Aucune note.</div>', `<button class="link" data-act="new-note" data-id="${p.id}">+ Note</button>`);
+  html += linkedSection(p, new Set([...ts, ...notes].map(x => x.id)));
   if (done.length) html += `<details class="done-sec"><summary>${plural(done.length, 'action terminée', 'actions terminées')}</summary>${done.map(t => taskRow(t, { noProject: true })).join('')}</details>`;
   return { title: 'Projet', html, fab: 'proj-task:' + p.id };
 };
@@ -162,7 +164,7 @@ export function notesList() {
   let list = ofKind('note');
   if (S.ui.noteTag) list = list.filter(n => itemTags(n).includes(S.ui.noteTag));
   if (q) list = list.filter(n => (n.title + ' ' + n.body + ' ' + itemTags(n).join(' ')).toLowerCase().includes(q));
-  list.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  list.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updated_at.localeCompare(a.updated_at));
   return list.length ? list.map(noteRow).join('') : empty(q || S.ui.noteTag ? 'Aucune note trouvée' : 'Aucune note', q ? '' : 'Ton second cerveau commence ici : idées, références, apprentissages.');
 }
 views.notes = () => {

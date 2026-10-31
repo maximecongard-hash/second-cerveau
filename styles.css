@@ -378,6 +378,16 @@ main {
 .sub-title { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
 .sub-item { display: block; padding: 4px 0; font-size: 15px; text-align: left; }
 .sub-list .inline-add input { background: var(--surface); }
+/* Liens entre éléments */
+.link-item { display: flex; align-items: center; gap: 8px; }
+.link-item .sub-item { flex: 1; min-width: 0; }
+.link-item .x { padding: 2px 6px; font-size: 18px; line-height: 1; color: var(--muted); }
+.link-kind { margin-right: 8px; font: 500 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.small-link { display: inline-block; margin: 6px 0 2px; font-size: 14px; }
+.link-pick { width: 100%; text-align: left; }
+.row-meta .m-link { display: inline-flex; align-items: center; gap: 2px; font-family: var(--f-mono); font-size: 12px; }
+.row-meta .m-link svg { width: 13px; height: 13px; }
+.pin-mark svg { width: 14px; height: 14px; margin-right: 4px; vertical-align: -1px; color: var(--muted); }
 
 .kv { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .kv .btn-row { margin: 0; }

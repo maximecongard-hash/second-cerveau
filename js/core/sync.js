@@ -20,6 +20,8 @@ function toRow(it) {
   r.user_id = S.user.id;
   r.contexts = it.contexts || [];
   r.tags = it.tags || [];
+  r.links = it.links || [];
+  r.pinned = !!it.pinned;
   r.title = it.title || '';
   r.body = it.body || '';
   r.source = it.source || 'app';
@@ -28,7 +30,7 @@ function toRow(it) {
 function fromRow(r) {
   return {
     ...r,
-    contexts: r.contexts || [], tags: r.tags || [], body: r.body || '',
+    contexts: r.contexts || [], tags: r.tags || [], links: r.links || [], pinned: !!r.pinned, body: r.body || '',
     scheduled_time: r.scheduled_time ? r.scheduled_time.slice(0, 5) : null
   };
 }
@@ -87,7 +89,7 @@ export async function sync() {
   } catch (e) {
     console.error('sync', e);
     S.lastError = /column|schema cache|violates check/i.test(e.message || '')
-      ? 'base de données à mettre à jour (supabase/002_pack1.sql)'
+      ? 'base de données à mettre à jour (supabase/003_liens.sql)'
       : (e.message || String(e));
   } finally {
     S.syncing = false;
