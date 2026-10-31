@@ -5,12 +5,13 @@
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------------
--- Éléments : inbox, tâches, projets, notes et domaines dans une seule table
+-- Éléments : inbox, tâches, projets, notes, signets et domaines dans une seule table
 -- ---------------------------------------------------------------------------
 create table if not exists public.items (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  kind           text not null default 'inbox' check (kind in ('inbox','task','project','note','area')),
+  -- inbox, task, project, area (Organisation), note, bookmark (Notes)… : chaque module déclare les siens
+  kind           text not null default 'inbox' constraint items_kind_check check (kind ~ '^[a-z][a-z_]*$'),
   status         text not null default 'active' check (status in ('active','waiting','someday','done','trashed','clarify')),
   title          text not null default '',
   body           text not null default '',

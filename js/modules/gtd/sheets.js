@@ -1,8 +1,9 @@
-import { $, esc, I, chip, fRow, seg, sel, plural, today, fmtDate, fmtDur, domain, md, nowIso, empty } from '../../core/util.js';
+import { $, esc, I, chip, fRow, seg, sel, plural, today, fmtDate, fmtDur, domain, nowIso, empty } from '../../core/util.js';
 import { S, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '../../core/store.js';
 import { uploadImage } from '../../core/images.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
+import { kindOwner } from '../../core/modules.js';
 import { areas, nextActions, nextOrder, sortTasks, spawnNext } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ function media(it) {
   return `${it.image_path ? `<img class="cap-img" data-img="${esc(it.image_path)}" alt="">` : ''}${it.url ? `<a class="link-card" href="${esc(it.url)}" target="_blank" rel="noopener">${I.link}<span>${esc(domain(it.url))}</span></a>` : ''}`;
 }
 function editorHead(it) {
-  const kinds = [['task', 'Tâche'], ['project', 'Projet'], ['note', 'Note']];
+  const kinds = [['task', 'Tâche'], ['project', 'Projet'], ...(kindOwner('note') ? [['note', 'Note']] : [])];
   const mid = it.kind === 'area' ? '<span class="sheet-kind">Domaine</span>'
     : `<div class="seg small">${kinds.map(([v, l]) => `<button class="${it.kind === v ? 'on' : ''}" data-act="kind" data-v="${v}">${l}</button>`).join('')}</div>`;
   return `<div class="sheet-head"><button class="link strong" data-act="close">OK</button>${mid}<button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
@@ -54,17 +55,6 @@ export function editorHTML(it) {
         <form class="inline-add" data-form="add-proj" data-id="${it.id}"><input id="ed-next" placeholder="+ Prochaine action" enterkeyhint="done" autocomplete="off"></form></div>
       ${linksBlock(it)}
       <a class="btn block" href="#/project/${it.id}" data-act="close-go">Ouvrir le projet</a>`;
-  }
-  if (it.kind === 'note') {
-    const linkTask = `<form class="inline-add" data-form="link-task" data-id="${it.id}"><input id="ed-link-task" placeholder="+ Action liée à cette note" enterkeyhint="done" autocomplete="off"></form>`;
-    return head + title('Titre de la note') +
-      `<div class="seg small mode">${[['0', 'Écrire'], ['1', 'Aperçu']].map(([v, l]) => `<button class="${(S.ui.preview ? '1' : '0') === v ? 'on' : ''}" data-act="preview" data-v="${v}">${l}</button>`).join('')}</div>
-      ${S.ui.preview ? `<div class="md note-preview">${md(it.body) || '<p class="muted">Vide</p>'}</div>`
-        : `<textarea class="notes-input big" data-f="body" rows="12" placeholder="Écris librement… [[Titre]] pour citer une note, une tâche ou un projet, #tag pour classer">${esc(it.body)}</textarea>`}
-      ${media(it)}
-      <div class="fields">${fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}${tagsF}${urlF}
-        ${fRow('Épingle', `<button class="chip ${it.pinned ? 'on' : ''}" data-act="pin" data-id="${it.id}">${it.pinned ? 'Épinglée' : 'Épingler en haut'}</button>`)}</div>
-      ${linksBlock(it, linkTask)}`;
   }
   // tâche
   const ctxs = [...new Set([...S.prefs.contexts, ...(it.contexts || [])])];

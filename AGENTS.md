@@ -9,7 +9,9 @@ PWA personnelle de type « second cerveau », pensée d'abord pour l'iPhone inst
 L'app est organisée en **modules** (thèmes) affichés dans une barre latérale :
 
 - **Organisation** (`gtd`) : capture rapide (app, raccourcis iOS, partage), tri de l'Inbox, prochaines actions
-  par contexte, projets, notes liées en Markdown, planification de la journée (Top 3, agenda), revues du soir et hebdo.
+  par contexte, projets, planification de la journée (Top 3, agenda), revues du soir et hebdo.
+- **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
+  Reliés aux tâches et projets par les liens du cœur.
 - **Sport** et **Courses** : en aperçu, désactivés par défaut, contenu prévu en phase 2.
 
 Autres repères :
@@ -56,7 +58,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `config.js` | URL et clé **publique** Supabase (`window.SC_CONFIG`) |
 | `js/main.js` | point d'entrée : importe le cœur, puis les modules (ordre = ordre par défaut de la barre), puis `init()` |
 | `js/core/` | cœur commun, voir ci-dessous |
-| `js/modules/<id>/` | un dossier par module (`gtd`, `sport`, `courses`) |
+| `js/modules/<id>/` | un dossier par module (`gtd`, `notes`, `sport`, `courses`) |
 | `sw.js` | cache hors ligne, stratégie stale-while-revalidate, liste `SHELL` de tous les fichiers |
 | `manifest.webmanifest`, `manifest-papier.webmanifest`, `icons/` | installation sur l'écran d'accueil ; deux icônes au choix (Encre par défaut, Papier), sources SVG dans `icons/src/`, choix appliqué par `applyIcon()` de `util.js` |
 | `supabase/schema.sql` | schéma complet, idempotent |
@@ -88,7 +90,8 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
   `state.js` reste sans import pour éviter les cycles.
 - **État global unique `S`** : `items` (Map id → item), `prefs`, `dirty` (ids à envoyer), `cursor` de synchro, `ui`.
   Un module ajoute ses préférences et son état d'affichage via `prefs` / `ui` dans `registerModule`, pas en modifiant `S` au chargement.
-- **Une seule table `items`** pour tout : `kind` (`inbox | task | project | note | area` pour le GTD),
+- **Une seule table `items`** pour tout : `kind` (`inbox | task | project | area` pour le GTD, `note | bookmark` pour Notes ;
+  depuis la migration 004 la base accepte tout type en minuscules, un nouveau module n'a pas besoin de migration pour ses kinds),
   `status` ∈ `active | waiting | someday | done | trashed | clarify`. La hiérarchie passe par `parent_id`
   (tâche → projet → domaine). La suppression est logique (`status: 'trashed'`). Chaque `kind` appartient à un module
   (`kinds`, `kindOwner()`, libellé via `kindLabel`).

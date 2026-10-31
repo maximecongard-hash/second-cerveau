@@ -10,6 +10,7 @@ import { S, DEFAULT_PREFS } from './state.js';
 //   tabs                           [[vue, libellé, icône, badge?()]] onglets du module
 //   tabOf                          { vue: onglet } pour les sous-vues
 //   views, acts, forms             vues (#/nom/arg), actions data-act, formulaires data-form
+//   fab(v)                         bouton + des vues du module (la vue renvoie { fab: v })
 //   kinds                          types d'éléments dont il gère l'éditeur et l'affichage
 //   kindLabel                      { kind: libellé } affiché dans les liens (« Tâche », « Note »…)
 //   editor(it), setField(id, f, v) éditeur des éléments de ses kinds

@@ -6,10 +6,11 @@ import { DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './
 import { anyRow } from './rows.js';
 import { views } from './views.js';
 import { editorHTML, setField } from './sheets.js';
-import { acts, forms, onInput, onChange } from './actions.js';
+import { acts, forms, fab, onChange } from './actions.js';
 
 // ---------------------------------------------------------------------------
-// Module « Organisation » : le GTD d'origine (inbox, aujourd'hui, actions, projets, notes)
+// Module « Organisation » : le GTD d'origine (inbox, aujourd'hui, actions, projets)
+// Les notes et signets vivent dans le module Notes (js/modules/notes)
 // ---------------------------------------------------------------------------
 function settings() {
   return sec('Contextes', `<div class="chips wrap">${S.prefs.contexts.map(c => `<span class="chip on">${esc(c)}<button class="x" data-act="ctx-del" data-v="${esc(c)}" aria-label="Retirer">×</button></span>`).join('')}</div>
@@ -49,17 +50,13 @@ function seedDemo() {
   add({ kind: 'inbox', title: 'Idée : podcast sur la productivité', source: 'shortcut' });
   add({ kind: 'inbox', title: 'https://example.com/article-gtd', url: 'https://example.com/article-gtd', source: 'shortcut' });
   add({ kind: 'inbox', title: 'Appeler le garagiste pour le contrôle technique' });
-  const train = add({ kind: 'task', title: 'Comparer les prix des billets de train', parent_id: p1.id, contexts: ['@ordi'], duration_min: 30, scheduled_date: t0, day_order: 1, focus: 1 });
+  add({ kind: 'task', title: 'Comparer les prix des billets de train', parent_id: p1.id, contexts: ['@ordi'], duration_min: 30, scheduled_date: t0, day_order: 1, focus: 1 });
   add({ kind: 'task', title: 'Courses pour le dîner', contexts: ['@courses'], scheduled_date: t0, scheduled_time: '18:30', duration_min: 45 });
   add({ kind: 'task', title: 'Répondre au mail de Julie', contexts: ['@ordi'], scheduled_date: t0, day_order: 2, duration_min: 15 });
   add({ kind: 'task', title: 'Payer la facture d’électricité', contexts: ['@ordi'], due_date: addDays(t0, 2), recurrence: 'monthly' });
-  const theme = add({ kind: 'task', title: 'Choisir un thème pour le site', parent_id: p2.id, contexts: ['@ordi'], energy: 'high' });
+  add({ kind: 'task', title: 'Choisir un thème pour le site', parent_id: p2.id, contexts: ['@ordi'], energy: 'high' });
   add({ kind: 'task', title: 'Devis du plombier', status: 'waiting', waiting_for: 'M. Durand', contexts: [] });
   add({ kind: 'task', title: 'Apprendre la guitare', status: 'someday' });
-  add({ kind: 'note', title: 'Principes GTD', body: '# Les 5 étapes\n1. **Capturer**\n2. Clarifier\n3. Organiser\n4. Réfléchir (revue)\n5. Agir\n\nVoir aussi [[Idées de projets]] #productivité' });
-  add({ kind: 'note', title: 'Idées de projets', body: '- Newsletter mensuelle\n- [ ] Atelier photo\n- [[Refaire le site perso]]\n\n#idées', pinned: true });
-  add({ kind: 'note', title: 'Comparateurs de billets', body: 'Les sites qui affichent toutes les compagnies.\n\n#voyage', url: 'https://example.com/trains', links: [train.id, p1.id] });
-  add({ kind: 'note', title: 'Inspirations de design', body: 'Sites sobres, beaucoup de blanc, une seule couleur d’accent.', links: [theme.id] });
   S.prefs.seeded = true;
   S.prefs.areasV2 = true;
 }
@@ -68,20 +65,19 @@ registerModule({
   id: 'gtd',
   label: 'Organisation',
   icon: I.checkCircle,
-  description: 'Inbox, journée, prochaines actions, projets et notes (méthode GTD).',
+  description: 'Inbox, journée, prochaines actions et projets (méthode GTD).',
   defaultOn: true,
   home: 'today',
   tabs: [
     ['inbox', 'Inbox', I.inbox, () => inboxItems().length],
     ['today', "Aujourd'hui", I.sun],
     ['actions', 'Actions', I.list],
-    ['projects', 'Projets', I.folder],
-    ['notes', 'Notes', I.note]
+    ['projects', 'Projets', I.folder]
   ],
   tabOf: { clarify: 'inbox', project: 'projects', evening: 'today' },
-  kinds: ['inbox', 'task', 'project', 'note', 'area'],
-  kindLabel: { inbox: 'Inbox', task: 'Tâche', project: 'Projet', note: 'Note', area: 'Domaine' },
-  views, acts, forms,
+  kinds: ['inbox', 'task', 'project', 'area'],
+  kindLabel: { inbox: 'Inbox', task: 'Tâche', project: 'Projet', area: 'Domaine' },
+  views, acts, forms, fab,
   prefs: {
     contexts: ['@maison', '@bureau', '@ordi', '@tél', '@courses', '@dehors'],
     lastReview: null,
@@ -90,7 +86,7 @@ registerModule({
     seeded: false,
     areasV2: false
   },
-  ui: { day: today(), ctx: 'all', reorder: false, noteTag: null, noteQuery: '', preview: false, review: new Set() },
+  ui: { day: today(), ctx: 'all', reorder: false, review: new Set() },
   badge: () => inboxItems().length,
   menu: () => [
     ['#/evening', 'Revue du soir'],
@@ -106,7 +102,6 @@ registerModule({
   settings,
   afterSync,
   seedDemo,
-  onInput,
   onChange,
   onResume: () => { if (S.ui.day < today() && route().name === 'today') { S.ui.day = today(); queueRender(); } }
 });

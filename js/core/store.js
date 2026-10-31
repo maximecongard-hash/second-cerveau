@@ -79,6 +79,12 @@ export function savePrefs() {
 export const live = () => [...S.items.values()].filter(i => i.status !== 'trashed');
 export const ofKind = k => live().filter(i => i.kind === k);
 export const byTitle = (a, b) => a.title.localeCompare(b.title, 'fr');
+// Tags d'un élément : champ tags + #mots du texte
+export function itemTags(it) {
+  const set = new Set(it.tags || []);
+  for (const m of (it.body || '').matchAll(/(^|\s)#([\p{L}\d_-]+)/gu)) set.add(m[2]);
+  return [...set];
+}
 
 // ---------------------------------------------------------------------------
 // Liens entre éléments, tous modules confondus : stockés d'un seul côté, lus dans les deux sens

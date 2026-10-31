@@ -1,8 +1,8 @@
 import { TEXT_FIELDS } from './state.js';
-import { patch } from './store.js';
+import { S, patch } from './store.js';
 import { sync, setSyncState } from './sync.js';
 import { MODULES, ACTS, FORMS } from './modules.js';
-import { app, render, flushPendingRender, SH, closeSheet, openEditor, setField, openMenu, openSide, closeSide, runUndo } from './ui.js';
+import { app, render, flushPendingRender, SH, closeSheet, openEditor, setField, openMenu, openSide, closeSide, runUndo, activeModule, toast } from './ui.js';
 import { liveSearch } from './views.js';
 import { liveLinkSearch } from './links.js';
 
@@ -16,6 +16,19 @@ Object.assign(ACTS, {
   undo: () => runUndo(),
   edit: el => openEditor(el.dataset.id),
   set: el => setField(SH.editingId, el.dataset.f, el.dataset.v, true),
+  // bouton + : géré par le module de la vue affichée
+  fab: el => activeModule().fab?.(el.dataset.v),
+  trash: el => {
+    const id = el.dataset.id;
+    const prev = S.items.get(id)?.status;
+    if (!prev) return;
+    if (SH.draftId === id) SH.draftId = null;
+    patch(id, { status: 'trashed' });
+    closeSheet();
+    toast('Supprimé', () => patch(id, { status: prev }));
+  },
+  // lien externe dans une ligne cliquable : laisse le navigateur l'ouvrir
+  'open-url': () => {},
   'side-open': () => openSide(),
   'side-close': () => closeSide()
 });

@@ -41,11 +41,6 @@ export function migrateAreas() {
   const have = new Set(areas().map(a => a.title));
   DEFAULT_AREAS.filter(t => !have.has(t)).forEach(t => saveItem(newItem({ kind: 'area', title: t }), { render: false }));
 }
-export function itemTags(it) {
-  const set = new Set(it.tags || []);
-  for (const m of (it.body || '').matchAll(/(^|\s)#([\p{L}\d_-]+)/gu)) set.add(m[2]);
-  return [...set];
-}
 export function sortTasks(a, b) {
   const da = a.due_date || '9999', db = b.due_date || '9999';
   if (da !== db) return da.localeCompare(db);
@@ -105,6 +100,8 @@ export function clarify(id, v) {
     case 'waiting': patch(id, { kind: 'task', status: 'waiting' }); openEditor(id, { focus: 'waiting_for' }); break;
     case 'project': patch(id, { kind: 'project', status: 'active' }); openEditor(id); document.getElementById('ed-next')?.focus(); break;
     case 'note': patch(id, { kind: 'note', status: 'active' }); openEditor(id); break;
+    // un titre qui n'est que l'adresse est vidé : le signet affiche le domaine en attendant un vrai titre
+    case 'bookmark': patch(id, { kind: 'bookmark', status: 'active', title: it.url && it.title.trim() === it.url ? '' : it.title }); openEditor(id); break;
     case 'someday': patch(id, { kind: 'task', status: 'someday' }); toast('Rangé dans Un jour', () => patch(id, { kind: 'inbox', status: 'active' })); break;
     case 'trash': patch(id, { status: 'trashed' }); toast('Supprimé', () => patch(id, { status: 'active' })); break;
   }

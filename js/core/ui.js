@@ -80,7 +80,7 @@ export function render() {
         <a class="icon-btn" href="#/search" aria-label="Rechercher">${I.search}</a>
         <button class="icon-btn" data-act="menu" aria-label="Menu">${I.menu}</button></div></header>
       <main id="main">${v.html}</main>
-      ${v.fab ? `<button class="fab" data-act="fab" data-v="${v.fab}" aria-label="Ajouter">${I.plus}</button>` : ''}
+      ${v.fab ? `<button class="fab" data-act="fab" data-v="${esc(v.fab)}" aria-label="Ajouter">${I.plus}</button>` : ''}
       ${tabs.length ? `<nav class="tabs">${tabs.map(([k, l, ic, badge]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${ic}<span>${l}</span>${badgeHtml(badge?.(), 'badge')}</a>`).join('')}</nav>` : ''}
     </div>`;
   hydrateImages(app);
@@ -112,7 +112,7 @@ export function showSheet() {
 export function closeSheet() {
   if ((SH.mode === 'editor' || SH.mode === 'link') && SH.draftId) {
     const d = S.items.get(SH.draftId);
-    if (d && !d.title.trim() && !d.body.trim() && !d.image_path) patch(d.id, { status: 'trashed' }, { render: false });
+    if (d && !d.title.trim() && !d.body.trim() && !d.image_path && !d.url) patch(d.id, { status: 'trashed' }, { render: false });
   }
   SH.draftId = null;
   const gen = ++sheetGen;

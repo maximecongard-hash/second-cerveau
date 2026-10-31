@@ -1,6 +1,6 @@
 # Second Cerveau
 
-PWA personnelle de type GTD : capture rapide depuis l'iPhone, tri de l'Inbox, prochaines actions par contexte, projets, notes liées et planification de la journée. Les données sont synchronisées avec Supabase et l'app fonctionne hors ligne.
+PWA personnelle de type GTD : capture rapide depuis l'iPhone, tri de l'Inbox, prochaines actions par contexte, projets, notes et signets liés aux tâches, et planification de la journée. Les données sont synchronisées avec Supabase et l'app fonctionne hors ligne.
 
 - **App** : https://maximecongard-hash.github.io/second-cerveau/
 - **Démo sans compte** : https://maximecongard-hash.github.io/second-cerveau/?demo=1 (données fictives, stockées seulement dans le navigateur)
@@ -20,7 +20,7 @@ Le script crée :
 
 | Élément | Rôle |
 |---|---|
-| table `items` | inbox, tâches, projets, notes et domaines |
+| table `items` | inbox, tâches, projets, domaines, notes et signets |
 | table `prefs` | contextes, date de la dernière revue… |
 | table `capture_tokens` | jetons secrets utilisés par les raccourcis iPhone |
 | fonction `capture()` | ajoute un élément dans l'Inbox à partir d'un jeton |
@@ -32,6 +32,7 @@ Base créée avant une mise à jour : colle aussi, dans l'ordre, les migrations 
 
 - Avant la version 0.2 : [`supabase/002_pack1.sql`](supabase/002_pack1.sql) (Top 3, résultat attendu, date de revue).
 - Avant la version 0.5 : [`supabase/003_liens.sql`](supabase/003_liens.sql) (liens entre tâches, notes et projets, épingle). Sans elle, la pastille de synchro passe en erreur.
+- Avant la version 0.6 : [`supabase/004_signets.sql`](supabase/004_signets.sql) (signets, et types d'éléments ouverts aux nouveaux modules). Sans elle, enregistrer un signet échoue.
 
 ## 2. Installer l'app sur l'iPhone
 
@@ -141,7 +142,7 @@ Pour tester, crée dans l'app une tâche avec une date et une heure, puis touche
 ## 7. Utilisation au quotidien
 
 - **Dans la journée** : tu captures tout avec le bouton Action, Siri ou le partage. Pas besoin de trier.
-- **Le soir** : onglet Inbox > **Trier**. Pour chaque élément : fait, aujourd'hui, prochaine action, projet, en attente, un jour, note ou suppression.
+- **Le soir** : onglet Inbox > **Trier**. Pour chaque élément : fait, aujourd'hui, prochaine action, projet, en attente, un jour, note, signet ou suppression. Un élément partagé avec un lien propose d'emblée « Signet ».
 - **Le matin ou la veille** : onglet Aujourd'hui > **Choisir dans mes prochaines actions**. Ajoute une heure aux tâches qui doivent tomber à un moment précis ; elles passent dans l'Agenda.
 - **Chaque semaine** : menu **⋯** > **Revue hebdo**.
 
@@ -151,7 +152,8 @@ Le point en haut à droite indique la synchro : vert = synchronisé, orange = en
 
 L'app est organisée en modules, affichés dans une barre latérale : fixe sur grand écran, ouverte avec le bouton ☰ sur iPhone.
 
-- **Organisation** : le GTD (Inbox, Aujourd'hui, Actions, Projets, Notes).
+- **Organisation** : le GTD (Inbox, Aujourd'hui, Actions, Projets).
+- **Notes** : notes en Markdown, signets à lire ou lus, éléments épinglés. Chaque note ou signet peut être lié à des tâches et des projets (« Liés », « + Lier à… », « + Action liée »).
 - **Sport** et **Courses** : en aperçu, désactivés par défaut.
 
 Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque module et change leur ordre. Le premier module s'ouvre au lancement. Ce choix est enregistré dans tes préférences et synchronisé entre tes appareils.
@@ -164,7 +166,7 @@ Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque modu
 | `js/main.js` | point d'entrée : charge le cœur puis les modules |
 | `js/core/` | cœur commun : état, synchro Supabase, rendu, barre latérale, réglages, recherche |
 | `js/core/modules.js` | registre des modules (la liste des propriétés d'un module y est décrite) |
-| `js/modules/<module>/` | un dossier par module (`gtd`, `sport`, `courses`) |
+| `js/modules/<module>/` | un dossier par module (`gtd`, `notes`, `sport`, `courses`) |
 | `config.js` | URL et clé publique Supabase |
 | `sw.js` | cache hors ligne : change `CACHE` à chaque nouvelle version et ajoute chaque nouveau fichier de `js/` à `SHELL` |
 | `manifest.webmanifest`, `icons/` | installation sur l'écran d'accueil |
