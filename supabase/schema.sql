@@ -30,6 +30,8 @@ create table if not exists public.items (
   outcome        text,
   review_date    date,
   recurrence     text check (recurrence in ('daily','weekdays','weekly','monthly','yearly')),
+  links          uuid[] not null default '{}',
+  pinned         boolean not null default false,
   source         text not null default 'app',
   completed_at   timestamptz,
   created_at     timestamptz not null default now(),

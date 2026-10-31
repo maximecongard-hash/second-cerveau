@@ -76,6 +76,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `events.js` | écouteurs globaux et actions communes |
 | `util.js` | dates, formats, `esc()`, `md()`, icônes `I`, petits gabarits (`sec`, `empty`) |
 | `images.js` | redimensionnement, upload et URL signées des photos |
+| `links.js` | liens entre éléments de tous les modules : bloc « Liés » des éditeurs, section de page, feuille « Lier à… », `[[wikiliens]]`, épingle |
 | `boot.js` | `init()` : restauration, mode démo ou session Supabase, premier rendu |
 
 ## Architecture
@@ -88,8 +89,14 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 - **État global unique `S`** : `items` (Map id → item), `prefs`, `dirty` (ids à envoyer), `cursor` de synchro, `ui`.
   Un module ajoute ses préférences et son état d'affichage via `prefs` / `ui` dans `registerModule`, pas en modifiant `S` au chargement.
 - **Une seule table `items`** pour tout : `kind` (`inbox | task | project | note | area` pour le GTD),
-  `status` ∈ `active | waiting | someday | done | trashed | clarify`. Les liens passent par `parent_id`.
-  La suppression est logique (`status: 'trashed'`). Chaque `kind` appartient à un module (`kinds`, `kindOwner()`).
+  `status` ∈ `active | waiting | someday | done | trashed | clarify`. La hiérarchie passe par `parent_id`
+  (tâche → projet → domaine). La suppression est logique (`status: 'trashed'`). Chaque `kind` appartient à un module
+  (`kinds`, `kindOwner()`, libellé via `kindLabel`).
+- **Liens entre éléments** (0.5) : colonne `links uuid[]`, stockée d'un seul côté et lue dans les deux sens.
+  Toujours passer par `linkedIds()`, `linked()`, `link()`, `unlink()` de `store.js`. `mentionsOf()` donne les
+  éléments qui citent `[[titre]]`, `findByTitle()` résout un wikilien. L'interface commune (bloc « Liés »,
+  section de page, feuille « Lier à… ») est dans `core/links.js` : c'est par là qu'un module montre les éléments
+  d'un autre module, sans l'importer.
 - **Écrire une donnée** : toujours via `newItem()`, `saveItem()` ou `patch()` de `store.js`. Ces fonctions mettent
   `updated_at`, marquent l'item `dirty`, persistent en localStorage et planifient la synchro. Ne jamais modifier `S.items` à la main.
 - **Routage** : par hash `#/vue/arg`. Une vue est une fonction de `views` qui renvoie `{ title, html }`.

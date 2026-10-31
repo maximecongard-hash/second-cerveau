@@ -96,9 +96,10 @@ export const closeSide = () => document.body.classList.remove('side-open');
 // ---------------------------------------------------------------------------
 // Feuilles (éditeur, menu, et feuilles propres aux modules)
 // ---------------------------------------------------------------------------
-// mode : 'editor' | 'menu' | autre valeur choisie par un module
+// mode : 'editor' | 'menu' | 'link' | autre valeur choisie par un module
 // onSubmit : action lancée par Cmd/Ctrl + Entrée
-export const SH = { mode: null, editingId: null, draftId: null, onSubmit: null };
+// linkFrom, linkBack : feuille « Lier à… » (élément d'origine, retour à son éditeur)
+export const SH = { mode: null, editingId: null, draftId: null, onSubmit: null, linkFrom: null, linkBack: false };
 export const sheet = $('#sheet');
 const sheetWrap = $('#sheet-wrap');
 let sheetGen = 0;
@@ -109,7 +110,7 @@ export function showSheet() {
   document.body.classList.add('noscroll');
 }
 export function closeSheet() {
-  if (SH.mode === 'editor' && SH.draftId) {
+  if ((SH.mode === 'editor' || SH.mode === 'link') && SH.draftId) {
     const d = S.items.get(SH.draftId);
     if (d && !d.title.trim() && !d.body.trim() && !d.image_path) patch(d.id, { status: 'trashed' }, { render: false });
   }

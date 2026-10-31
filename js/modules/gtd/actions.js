@@ -53,12 +53,6 @@ export const acts = {
   },
   reminder: el => createReminder(el.dataset.id),
   preview: el => { S.ui.preview = el.dataset.v === '1'; renderEditor(); },
-  wiki: el => {
-    const t = el.dataset.title;
-    const n = ofKind('note').find(x => x.title.toLowerCase() === t.toLowerCase());
-    if (n) openEditor(n.id);
-    else { const it = saveItem(newItem({ kind: 'note', title: t })); openEditor(it.id); }
-  },
   'new-note': el => createAndEdit({ kind: 'note', parent_id: el.dataset.id }),
   clar: el => clarify(el.dataset.id, el.dataset.v),
   'clarify-one': el => { location.hash = '#/clarify/' + el.dataset.id; },
@@ -127,6 +121,17 @@ export const forms = {
     saveItem(newItem({ kind: 'task', title: v, parent_id: f.dataset.id }));
     input.value = '';
     if (SH.mode === 'editor') { renderEditor(); $('#ed-next')?.focus(); }
+  },
+  // depuis une note : prochaine action liée à la note (et à son projet)
+  'link-task': f => {
+    const input = f.querySelector('input'), v = input.value.trim();
+    const n = S.items.get(f.dataset.id);
+    if (!v || !n) return;
+    const p = n.parent_id && S.items.get(n.parent_id);
+    saveItem(newItem({ kind: 'task', title: v, links: [n.id], parent_id: p?.kind === 'project' ? p.id : null }));
+    input.value = '';
+    toast('Action ajoutée');
+    if (SH.mode === 'editor') { renderEditor(); $('#ed-link-task')?.focus(); }
   },
   'ctx-add': f => {
     const input = f.querySelector('input');

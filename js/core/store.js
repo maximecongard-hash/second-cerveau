@@ -49,7 +49,8 @@ export function newItem(fields = {}) {
     id: uuid(), user_id: S.user?.id || null, kind: 'inbox', status: 'active', title: '', body: '',
     url: null, image_path: null, parent_id: null, contexts: [], tags: [], duration_min: null,
     energy: null, due_date: null, scheduled_date: null, scheduled_time: null, day_order: null,
-    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, source: 'app', completed_at: null,
+    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false,
+    source: 'app', completed_at: null,
     created_at: now, updated_at: now, ...fields
   };
 }
@@ -78,3 +79,37 @@ export function savePrefs() {
 export const live = () => [...S.items.values()].filter(i => i.status !== 'trashed');
 export const ofKind = k => live().filter(i => i.kind === k);
 export const byTitle = (a, b) => a.title.localeCompare(b.title, 'fr');
+
+// ---------------------------------------------------------------------------
+// Liens entre éléments, tous modules confondus : stockés d'un seul côté, lus dans les deux sens
+// ---------------------------------------------------------------------------
+export function linkedIds(id) {
+  const out = new Set(S.items.get(id)?.links || []);
+  for (const x of S.items.values()) if (x.links?.includes(id)) out.add(x.id);
+  out.delete(id);
+  return [...out];
+}
+export const linked = id => linkedIds(id).map(i => S.items.get(i)).filter(i => i && i.status !== 'trashed');
+export function link(a, b) {
+  const it = S.items.get(a);
+  if (!it || a === b || !S.items.has(b) || linkedIds(a).includes(b)) return;
+  patch(a, { links: [...(it.links || []), b] });
+}
+export function unlink(a, b) {
+  for (const [x, y] of [[a, b], [b, a]]) {
+    const it = S.items.get(x);
+    if (it?.links?.includes(y)) patch(x, { links: it.links.filter(i => i !== y) });
+  }
+}
+// Éléments dont le texte cite [[titre]]
+export function mentionsOf(it) {
+  const key = it.title && `[[${it.title.toLowerCase()}]]`;
+  return key ? live().filter(x => x.id !== it.id && x.body?.toLowerCase().includes(key)) : [];
+}
+// Cible d'un [[wikilien]] : titre exact, de préférence une note, puis un projet, puis le reste
+const WIKI_ORDER = ['note', 'project', 'task'];
+export function findByTitle(t) {
+  const k = t.trim().toLowerCase();
+  const rank = i => { const r = WIKI_ORDER.indexOf(i.kind); return r < 0 ? WIKI_ORDER.length : r; };
+  return live().filter(i => i.kind !== 'area' && i.title.trim().toLowerCase() === k).sort((a, b) => rank(a) - rank(b))[0] || null;
+}
