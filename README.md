@@ -55,13 +55,12 @@ Tu colleras ce jeton en installant les raccourcis (étape 4). Si tu le révoques
 
 ## 4. Installer les raccourcis iPhone
 
-Les quatre raccourcis sont déjà prêts. Tu n'as rien à construire : tu les installes, tu colles ton jeton, c'est tout.
+Les trois raccourcis sont déjà prêts. Tu n'as rien à construire : tu les installes, tu colles ton jeton, c'est tout.
 
 | Raccourci | À quoi il sert |
 |---|---|
 | **Capturer** | Noter une idée (texte ou dictée) ou un lien partagé, qui arrive dans l'Inbox. |
 | **Capturer photo** | Prendre ou partager une photo, avec une légende, qui arrive dans l'Inbox. |
-| **Rappel GTD** | Lancé par l'app quand tu touches « Créer un rappel Apple » dans une tâche. |
 | **Agenda Apple** | Envoie tes prochains événements de Calendrier à Brain (voir la partie 5). |
 
 ### Avant : supprime tes anciens raccourcis
@@ -75,22 +74,18 @@ Pour chaque raccourci, **sur l'iPhone, dans Safari** :
 1. Touche le lien :
    - [Capturer](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Capturer.shortcut)
    - [Capturer photo](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Capturer%20photo.shortcut)
-   - [Rappel GTD](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Rappel%20GTD.shortcut)
    - [Agenda Apple](https://maximecongard-hash.github.io/second-cerveau/raccourcis/Agenda%20Apple.shortcut)
 2. Safari demande s'il faut télécharger le fichier : touche **Télécharger** (*Download*).
 3. Touche l'icône de téléchargement (flèche bleue dans la barre d'adresse), puis le fichier. L'app Raccourcis s'ouvre.
 4. Touche **Configurer le raccourci** (*Set Up Shortcut*). Pour Capturer, Capturer photo et Agenda Apple, l'iPhone te demande ton jeton : dans l'app Brain, menu **⋯** > **Réglages** > **Capture iPhone** > **Copier**, puis colle-le ici.
 5. Touche **Ajouter le raccourci** (*Add Shortcut*).
 
-Le nom **Rappel GTD** doit rester tel quel : l'app lance ce raccourci par son nom. Si tu le renommes, tape le nouveau nom dans l'app, Réglages > Rappels Apple.
-
 ### Essayer
 
 - **Capturer** : lance-le, tape « test », valide. Le téléphone vibre et « test » apparaît dans l'Inbox de l'app.
 - **Capturer photo** : lance-le, prends une photo, laisse la légende vide. Elle apparaît dans l'Inbox.
-- **Rappel GTD** : dans l'app, ouvre une tâche avec une date, touche **Créer un rappel Apple**. Un rappel apparaît dans l'app Rappels (à 9 h 00 si la tâche n'a pas d'heure).
 
-La première fois, l'iPhone demande s'il peut se connecter à `supabase.co` ou accéder à tes Rappels : touche **Toujours autoriser** (*Always Allow*).
+La première fois, l'iPhone demande s'il peut se connecter à `supabase.co` ou à tes photos : touche **Toujours autoriser** (*Always Allow*).
 
 ### Utiliser Capturer au quotidien
 
@@ -150,12 +145,6 @@ Dans les images, un **cadre vert** entoure ce qui doit être exactement comme ç
 
 ![Raccourci Capturer photo](docs/raccourci-capturer-photo.svg)
 
-### Rappel GTD
-
-L'app envoie au raccourci trois informations : `titre`, `date` et `notes`. Le raccourci les lit une par une, puis crée le rappel.
-
-![Raccourci Rappel GTD](docs/raccourci-rappel-gtd.svg)
-
 ### Agenda Apple
 
 Une boucle écrit une ligne par événement (calendrier, début, fin, journée entière, titre, lieu), puis l'ensemble part vers `sync_events`, qui remplace tes prochains événements dans Brain.
@@ -166,7 +155,31 @@ Une boucle écrit une ligne par événement (calendrier, début, fin, journée e
 
 Les fichiers de `raccourcis/` sont fabriqués par [`raccourcis/build.py`](raccourcis/build.py), sur un Mac : `python3 raccourcis/build.py`. Le script les signe avec l'outil `shortcuts` du Mac, ce qui permet de les installer sur n'importe quel iPhone.
 
-## 7. Utilisation au quotidien
+## 7. Notifications de rappel
+
+Brain t'envoie lui-même une notification à l'heure choisie, même app fermée, sans passer par l'app Raccourcis. Supabase vérifie chaque minute s'il y a un rappel à envoyer.
+
+### Mise en place (une seule fois, sur ordinateur de préférence)
+
+1. **Mettre à jour la base.** Supabase > **SQL Editor** > **New query**, colle tout [`supabase/006_notifications.sql`](supabase/006_notifications.sql), puis **Run**.
+   Si un message parle de `pg_cron` ou `pg_net` : Supabase > **Database** > **Extensions**, active **pg_cron** et **pg_net**, puis relance le script.
+2. **Créer la fonction d'envoi.** Supabase > **Edge Functions** > **Deploy a new function** > **Via Editor** :
+   - Nom de la fonction : `send-reminders` (exactement).
+   - Efface le code d'exemple et colle tout le contenu de [ce fichier](https://raw.githubusercontent.com/maximecongard-hash/second-cerveau/main/supabase/functions/send-reminders/index.ts) (sur la page qui s'ouvre : tout sélectionner, copier).
+   - Touche **Deploy function**.
+3. **Laisser Supabase l'appeler.** Dans la fonction `send-reminders` > **Details** (ou **Settings**), désactive **Verify JWT** (*Enforce JWT verification*), puis enregistre.
+4. **Attendre une minute** : au premier passage, la fonction crée toute seule ses clés de chiffrement.
+5. **Sur l'iPhone**, dans l'app Brain installée sur l'écran d'accueil : menu **⋯** > **Réglages** > **Notifications** > **Activer les notifications**, puis **Autoriser**. Touche ensuite **Envoyer un essai** : une notification doit arriver.
+
+Recommence l'étape 5 sur chaque appareil qui doit recevoir les rappels.
+
+### Utilisation
+
+Dans une tâche, champ **Rappel** : choisis une date et une heure, ou touche un raccourci (**Heure prévue**, **Dans 1 h**, **Demain 9 h**). Une petite cloche apparaît dans la liste. À l'heure dite, la notification arrive ; la toucher ouvre la tâche.
+
+Ouvrir l'app efface les notifications déjà affichées : rien ne s'accumule dans le centre de notifications. Pour une tâche répétée, le rappel suit la répétition.
+
+## 8. Utilisation au quotidien
 
 - **Dans la journée** : tu captures tout avec le bouton Action, Siri ou le partage. Pas besoin de trier.
 - **Le soir** : onglet Inbox > **Trier**. Pour chaque élément : fait, aujourd'hui, prochaine action, projet, en attente, un jour, note, signet ou suppression. Un élément partagé avec un lien propose d'emblée « Signet ».
@@ -175,7 +188,7 @@ Les fichiers de `raccourcis/` sont fabriqués par [`raccourcis/build.py`](raccou
 
 Le point en haut à droite indique la synchro : vert = synchronisé, orange = en cours, gris = hors ligne (tes modifications restent sur le téléphone et partent au retour du réseau), rouge = erreur (détail dans Réglages).
 
-## 8. Modules (thèmes)
+## 9. Modules (thèmes)
 
 L'app est organisée en modules, affichés dans une barre latérale : fixe sur grand écran, ouverte avec le bouton ☰ sur iPhone.
 
@@ -201,6 +214,7 @@ Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque modu
 | `supabase/schema.sql` | base de données complète (installation neuve) |
 | `supabase/00N_*.sql` | migrations pour une base existante |
 | `supabase/functions/calendrier/` | Edge Function du lien d'abonnement de Calendrier (flux ICS) |
+| `supabase/functions/send-reminders/` | fonction Supabase qui envoie les notifications de rappel |
 | `AGENTS.md`, `CLAUDE.md` | consignes pour les agents de code |
 
 ### Ajouter un module

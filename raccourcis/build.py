@@ -150,21 +150,6 @@ capturer_photo = workflow(
     no_input={'Name': 'WFWorkflowNoInputBehaviorPassthrough', 'Parameters': {}},
     questions=token_question(), glyph=59448)
 
-# ---------- Rappel GTD : lancé par l'app avec {titre, date, notes} ----------
-dic, titre, date_txt, quand, notes = uid(), uid(), uid(), uid(), uid()
-rappel = workflow(
-    [act('detect.dictionary', UUID=dic, WFInput=var(INPUT)),
-     act('getvalueforkey', UUID=titre, WFGetDictionaryValueType='Value', WFDictionaryKey='titre',
-         WFInput=var(out(dic, 'Dictionary')), CustomOutputName='Titre'),
-     act('getvalueforkey', UUID=date_txt, WFGetDictionaryValueType='Value', WFDictionaryKey='date',
-         WFInput=var(out(dic, 'Dictionary')), CustomOutputName='Date texte'),
-     act('detect.date', UUID=quand, WFInput=var(out(date_txt, 'Date texte')), CustomOutputName='Quand'),
-     act('getvalueforkey', UUID=notes, WFGetDictionaryValueType='Value', WFDictionaryKey='notes',
-         WFInput=var(out(dic, 'Dictionary')), CustomOutputName='Notes'),
-     act('addnewreminder', WFCalendarItemTitle=text(out(titre, 'Titre')), WFCalendarItemNotes=text(out(notes, 'Notes')),
-         WFAlertEnabled='Alert', WFAlertCondition='At Time', WFAlertCustomTime=text(out(quand, 'Quand')))],
-    ['WFStringContentItem'], [], glyph=59784, color=4271458815)
-
 # ---------- Agenda Apple : envoie les prochains événements de Calendrier à Brain ----------
 # Une ligne par événement, séparées par ␞, champs séparés par une tabulation :
 # calendrier, début, fin, journée entière, titre, lieu (voir sync_events dans supabase/005_calendrier.sql)
@@ -186,8 +171,7 @@ agenda_apple = workflow(
     [], [], questions=token_question(), glyph=59784, color=4292093695)
 
 os.makedirs(os.path.join(HERE, 'src'), exist_ok=True)
-for name, w in [('Capturer', capturer), ('Capturer photo', capturer_photo), ('Rappel GTD', rappel),
-                ('Agenda Apple', agenda_apple)]:
+for name, w in [('Capturer', capturer), ('Capturer photo', capturer_photo), ('Agenda Apple', agenda_apple)]:
     w['WFWorkflowName'] = name
     src = os.path.join(HERE, 'src', name + '.shortcut')
     with open(src, 'wb') as f:

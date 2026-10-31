@@ -21,8 +21,9 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.8.0**, cache SW `sc-v11`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.9.0**, cache SW `sc-v12`. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
+  La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
@@ -49,6 +50,12 @@ RLS), hors ligne via localStorage + service worker.
      l'Edge Function `supabase/functions/calendrier` (jeton dans `calendar_tokens`, fonction `calendar_feed`).
      Calendrier vers Brain : raccourci « Agenda Apple » qui envoie les prochains événements à `sync_events`
      (jeton de capture), table `events`, blocs gris dans la grille (`js/modules/agenda/apple.js`).
+  13. Raccourcis iOS prêts à installer (`raccourcis/`, signés par `build.py`), Capturer demande un titre pour un lien,
+     vibration au lieu des notifications.
+  14. 0.9.0 : notifications de Brain (Web Push) à la place du raccourci « Rappel GTD » : champ `remind_at` dans
+     les tâches, `js/core/push.js` (abonnement, Réglages > Notifications), push dans `sw.js`, fonction
+     `supabase/functions/send-reminders` (Web Push fait main en WebCrypto, testé sur le vecteur RFC 8291) appelée
+     chaque minute par pg_cron ; clés VAPID créées par la fonction et rangées dans `push_config` (pas de RLS ouverte).
 
 ## Pistes ouvertes
 
@@ -75,7 +82,7 @@ Pas de tests automatisés : vérifier à la main en largeur mobile (~390 px), en
 - Interface en français, ton calme, pas de point d'exclamation.
 - Raccourcis iOS : fichiers signés dans `raccourcis/`, refaits sur Mac par `python3 raccourcis/build.py`
   (jeton demandé à l'installation, jamais dans les fichiers). Images du README : `python3 docs/build_images.py docs`,
-  à garder identiques aux raccourcis. Si `capture()`, l'URL ou la clé publique changent, refaire les deux.
+  à garder identiques aux raccourcis. Le raccourci « Rappel GTD » n'existe plus (remplacé par les notifications). Si `capture()`, l'URL ou la clé publique changent, refaire les deux.
 - Committer et pousser seulement sur demande.
 
 ## Tenir ce fichier à jour

@@ -66,7 +66,19 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && SH.onSubmit) SH.onSubmit();
 });
 app.addEventListener('focusout', flushPendingRender);
-window.addEventListener('hashchange', () => { closeSide(); if (SH.mode) closeSheet(); else render(); });
+window.addEventListener('hashchange', () => { if (openFromHash()) return; closeSide(); if (SH.mode) closeSheet(); else render(); });
+// Lien d'une notification : #/open/<id> ouvre l'élément par-dessus l'écran d'accueil
+export function openFromHash() {
+  const m = location.hash.match(/^#\/open\/([\w-]+)/);
+  if (!m) return false;
+  history.replaceState(null, '', location.pathname + location.search + '#/');
+  if (SH.mode) closeSheet();
+  render();
+  if (S.items.has(m[1])) openEditor(m[1]);
+  return true;
+}
+// Notification touchée alors que l'app était déjà ouverte (message du service worker)
+navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.open) location.hash = '#/open/' + e.data.open; });
 window.addEventListener('online', () => { setSyncState(); sync(); });
 window.addEventListener('offline', setSyncState);
 document.addEventListener('visibilitychange', () => {

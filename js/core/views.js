@@ -3,6 +3,7 @@ import { $, esc, I, empty, sec, today, nowIso, FMT_TIME, ICONS, iconChoice, setI
 import { S, live, savePrefs, resetLocal, persistNow } from './store.js';
 import { sync, syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
+import { pushSettings } from './push.js';
 import { VIEWS, ACTS, FORMS, moduleOrder, enabledModules, getModule, kindOwner } from './modules.js';
 import { queueRender, render, toast } from './ui.js';
 
@@ -61,6 +62,7 @@ VIEWS.settings = () => {
     sec('Compte', `<div class="kv"><span>${esc(S.user.email)}</span><span class="sync ${syncClass()}"></span></div>
       <div class="muted small pad">${syncLabel()}${S.lastSync ? ` · dernière synchro ${FMT_TIME.format(new Date(S.lastSync))}` : ''}</div>
       <div class="btn-row">${DEMO ? '' : '<button class="btn" data-act="sync-now">Synchroniser</button><button class="btn danger" data-act="logout">Se déconnecter</button>'}</div>`) +
+    sec('Notifications', pushSettings()) +
     sec('Modules', `<a class="row" href="#/modules"><div class="row-main"><div class="row-title">Thèmes affichés</div><div class="row-meta"><span>${enabledModules().map(m => esc(m.label)).join(' · ')}</span></div></div><span class="chev">${I.right}</span></a>`) +
     enabledModules().map(m => m.settings?.() || '').join('') +
     sec('Capture iPhone', `<div class="muted small pad">Valeurs à coller dans tes raccourcis (voir le guide).</div>

@@ -49,7 +49,7 @@ export function newItem(fields = {}) {
     id: uuid(), user_id: S.user?.id || null, kind: 'inbox', status: 'active', title: '', body: '',
     url: null, image_path: null, parent_id: null, contexts: [], tags: [], duration_min: null,
     energy: null, due_date: null, scheduled_date: null, scheduled_time: null, day_order: null,
-    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false,
+    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null,
     source: 'app', completed_at: null,
     created_at: now, updated_at: now, ...fields
   };

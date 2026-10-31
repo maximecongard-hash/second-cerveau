@@ -4,7 +4,8 @@ import { uploadImage } from '../../core/images.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { kindOwner } from '../../core/modules.js';
-import { areas, nextActions, nextOrder, sortTasks, spawnNext } from './model.js';
+import { areas, nextActions, nextOrder, sortTasks, spawnNext, toLocalInput, fromLocalInput } from './model.js';
+import { pushHint } from '../../core/push.js';
 
 // ---------------------------------------------------------------------------
 // Feuilles GTD : éditeur, capture rapide, sélection des tâches du jour
@@ -68,6 +69,9 @@ export function editorHTML(it) {
       ${fRow('Contextes', `<div class="chips wrap">${ctxs.map(c => chip(esc(c), (it.contexts || []).includes(c), 'ctx', c)).join('')}</div>`)}
       ${fRow('Prévu le', `<div class="date-line"><input type="date" data-f="scheduled_date" value="${it.scheduled_date || ''}"><input type="time" data-f="scheduled_time" value="${it.scheduled_time || ''}"></div>
         <div class="quick">${[['0', "Aujourd'hui"], ['1', 'Demain'], ['7', '+1 sem.'], ['clear', 'Effacer']].map(([v, l]) => `<button class="chip" data-act="sched" data-v="${v}">${l}</button>`).join('')}</div>`)}
+      ${fRow('Rappel', `<div class="date-line"><input type="datetime-local" data-f="remind_at" value="${toLocalInput(it.remind_at)}"></div>
+        <div class="quick">${[['sched', it.scheduled_date || it.due_date ? 'Heure prévue' : 'Aujourd’hui 9 h'], ['hour', 'Dans 1 h'], ['tomorrow', 'Demain 9 h'], ['clear', 'Effacer']].map(([v, l]) => `<button class="chip" data-act="remind" data-v="${v}">${l}</button>`).join('')}</div>
+        ${it.remind_at ? pushHint() : ''}`)}
       ${fRow('Échéance', `<input type="date" data-f="due_date" value="${it.due_date || ''}">`)}
       ${fRow('Durée', sel('duration_min', it.duration_min, [['', '—'], [5, '5 min'], [10, '10 min'], [15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 h'], [90, '1 h 30'], [120, '2 h'], [180, '3 h'], [240, '4 h']]))}
       ${fRow('Énergie', seg('energy', it.energy, [['low', 'Faible'], ['medium', 'Moyenne'], ['high', 'Forte']]))}
@@ -75,7 +79,7 @@ export function editorHTML(it) {
       ${tagsF}${urlF}
     </div>
     ${linksBlock(it)}
-    ${it.scheduled_date || it.due_date ? `<button class="btn block" data-act="reminder" data-id="${it.id}">${I.bell} Créer un rappel Apple</button>` : '<div class="muted small pad center">Ajoute une date pour pouvoir créer un rappel Apple.</div>'}`;
+`;
 }
 
 export function createAndEdit(fields) {
@@ -92,6 +96,7 @@ export function setField(id, f, v) {
   let val = v;
   if (f === 'tags') val = v.split(',').map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (f === 'duration_min') val = v ? parseInt(v, 10) : null;
+  else if (f === 'remind_at') val = fromLocalInput(v);
   else if (NULLABLE.has(f)) val = v || null;
   const p = { [f]: val };
   if (f === 'scheduled_date') {

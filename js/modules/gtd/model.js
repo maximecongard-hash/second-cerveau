@@ -71,7 +71,8 @@ export function spawnNext(t) {
   const shift = s => (s ? addDays(s, daysBetween(base, next)) : null);
   const copy = newItem({
     ...t, id: uuid(), status: 'active', completed_at: null, day_order: null, focus: null, created_at: nowIso(),
-    scheduled_date: shift(t.scheduled_date), due_date: shift(t.due_date)
+    scheduled_date: shift(t.scheduled_date), due_date: shift(t.due_date),
+    remind_at: t.remind_at ? new Date(+new Date(t.remind_at) + daysBetween(base, next) * 864e5).toISOString() : null
   });
   if (!t.scheduled_date && !t.due_date) copy.scheduled_date = next;
   saveItem(copy);
@@ -127,10 +128,19 @@ export function evening(id, v) {
   if (v === 'next') { patch(id, { status: 'active', scheduled_date: null, scheduled_time: null, day_order: null, focus: null }); toast('Remis en prochaine action', undo); }
   if (v === 'waiting') { patch(id, { status: 'waiting', scheduled_date: null, scheduled_time: null, day_order: null, focus: null }); openEditor(id, { focus: 'waiting_for' }); }
 }
-export function createReminder(id) {
-  const t = S.items.get(id);
-  const date = t.scheduled_date || t.due_date;
-  const payload = JSON.stringify({ titre: t.title, date: `${date} ${t.scheduled_time || '09:00'}`, notes: t.body || '' });
-  location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(S.prefs.reminderShortcut || 'Rappel GTD')}&input=text&text=${encodeURIComponent(payload)}`;
+// Rappels : remind_at est un instant (ISO, UTC) ; le champ de l'éditeur travaille en heure locale
+export const toLocalInput = iso => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${ymd(d)}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+export const fromLocalInput = v => (v ? new Date(v).toISOString() : null);
+// Raccourcis du champ Rappel : à l'heure prévue (9 h sans heure), dans 1 h, demain 9 h
+export function remindPreset(t, v) {
+  if (v === 'clear') return null;
+  if (v === 'hour') return new Date(Date.now() + 3600e3).toISOString();
+  if (v === 'tomorrow') return fromLocalInput(`${addDays(today(), 1)}T09:00`);
+  const day = t.scheduled_date || t.due_date || today();
+  return fromLocalInput(`${day}T${t.scheduled_time || '09:00'}`);
 }
 export const somedayItems = () => live().filter(i => i.status === 'someday');

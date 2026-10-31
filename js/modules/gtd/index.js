@@ -16,9 +16,7 @@ function settings() {
   return sec('Contextes', `<div class="chips wrap">${S.prefs.contexts.map(c => `<span class="chip on">${esc(c)}<button class="x" data-act="ctx-del" data-v="${esc(c)}" aria-label="Retirer">×</button></span>`).join('')}</div>
       <form class="inline-add" data-form="ctx-add"><input id="ctx-add" placeholder="+ Nouveau contexte (ex. @voiture)" autocomplete="off"></form>`) +
     sec('Domaines de vie', areas().map(a => `<div class="row" data-act="edit" data-id="${a.id}"><div class="row-main"><div class="row-title">${esc(a.title)}</div></div><span class="chev">${I.right}</span></div>`).join('') +
-      `<form class="inline-add" data-form="area-add"><input id="area-add" placeholder="+ Nouveau domaine" autocomplete="off"></form>`) +
-    sec('Rappels Apple', `<div class="muted small pad">Nom du raccourci qui crée un rappel :</div>
-      <form class="inline-add" data-form="reminder-name"><input id="reminder-name" value="${esc(S.prefs.reminderShortcut)}" autocomplete="off"></form>`);
+      `<form class="inline-add" data-form="area-add"><input id="area-add" placeholder="+ Nouveau domaine" autocomplete="off"></form>`);
 }
 
 // Premier lancement : domaines par défaut ; anciens comptes : migration des domaines
@@ -81,7 +79,6 @@ registerModule({
   prefs: {
     contexts: ['@maison', '@bureau', '@ordi', '@tél', '@courses', '@dehors'],
     lastReview: null,
-    reminderShortcut: 'Rappel GTD',
     lastEvening: null,
     seeded: false,
     areasV2: false

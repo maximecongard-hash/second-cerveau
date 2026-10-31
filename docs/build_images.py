@@ -206,30 +206,6 @@ render(os.path.join(DOCS, "raccourci-capturer-photo.svg"), "Capturer photo",
                 note=["Une vibration confirme l’envoi.", "Pas de notification qui reste."]),
        ], legend="Cadre vert = doit être exactement ça")
 
-# ---------- Rappel GTD ----------
-render(os.path.join(DOCS, "raccourci-rappel-gtd.svg"), "Rappel GTD",
-       ["✓ Nom exact : l’app lance ce raccourci", "par son nom. Si tu en veux un autre", "(ex. Rappel BRAIN), tape-le aussi dans", "l’app : Réglages > Rappels Apple."],
-       [
-           dict(icon="blue", lines=[[("t", "Receive"), ("b", "Any"), ("t", "from"), ("b", "Nowhere")],
-                                    [("g", "If there’s no input:"), ("b", "Continue")]],
-                note=["Laisse tel quel."]),
-           dict(icon="orange", lines=[[("t", "Get dictionary from")], [("v", "Shortcut Input")]],
-                note=["Get Dictionary from Input."]),
-           dict(icon="orange", lines=[[("t", "Get"), ("b", "Value"), ("t", "for"), ("m!", "titre"), ("t", "in")], [("v", "Dictionary")]],
-                note=["Get Dictionary Value.", "✓ Clé exacte : titre (minuscules)", "« in » = Dictionary (sortie de 2).", "Résultat de cette action : Titre"]),
-           dict(icon="orange", lines=[[("t", "Get"), ("b", "Value"), ("t", "for"), ("m!", "date"), ("t", "in")], [("v", "Dictionary")]],
-                note=["✓ Clé exacte : date", "« in » = Dictionary.", "Résultat : Date texte"]),
-           dict(icon="red", lines=[[("t", "Get dates from"), ("v", "Date texte")]],
-                note=["Get Dates from Input.", "Résultat : Quand"]),
-           dict(icon="orange", lines=[[("t", "Get"), ("b", "Value"), ("t", "for"), ("m!", "notes"), ("t", "in")], [("v", "Dictionary")]],
-                note=["✓ Clé exacte : notes", "« in » = Dictionary.", "Résultat : Notes"]),
-           dict(icon="yellow", lines=[[("t", "Add"), ("v", "Titre"), ("t", "to"), ("b", "Reminders")], "sep",
-                                      [("g", "Notes"), ("v", "Notes")],
-                                      [("g", "Alert"), ("b", "At Time")],
-                                      [("g", "Date"), ("v", "Quand")]],
-                note=["Add New Reminder.", "Touche ⌄ pour Notes et Alert.", "Alert : At Time, puis Quand."]),
-       ])
-
 # ---------- Agenda Apple ----------
 DATE_FMT = "yyyy-MM-dd'T'HH:mm"
 render(os.path.join(DOCS, "raccourci-agenda-apple.svg"), "Agenda Apple",

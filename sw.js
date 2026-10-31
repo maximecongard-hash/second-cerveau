@@ -1,7 +1,7 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
 // et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v11';
+const CACHE = 'sc-v12';
 const SHELL = [
   './',
   'index.html',
@@ -12,6 +12,7 @@ const SHELL = [
   'js/core/images.js',
   'js/core/links.js',
   'js/core/modules.js',
+  'js/core/push.js',
   'js/core/state.js',
   'js/core/store.js',
   'js/core/sync.js',
@@ -79,4 +80,26 @@ self.addEventListener('fetch', e => {
       return Promise.race([network.catch(() => cached), late]);
     })
   );
+});
+
+// Notifications de Brain (envoyées par la fonction Supabase send-reminders)
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data?.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Brain', {
+    body: d.body || '',
+    tag: d.tag,
+    icon: 'icons/icon-192.png',
+    data: { url: d.url || './' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL(e.notification.data?.url || './', self.registration.scope).href;
+  const id = (url.match(/#\/open\/([\w-]+)/) || [])[1];
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    const win = list[0];
+    if (win) { if (id) win.postMessage({ open: id }); return win.focus(); }
+    return clients.openWindow(url);
+  }));
 });

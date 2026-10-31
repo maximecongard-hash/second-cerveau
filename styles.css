@@ -389,6 +389,9 @@ main {
 .link-pick { width: 100%; text-align: left; }
 .row-meta .m-link { display: inline-flex; align-items: center; gap: 2px; font-family: var(--f-mono); font-size: 12px; }
 .row-meta .m-link svg { width: 13px; height: 13px; }
+.row-meta .m-bell { display: inline-flex; align-items: center; }
+.row-meta .m-bell svg { width: 13px; height: 13px; }
+input[type="datetime-local"] { min-width: 0; }
 .row.bm.read .row-title { color: var(--muted); }
 .open-btn { align-self: center; color: var(--accent); }
 .open-btn svg { width: 19px; height: 19px; }
@@ -396,6 +399,7 @@ main {
 
 .kv { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .kv .btn-row { margin: 0; }
+.kv svg { width: 18px; height: 18px; vertical-align: -4px; }
 .icon-pick { display: flex; gap: 16px; padding: 10px 2px 4px; }
 .icon-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
 .icon-opt img { display: block; border-radius: 14px; outline: 2px solid transparent; outline-offset: 3px; }

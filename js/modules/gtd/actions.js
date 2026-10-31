@@ -1,7 +1,7 @@
 import { $, today, addDays, fmtDate, nowIso } from '../../core/util.js';
 import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store.js';
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
-import { complete, clarify, moveInDay, evening, createReminder, nextOrder, toggleFocus } from './model.js';
+import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus } from './model.js';
 import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
@@ -41,7 +41,11 @@ export const acts = {
     const v = el.dataset.v;
     setField(SH.editingId, 'scheduled_date', v === 'clear' ? '' : addDays(today(), +v), true);
   },
-  reminder: el => createReminder(el.dataset.id),
+  remind: el => {
+    const it = S.items.get(SH.editingId);
+    patch(SH.editingId, { remind_at: remindPreset(it, el.dataset.v) });
+    renderEditor();
+  },
   'new-note': el => createAndEdit({ kind: 'note', parent_id: el.dataset.id }),
   clar: el => clarify(el.dataset.id, el.dataset.v),
   'clarify-one': el => { location.hash = '#/clarify/' + el.dataset.id; },
@@ -124,8 +128,7 @@ export const forms = {
     if (!v) return;
     saveItem(newItem({ kind: 'area', title: v }));
     input.value = '';
-  },
-  'reminder-name': f => { S.prefs.reminderShortcut = f.querySelector('input').value.trim() || 'Rappel GTD'; savePrefs(); toast('Enregistré'); }
+  }
 };
 
 // Saisies propres au module (renvoient true si traitées)

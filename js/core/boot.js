@@ -4,6 +4,8 @@ import { S, restore, resetLocal, persist } from './store.js';
 import { sync } from './sync.js';
 import { MODULES } from './modules.js';
 import { app, render, queueRender } from './ui.js';
+import { clearShown } from './push.js';
+import { openFromHash } from './events.js';
 
 // ---------------------------------------------------------------------------
 // Démarrage (appelé une fois tous les modules enregistrés)
@@ -12,6 +14,8 @@ export async function init() {
   applyIcon();
   restore();
   registerSW();
+  clearShown();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clearShown(); });
   if (DEMO) {
     S.user = { id: 'demo', email: 'Mode démo (données locales)' };
     if (!S.items.size) MODULES.forEach(m => m.seedDemo?.());
@@ -25,6 +29,7 @@ export async function init() {
   setUser(session?.user || null);
   sb.auth.onAuthStateChange((_ev, s) => setUser(s?.user || null));
   render();
+  if (S.user) openFromHash();
 }
 // Service worker : quand une nouvelle version prend la main, on recharge une fois pour l'afficher
 function registerSW() {
