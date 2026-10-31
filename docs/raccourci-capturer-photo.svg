@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="3346" viewBox="0 0 1280 3346" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
-<rect width="1280" height="3346" fill="#161618" rx="28"/>
-<rect width="660" height="3346" fill="#000" rx="28"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="3348" viewBox="0 0 1280 3348" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
+<rect width="1280" height="3348" fill="#161618" rx="28"/>
+<rect width="660" height="3348" fill="#000" rx="28"/>
 <rect x="191" y="38" width="279" height="56" rx="16" fill="none" stroke="#34c759" stroke-width="3"/>
 <text x="330" y="77" font-size="31" fill="#fff" font-weight="600" text-anchor="middle">Capturer photo</text>
 <text x="696" y="62" font-size="26" fill="#fff" font-weight="600" text-anchor="start">Nom du raccourci</text>
@@ -304,10 +304,9 @@
 <rect x="22" y="3212" width="616" height="80" rx="28" fill="#2c2c2e"/>
 <rect x="44" y="3239" width="32" height="32" rx="8" fill="#ff453a"/>
 <rect x="53" y="3246" width="14" height="18" rx="2" fill="#fff" opacity=".85"/>
-<text x="90" y="3264" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Show notification</text>
-<rect x="316" y="3236" width="340" height="38" rx="11" fill="#0a84ff" fill-opacity=".16"/>
-<text x="327" y="3264" font-size="24" fill="#0a84ff" font-weight="400" text-anchor="start">Photo ajoutée à l’Inbox ✓</text>
+<text x="90" y="3264" font-size="24" fill="#fff" font-weight="400" text-anchor="start">Vibrate Device</text>
 <circle cx="713" cy="3248" r="17" fill="#0a84ff"/>
 <text x="713" y="3255" font-size="20" fill="#fff" font-weight="600" text-anchor="middle">16</text>
-<text x="744" y="3255" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Petit message de confirmation.</text>
+<text x="744" y="3255" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Une vibration confirme l’envoi.</text>
+<text x="744" y="3283" font-size="20" fill="#e5e5ea" font-weight="400" text-anchor="start">Pas de notification qui reste.</text>
 </svg>

@@ -81,7 +81,7 @@ Le nom **Rappel GTD** doit rester tel quel : l'app lance ce raccourci par son no
 
 ### Essayer
 
-- **Capturer** : lance-le, tape « test », valide. « test » apparaît dans l'Inbox de l'app.
+- **Capturer** : lance-le, tape « test », valide. Le téléphone vibre et « test » apparaît dans l'Inbox de l'app.
 - **Capturer photo** : lance-le, prends une photo, laisse la légende vide. Elle apparaît dans l'Inbox.
 - **Rappel GTD** : dans l'app, ouvre une tâche avec une date, touche **Créer un rappel Apple**. Un rappel apparaît dans l'app Rappels (à 9 h 00 si la tâche n'a pas d'heure).
 
@@ -94,7 +94,11 @@ La première fois, l'iPhone demande s'il peut se connecter à `supabase.co` ou a
 - **Widget** Raccourcis sur l'écran d'accueil ou l'écran verrouillé.
 - **Partage** depuis Safari, YouTube, X… : Partager > Capturer. Le lien arrive dans l'Inbox.
 
-Un lien seul est reconnu automatiquement. Pour un texte sur plusieurs lignes, la première ligne devient le titre et le reste les détails.
+Quand tu partages un lien, le raccourci demande « Titre ou note ? ». La première ligne devient le titre, les lignes suivantes la note, et le lien reste attaché. Laisse vide pour garder le lien seul.
+
+Pour une idée tapée ou dictée sur plusieurs lignes, la première ligne devient le titre et le reste les détails.
+
+Une vibration confirme chaque envoi. Les raccourcis n'affichent pas de notification, pour ne rien laisser dans le centre de notifications.
 
 ## 5. Ce qu'il y a dans chaque raccourci
 

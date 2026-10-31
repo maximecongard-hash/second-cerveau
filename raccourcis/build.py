@@ -84,12 +84,26 @@ def workflow(actions, inputs, types, no_input=None, questions=(), glyph=59511, c
     return w
 
 
+# Confirmation : une vibration (une notification resterait dans le centre de notifications).
+VIBRATE = act('vibrate')
+
+
 # ---------- Capturer : texte, dictée, liens ----------
-tok = uid()
+tok, match, grp, note = uid(), uid(), uid(), uid()
 capturer = workflow(
     [token_action(tok),
+     # Un lien seul : on demande un titre ou une note, et le lien part à part (p_url).
+     act('text.match', UUID=match, WFMatchTextPattern=r'^\s*https?://\S+\s*$', WFMatchTextCaseSensitive=False,
+         text=text(INPUT)),
+     act('conditional', GroupingIdentifier=grp, WFControlFlowMode=0, WFCondition=100,
+         WFInput={'Type': 'Variable', 'Variable': var(out(match, 'Matches'))}),
+     act('ask', UUID=note, WFAskActionPrompt='Titre ou note ? (facultatif)', WFInputType='Text',
+         WFAskActionDefaultAnswer='', WFAllowsMultilineText=True),
+     capture_call(tok, [('p_text', text(out(note, 'Provided Input'))), ('p_url', text(INPUT))]),
+     act('conditional', GroupingIdentifier=grp, WFControlFlowMode=1),
      capture_call(tok, [('p_text', text(INPUT))]),
-     act('notification', WFNotificationActionBody='Ajouté à l’Inbox ✓', WFNotificationActionSound=False)],
+     act('conditional', GroupingIdentifier=grp, WFControlFlowMode=2),
+     VIBRATE],
     ['WFStringContentItem', 'WFURLContentItem'], ['ActionExtension', 'Watch'],
     no_input={'Name': 'WFWorkflowNoInputBehaviorAskForInput', 'Parameters': {'ItemClass': 'WFStringContentItem'}},
     questions=token_question())
@@ -119,7 +133,7 @@ capturer_photo = workflow(
          WFHTTPBodyType='File', WFRequestVariable=var(out(jpeg, 'Converted Image'))),
      act('ask', UUID=legend, WFAskActionPrompt='Légende ? (facultatif)', WFInputType='Text', WFAskActionDefaultAnswer=''),
      capture_call(tok, [('p_text', text(out(legend, 'Provided Input'))), ('p_image_path', text(out(path, 'Chemin')))]),
-     act('notification', WFNotificationActionBody='Photo ajoutée à l’Inbox ✓', WFNotificationActionSound=False)],
+     VIBRATE],
     ['WFImageContentItem'], ['ActionExtension'],
     no_input={'Name': 'WFWorkflowNoInputBehaviorPassthrough', 'Parameters': {}},
     questions=token_question(), glyph=59448)
