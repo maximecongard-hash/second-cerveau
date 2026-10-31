@@ -119,12 +119,33 @@ Sans heure dans l'app, le rappel sonne à 9 h 00.
 
 Le point en haut à droite indique la synchro : vert = synchronisé, orange = en cours, gris = hors ligne (tes modifications restent sur le téléphone et partent au retour du réseau), rouge = erreur (détail dans Réglages).
 
+## 8. Modules (thèmes)
+
+L'app est organisée en modules, affichés dans une barre latérale : fixe sur grand écran, ouverte avec le bouton ☰ sur iPhone.
+
+- **Organisation** : le GTD (Inbox, Aujourd'hui, Actions, Projets, Notes).
+- **Sport** et **Courses** : en aperçu, désactivés par défaut.
+
+Menu **Modules** (dans la barre ou les Réglages) : active ou masque chaque module et change leur ordre. Le premier module s'ouvre au lancement. Ce choix est enregistré dans tes préférences et synchronisé entre tes appareils.
+
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `index.html`, `styles.css`, `app.js` | l'app |
+| `index.html`, `styles.css` | page et styles |
+| `js/main.js` | point d'entrée : charge le cœur puis les modules |
+| `js/core/` | cœur commun : état, synchro Supabase, rendu, barre latérale, réglages, recherche |
+| `js/core/modules.js` | registre des modules (la liste des propriétés d'un module y est décrite) |
+| `js/modules/<module>/` | un dossier par module (`gtd`, `sport`, `courses`) |
 | `config.js` | URL et clé publique Supabase |
-| `sw.js` | cache hors ligne (change `CACHE` à chaque nouvelle version) |
+| `sw.js` | cache hors ligne : change `CACHE` à chaque nouvelle version et ajoute chaque nouveau fichier de `js/` à `SHELL` |
 | `manifest.webmanifest`, `icons/` | installation sur l'écran d'accueil |
 | `supabase/schema.sql` | base de données |
+
+### Ajouter un module
+
+1. Crée `js/modules/<nom>/index.js` et appelle `registerModule({...})` (voir `js/modules/sport/index.js`).
+2. Importe-le dans `js/main.js`.
+3. Ajoute ses fichiers à `SHELL` dans `sw.js` et incrémente `CACHE`.
+
+Pour tester en local : `python3 -m http.server 5173`, puis ouvre `http://localhost:5173/?demo=1`.

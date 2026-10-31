@@ -1,11 +1,31 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
-// Changer CACHE à chaque nouvelle version pour forcer la mise à jour.
-const CACHE = 'sc-v2';
+// Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
+// et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
+const CACHE = 'sc-v3';
 const SHELL = [
   './',
   'index.html',
   'styles.css',
-  'app.js',
+  'js/core/boot.js',
+  'js/core/config.js',
+  'js/core/events.js',
+  'js/core/images.js',
+  'js/core/modules.js',
+  'js/core/state.js',
+  'js/core/store.js',
+  'js/core/sync.js',
+  'js/core/ui.js',
+  'js/core/util.js',
+  'js/core/views.js',
+  'js/main.js',
+  'js/modules/courses/index.js',
+  'js/modules/gtd/actions.js',
+  'js/modules/gtd/index.js',
+  'js/modules/gtd/model.js',
+  'js/modules/gtd/rows.js',
+  'js/modules/gtd/sheets.js',
+  'js/modules/gtd/views.js',
+  'js/modules/sport/index.js',
   'config.js',
   'manifest.webmanifest',
   'icons/icon-180.png',
