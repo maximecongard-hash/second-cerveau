@@ -35,7 +35,7 @@ Base créée avant la version 0.2 : colle aussi [`supabase/002_pack1.sql`](supab
 1. Ouvre https://maximecongard-hash.github.io/second-cerveau/ dans **Safari**.
 2. Connecte-toi avec l'email et le mot de passe créés dans Supabase.
 3. Facultatif : menu **⋯** > **Réglages** > **Icône**, choisis **Encre** (fond sombre) ou **Papier** (fond clair). iOS fige l'icône au moment de l'ajout : pour en changer plus tard, supprime l'app de l'écran d'accueil et ajoute-la de nouveau.
-4. Bouton **Partager** > **Sur l'écran d'accueil** > **Ajouter**.
+4. Bouton **Partager** (*Share*) > **Sur l'écran d'accueil** (*Add to Home Screen*) > **Ajouter** (*Add*).
 5. Ouvre l'app depuis l'icône : elle s'affiche en plein écran, comme une app native.
 
 ## 3. Générer ton jeton de capture
@@ -50,58 +50,60 @@ Valeurs dont tu auras besoin dans les raccourcis (boutons « Copier » dans les 
 - **Clé publique** : `sb_publishable_…`
 - **Jeton** : celui que tu viens de générer
 
+> Les noms des actions et des menus sont donnés en français, avec entre parenthèses leur nom quand l'iPhone est en anglais : **Obtenir le contenu de l'URL** (*Get Contents of URL*). Dans l'app Raccourcis, tape ce nom dans la recherche d'actions pour la trouver.
+
 ## 4. Raccourci « Capturer » (texte, dictée, liens)
 
-App **Raccourcis** > **+** > nomme-le **Capturer**.
+App **Raccourcis** (*Shortcuts*) > **+** > nomme-le **Capturer**.
 
-1. Touche le **ⓘ** en bas et active **Afficher dans la feuille de partage**.
-   En haut du raccourci apparaît « Recevoir **N'importe quoi** de **Feuille de partage** ». Touche « N'importe quoi » et garde seulement **Texte** et **URL**.
-   Touche ensuite « Si aucune entrée » et choisis **Demander** > **Texte**. Sans partage, le raccourci te demandera de taper ou dicter ton idée.
-2. Ajoute l'action **Obtenir le contenu de l'URL** :
+1. Touche le **ⓘ** en bas et active **Afficher dans la feuille de partage** (*Show in Share Sheet*).
+   En haut du raccourci apparaît « Recevoir **N'importe quoi** de **Feuille de partage** » (*Receive Any input from Share Sheet*). Touche « N'importe quoi » (*Any*) et garde seulement **Texte** (*Text*) et **URL** (*URLs*).
+   Touche ensuite « Si aucune entrée » (*If there's no input*) et choisis **Demander** (*Ask For*) > **Texte** (*Text*). Sans partage, le raccourci te demandera de taper ou dicter ton idée.
+2. Ajoute l'action **Obtenir le contenu de l'URL** (*Get Contents of URL*) :
    - URL : `https://zqdvtbkjvfzkjqtaffbb.supabase.co/rest/v1/rpc/capture`
-   - Touche **Afficher plus** :
-     - Méthode : **POST**
-     - En-têtes : ajoute `apikey` = ta clé publique
-     - Corps de la requête : **JSON**, avec deux champs de type Texte :
+   - Touche **Afficher plus** (*Show More*) :
+     - Méthode (*Method*) : **POST**
+     - En-têtes (*Headers*) : ajoute `apikey` = ta clé publique
+     - Corps de la requête (*Request Body*) : **JSON**, avec deux champs de type Texte (*Text*) :
        - `p_token` = ton jeton
-       - `p_text` = variable **Entrée du raccourci**
-3. Ajoute **Afficher la notification** avec le texte « Ajouté à l'Inbox ✓ ».
+       - `p_text` = variable **Entrée du raccourci** (*Shortcut Input*)
+3. Ajoute **Afficher la notification** (*Show Notification*) avec le texte « Ajouté à l'Inbox ✓ ».
 
 Utilisation :
 
-- **Bouton Action** (iPhone 15 Pro et plus) : Réglages > Bouton Action > Raccourci > Capturer.
-- **Siri** : « Dis Siri, Capturer ».
+- **Bouton Action** (*Action Button*, iPhone 15 Pro et plus) : Réglages > Bouton Action > Raccourci > Capturer (*Settings > Action Button > Shortcut > Capturer*).
+- **Siri** : « Dis Siri, Capturer » (*« Hey Siri, Capturer »*).
 - **Widget** sur l'écran d'accueil ou l'écran verrouillé.
-- **Partage** depuis Safari, YouTube, X… : Partager > Capturer. Le lien arrive dans l'Inbox.
+- **Partage** depuis Safari, YouTube, X… : Partager > Capturer (*Share > Capturer*). Le lien arrive dans l'Inbox.
 
 Un lien seul est reconnu automatiquement. Pour un texte sur plusieurs lignes, la première ligne devient le titre et le reste les détails.
 
 ## 5. Raccourci « Capturer photo »
 
-Nouveau raccourci **Capturer photo**, avec **Afficher dans la feuille de partage** activé et le type **Images** seulement (« Si aucune entrée » : **Continuer**).
+Nouveau raccourci **Capturer photo**, avec **Afficher dans la feuille de partage** (*Show in Share Sheet*) activé et le type **Images** seulement (« Si aucune entrée » : **Continuer**, soit *If there's no input: Continue*).
 
-1. **Si** [Entrée du raccourci] **n'a aucune valeur** :
-   - **Prendre une photo** (ou **Sélectionner des photos**)
-   - **Définir la variable** `Photo` sur le résultat
-   - **Sinon** : **Définir la variable** `Photo` sur Entrée du raccourci
-   - **Fin si**
-2. **Redimensionner l'image** `Photo` : largeur 1600 (hauteur automatique).
-3. **Convertir l'image** en **JPEG**, qualité 70 %.
-4. **Date actuelle**, puis **Formater la date** : format personnalisé `yyyyMMdd-HHmmss`.
-5. **Texte** : `inbox/TON_JETON/` suivi de la date formatée et de `.jpg`.
+1. **Si** [Entrée du raccourci] **n'a aucune valeur** (*If [Shortcut Input] does not have any value*) :
+   - **Prendre une photo** (*Take Photo*) ou **Sélectionner des photos** (*Select Photos*)
+   - **Définir la variable** (*Set Variable*) `Photo` sur le résultat
+   - **Sinon** (*Otherwise*) : **Définir la variable** `Photo` sur Entrée du raccourci (*Shortcut Input*)
+   - **Fin si** (*End If*)
+2. **Redimensionner l'image** (*Resize Image*) `Photo` : largeur 1600 (hauteur automatique).
+3. **Convertir l'image** (*Convert Image*) en **JPEG**, qualité (*Quality*) 70 %.
+4. **Date actuelle** (*Current Date*), puis **Formater la date** (*Format Date*) : format personnalisé (*Custom*) `yyyyMMdd-HHmmss`.
+5. **Texte** (*Text*) : `inbox/TON_JETON/` suivi de la date formatée et de `.jpg`.
    Exemple de résultat : `inbox/3f9a…/20261031-104512.jpg`.
-   **Définir la variable** `Chemin` sur ce texte.
-6. **Obtenir le contenu de l'URL** :
+   **Définir la variable** (*Set Variable*) `Chemin` sur ce texte.
+6. **Obtenir le contenu de l'URL** (*Get Contents of URL*) :
    - URL : `https://zqdvtbkjvfzkjqtaffbb.supabase.co/storage/v1/object/captures/` suivie de la variable `Chemin`
-   - Méthode **POST**
-   - En-têtes : `apikey` = ta clé publique, et `Content-Type` = `image/jpeg`
-   - Corps de la requête : **Fichier** = l'image convertie
-7. **Demander une entrée** (Texte) : « Légende ? » (tu peux laisser vide).
-8. **Obtenir le contenu de l'URL** :
+   - Méthode (*Method*) **POST**
+   - En-têtes (*Headers*) : `apikey` = ta clé publique, et `Content-Type` = `image/jpeg`
+   - Corps de la requête (*Request Body*) : **Fichier** (*File*) = l'image convertie
+7. **Demander une entrée** (*Ask for Input*), type Texte (*Text*) : « Légende ? » (tu peux laisser vide).
+8. **Obtenir le contenu de l'URL** (*Get Contents of URL*) :
    - URL : `https://zqdvtbkjvfzkjqtaffbb.supabase.co/rest/v1/rpc/capture`
-   - Méthode **POST**, en-tête `apikey` = ta clé publique
-   - Corps **JSON** : `p_token` = ton jeton, `p_text` = la réponse à l'étape 7, `p_image_path` = la variable `Chemin`
-9. **Afficher la notification** : « Photo ajoutée ✓ ».
+   - Méthode (*Method*) **POST**, en-tête (*Headers*) `apikey` = ta clé publique
+   - Corps (*Request Body*) **JSON** : `p_token` = ton jeton, `p_text` = la réponse à l'étape 7, `p_image_path` = la variable `Chemin`
+9. **Afficher la notification** (*Show Notification*) : « Photo ajoutée ✓ ».
 
 ## 6. Raccourci « Rappel GTD » (notifications)
 
@@ -109,11 +111,11 @@ Dans l'éditeur d'une tâche qui a une date, le bouton **Créer un rappel Apple*
 
 Nouveau raccourci, nommé exactement **Rappel GTD** (ou change le nom dans Réglages > Rappels Apple) :
 
-1. **Obtenir le dictionnaire de** [Entrée du raccourci].
-2. **Obtenir la valeur pour** `titre` dans le Dictionnaire. **Définir la variable** `Titre`.
-3. **Obtenir la valeur pour** `date` dans le Dictionnaire, puis **Obtenir les dates de** cette valeur. **Définir la variable** `Quand`.
-4. **Obtenir la valeur pour** `notes` dans le Dictionnaire. **Définir la variable** `Notes`.
-5. **Ajouter un nouveau rappel** : titre `Titre`, notes `Notes`, active **Alerte** et choisis la variable `Quand`.
+1. **Obtenir le dictionnaire de** [Entrée du raccourci] (*Get Dictionary from [Shortcut Input]*).
+2. **Obtenir la valeur pour** `titre` dans le Dictionnaire (*Get Value for `titre` in Dictionary*). **Définir la variable** (*Set Variable*) `Titre`.
+3. **Obtenir la valeur pour** `date` dans le Dictionnaire (*Get Value for `date` in Dictionary*), puis **Obtenir les dates de** cette valeur (*Get Dates from*). **Définir la variable** (*Set Variable*) `Quand`.
+4. **Obtenir la valeur pour** `notes` dans le Dictionnaire (*Get Value for `notes` in Dictionary*). **Définir la variable** (*Set Variable*) `Notes`.
+5. **Ajouter un nouveau rappel** (*Add New Reminder*) : titre `Titre`, notes `Notes`, active **Alerte** (*Alert*) et choisis la variable `Quand`.
 
 Sans heure dans l'app, le rappel sonne à 9 h 00.
 
