@@ -30,7 +30,7 @@ function editorHead(it) {
 }
 function timerField(it) {
   const run = !!it.timer_started_at, s = spentSec(it);
-  return `<div class="date-line"><span class="timer-val" data-timer="${it.id}">${fmtClock(s)}</span>${it.duration_min ? `<span class="muted small">sur ${fmtDur(it.duration_min)} prévu</span>` : ''}</div>
+  return `<div class="date-line"><span class="timer-val ${!run && s ? 'paused' : ''}" data-timer="${it.id}">${fmtClock(s)}</span>${it.duration_min ? `<span class="muted small">sur ${fmtDur(it.duration_min)} prévu</span>` : ''}</div>
     <div class="quick"><button class="chip ${run ? 'on' : ''}" data-act="${run ? 'timer-pause' : 'timer-start'}">${run ? 'Pause' : s ? 'Reprendre' : 'Démarrer'}</button>${s ? '<button class="chip" data-act="timer-reset">Remettre à zéro</button>' : ''}</div>`;
 }
 export function editorHTML(it) {

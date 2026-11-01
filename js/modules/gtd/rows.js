@@ -17,7 +17,7 @@ export function taskRow(t, o = {}) {
   if (o.showSched && t.scheduled_date) meta.push(`<span class="${t.scheduled_date < today() && !done ? 'late' : ''}">Prévu ${fmtDate(t.scheduled_date).toLowerCase()}</span>`);
   if (t.duration_min) meta.push(`<span>${fmtDur(t.duration_min)}</span>`);
   if (t.timer_started_at) meta.push(`<span class="m-timer" data-timer="${t.id}">${fmtClock(spentSec(t))}</span>`);
-  else if (t.spent_sec >= 60) meta.push(`<span>Réel ${fmtDur(Math.round(t.spent_sec / 60))}</span>`);
+  else if (t.spent_sec > 0) meta.push(`<span class="m-timer paused">${fmtClock(t.spent_sec)}</span>`);
   if (t.due_date) meta.push(`<span class="m-due ${t.due_date <= today() && !done ? 'late' : ''}">Échéance ${fmtDate(t.due_date).toLowerCase()}</span>`);
   if (t.recurrence) meta.push('<span>↻</span>');
   if (t.remind_at && !done && t.remind_at > new Date().toISOString()) meta.push(`<span class="m-bell" title="Rappel">${I.bell}</span>`);

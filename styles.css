@@ -395,6 +395,7 @@ main {
 .link-x { padding: 2px 8px; font-size: 20px; line-height: 1; color: var(--muted); }
 .row-meta .m-timer, .timer-val { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
 .row-meta .m-timer { color: var(--accent, inherit); }
+.row-meta .m-timer.paused, .timer-val.paused { color: var(--danger); }
 .timer-val { font-size: 1.25rem; align-self: center; }
 .row-meta .m-bell { display: inline-flex; align-items: center; }
 .row-meta .m-bell svg { width: 13px; height: 13px; }
