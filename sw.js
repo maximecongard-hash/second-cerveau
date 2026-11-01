@@ -1,7 +1,7 @@
 // Cache de l'app pour qu'elle s'ouvre hors ligne.
 // Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
 // et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v26';
+const CACHE = 'sc-v27';
 const SHELL = [
   './',
   'index.html',
@@ -37,7 +37,14 @@ const SHELL = [
   'js/modules/notes/editor.js',
   'js/modules/notes/index.js',
   'js/modules/notes/views.js',
+  'js/modules/sport/editor.js',
+  'js/modules/sport/exercises.js',
   'js/modules/sport/index.js',
+  'js/modules/sport/live.js',
+  'js/modules/sport/model.js',
+  'js/modules/sport/programs.js',
+  'js/modules/sport/stats.js',
+  'js/modules/sport/views.js',
   'config.js',
   'manifest.webmanifest',
   'manifest-papier.webmanifest',

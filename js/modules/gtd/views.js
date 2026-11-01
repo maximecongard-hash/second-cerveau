@@ -1,6 +1,6 @@
 import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetween, cap, domain, plural, fmtDate, fmtDur, fmtAgo, FMT_LONG } from '../../core/util.js';
 import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '../../core/store.js';
-import { kindOwner, viewOwner, isEnabled } from '../../core/modules.js';
+import { kindOwner, viewOwner, isEnabled, fromModules } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
 import { historyHTML } from './history.js';
 import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
@@ -92,6 +92,9 @@ views.today = () => {
   const ag = viewOwner('agenda');
   const agLink = ag && isEnabled(ag) ? `<a class="link" href="#/agenda" data-act="ag-open" data-d="${day}">Voir la grille</a>` : '';
   if (timed.length) html += sec('Agenda', `<div class="timeline">${timed.map(t => `<div class="slot"><div class="slot-time">${t.scheduled_time}</div>${taskRow(t, { extra: starBtn(t, day) })}</div>`).join('')}</div>`, agLink);
+
+  // sections des autres modules actifs (séances de sport…)
+  html += fromModules('todayRows', day).join('');
 
   const reorderBtn = untimed.length > 1 ? `<button class="link" data-act="reorder">${S.ui.reorder ? 'OK' : 'Réordonner'}</button>` : '';
   const rows = untimed.map((t, i) => taskRow(t, {
@@ -215,6 +218,7 @@ views.review = () => {
     step('inbox', 'Vider l’Inbox', `${plural(inboxItems().length, 'élément', 'éléments')} à trier. <a href="#/clarify">Trier</a>`),
     step('late', 'Retards et échéances', `${plural(lateN, 'tâche', 'tâches')} en retard ou échue(s). <a href="#/today">Voir</a>`),
     step('time', 'Temps réel', timeDesc()),
+    ...fromModules('reviewStep').map(s => step(s.key, s.title, s.desc)),
     step('calendar', 'Calendrier', 'Revois la semaine passée et les 2 semaines à venir : quelque chose à préparer ?'),
     step('actions', 'Prochaines actions', 'Coche ce qui est fait, supprime ce qui n’a plus de sens. <a href="#/actions">Voir</a>'),
     step('projects', 'Projets', [
@@ -253,6 +257,7 @@ views.evening = () => {
   html += sec('2. Inbox', inboxN ? `<a class="btn block" href="#/clarify">Trier ${plural(inboxN, 'élément', 'éléments')}</a>` : '<div class="muted pad">Inbox vide ✓</div>');
   html += sec('3. Demain', `<div class="muted pad small">${plural(ofKind('task').filter(t => t.scheduled_date === addDays(t0, 1) && t.status === 'active').length, 'tâche prévue', 'tâches prévues')}. Choisis ton Top 3 dès maintenant pour démarrer vite.</div>
     <button class="btn block" data-act="plan-tomorrow">Préparer demain</button>`);
+  html += fromModules('eveningHtml').join('');
   html += `<button class="btn primary block" data-act="evening-done">Revue du soir terminée</button>`;
   return { title: 'Revue du soir', html };
 };

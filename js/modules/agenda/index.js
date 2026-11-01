@@ -1,6 +1,6 @@
 import { esc, I, sec, today, addDays, pad, fmtDate, fmtDur, empty } from '../../core/util.js';
 import { S, live, newItem, saveItem, patch, savePrefs } from '../../core/store.js';
-import { registerModule, kindOwner } from '../../core/modules.js';
+import { registerModule, kindOwner, isSchedulable, enabledModules } from '../../core/modules.js';
 import { SH, sheet, showSheet, closeSheet, setField, route, render, queueRender, toast } from '../../core/ui.js';
 import { DEMO } from '../../core/config.js';
 import { views, untimedOn, weekSpan } from './views.js';
@@ -35,10 +35,15 @@ function renderSlot() {
   const row = i => `<button class="row link-pick" data-act="ag-place" data-id="${i.id}"><div class="row-main"><div class="row-title">${esc(i.title) || '<i>Sans titre</i>'}</div>
       <div class="row-meta">${i.duration_min ? `<span>${fmtDur(i.duration_min)}</span>` : ''}${i.due_date ? `<span class="m-due">Échéance ${fmtDate(i.due_date).toLowerCase()}</span>` : ''}${(i.contexts || []).map(c => `<span class="m-ctx">${esc(c)}</span>`).join('')}</div></div></button>`;
   const untimed = untimedOn(day), next = nextActions().slice(0, 40);
+  // Éléments des autres modules plaçables sans date (séances à caler) et leurs boutons de création
+  const others = live().filter(i => i.kind !== 'task' && isSchedulable(i) && i.status === 'active' && !i.scheduled_date).slice(0, 40);
+  const makers = enabledModules().filter(m => m.createAt && m.kinds).map(m => `<button type="button" class="chip" data-act="ag-new-kind" data-v="${m.kinds[0]}">+ ${esc(m.kindLabel?.[m.kinds[0]] || m.label)}</button>`).join('');
   sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">${esc(fmtDate(day))}</span><span></span></div>
     <div class="ag-slot-time"><label for="ag-time">Heure</label><input type="time" id="ag-time" value="${t}" step="300"></div>
     ${kindOwner('task') ? `<form class="inline-add" data-form="ag-new"><input id="ag-new" placeholder="+ Nouvelle tâche à cette heure" enterkeyhint="done" autocomplete="off"></form>` : ''}
+    ${makers ? `<div class="chips wrap pad">${makers}</div>` : ''}
     ${untimed.length ? sec('Prévues ce jour, sans heure', `<div class="list">${untimed.map(row).join('')}</div>`) : ''}
+    ${others.length ? sec('À caler', `<div class="list">${others.map(row).join('')}</div>`) : ''}
     ${sec('Prochaines actions', next.length ? `<div class="list">${next.map(row).join('')}</div>` : empty('Aucune prochaine action sans date'))}`;
 }
 
@@ -60,6 +65,14 @@ const acts = {
     setField(id, 'scheduled_time', t, false);
     closeSheet();
     toast(`Placé à ${t}`, () => patch(id, prev));
+  },
+  // création d'un élément d'un autre module à cette heure (hook createAt du module)
+  'ag-new-kind': el => {
+    const m = enabledModules().find(x => x.kinds?.includes(el.dataset.v));
+    if (!m?.createAt || !slot) return;
+    const { day, t } = slot;
+    closeSheet();
+    m.createAt(el.dataset.v, day, t);
   },
   ...appleActs
 };

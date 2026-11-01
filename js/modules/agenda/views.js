@@ -1,6 +1,7 @@
 import { esc, I, cap, pad, today, addDays, parseYmd, fmtDate, fmtDur, plural, FMT_LONG } from '../../core/util.js';
 import { S, live } from '../../core/store.js';
 import { kindLabel } from '../../core/links.js';
+import { isSchedulable } from '../../core/modules.js';
 import { eventsOn, allDayOn, span } from './apple.js';
 
 // ---------------------------------------------------------------------------
@@ -18,7 +19,7 @@ const shown = i => i.status !== 'someday';
 
 // Éléments placés à une heure ce jour-là, et éléments du jour sans heure (tâches) ou à échéance
 export const timedOn = day => live().filter(i => i.scheduled_date === day && i.scheduled_time && shown(i));
-export const untimedOn = day => live().filter(i => i.kind === 'task' && i.scheduled_date === day && !i.scheduled_time && (i.status === 'active' || i.status === 'waiting'));
+export const untimedOn = day => live().filter(i => isSchedulable(i) && i.scheduled_date === day && !i.scheduled_time && (i.status === 'active' || i.status === 'waiting'));
 export const dueOn = day => live().filter(i => i.kind === 'task' && i.due_date === day && i.scheduled_date !== day && i.status === 'active');
 
 // Nombre de jours de la vue semaine selon la place restante (barre latérale et panneau de tâches déduits) :
@@ -77,7 +78,7 @@ function block(i, a, compact) {
   const dur = i.duration_min || DEFAULT_DUR;
   const h = Math.max(MIN_H, dur * PX_MIN - 2);
   const label = i.kind === 'task' ? '' : `<span class="ag-kind">${esc(kindLabel(i.kind))}</span>`;
-  return `<button class="ag-ev ${done ? 'done' : ''} ${i.focus ? 'top' : ''} ${h < 40 ? 'short' : ''}" data-act="edit" data-id="${i.id}" data-drag
+  return `<button class="ag-ev ag-k-${esc(i.kind)} ${done ? 'done' : ''} ${i.focus ? 'top' : ''} ${h < 40 ? 'short' : ''}" data-act="edit" data-id="${i.id}" data-drag
       style="top:${(i._s - a) * PX_MIN + 1}px;height:${h}px;left:calc(${(i.col / i.n) * 100}% + 1px);width:calc(${100 / i.n}% - 2px)">
     <span class="ag-time">${i.scheduled_time}${!compact && i.duration_min ? ` · ${fmtDur(i.duration_min)}` : ''}</span>
     <span class="ag-title">${label}${esc(i.title) || '<i>Sans titre</i>'}</span>
@@ -120,7 +121,7 @@ const chipOf = (i, extra = '') => `<button class="ag-chip ${i.focus ? 'top' : ''
 const extChip = e => `<button class="ag-chip ext" data-act="ag-event" data-eid="${esc(e.id)}">${esc(e.title) || '<i>Sans titre</i>'}</button>`;
 
 // Panneau de tâches à glisser dans la grille (tablette et ordinateur, masqué sur téléphone par le CSS)
-const planned = () => live().filter(i => i.kind === 'task' && i.status === 'active' && !i.scheduled_time);
+const planned = () => live().filter(i => isSchedulable(i) && i.status === 'active' && !i.scheduled_time);
 function card(i) {
   const meta = [i.duration_min ? fmtDur(i.duration_min) : '', i.due_date ? `éch. ${fmtDate(i.due_date).toLowerCase()}` : '', ...(i.contexts || [])].filter(Boolean).map(esc).join(' · ');
   return `<div class="ag-task ${i.focus ? 'top' : ''}" data-drag data-act="edit" data-id="${i.id}"><div class="ag-task-title">${esc(i.title) || '<i>Sans titre</i>'}</div>${meta ? `<div class="ag-task-meta">${meta}</div>` : ''}</div>`;
@@ -129,8 +130,8 @@ function panel(day) {
   const here = day ? untimedOn(day) : [], ids = new Set(here.map(i => i.id));
   const rest = planned().filter(i => !ids.has(i.id) && !i.scheduled_date)
     .sort((x, y) => (x.due_date || '9999').localeCompare(y.due_date || '9999') || x.created_at.localeCompare(y.created_at)).slice(0, 80);
-  return `<aside class="ag-side" aria-label="Tâches à placer"><div class="ag-side-title">Tâches à placer</div>
-    <div class="ag-side-hint">Glisse une tâche sur la grille. Tire le bas d'un créneau pour changer sa durée, dépose-le ici pour retirer l'heure.</div>
+  return `<aside class="ag-side" aria-label="Tâches à placer"><div class="ag-side-title">Tâches et séances à placer</div>
+    <div class="ag-side-hint">Glisse un élément sur la grille. Tire le bas d'un créneau pour changer sa durée, dépose-le ici pour retirer l'heure.</div>
     ${here.length ? `<div class="ag-side-sub">Prévues ce jour</div>${here.map(card).join('')}` : ''}
     <div class="ag-side-sub">Prochaines actions</div>${rest.length ? rest.map(card).join('') : '<div class="muted small">Aucune action sans date.</div>'}</aside>`;
 }

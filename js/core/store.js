@@ -3,6 +3,7 @@ import { uuid, nowIso } from './util.js';
 import { scheduleSync } from './sync.js';
 import { queueRender, toast } from './ui.js';
 import { S, DEFAULT_PREFS } from './state.js';
+import { notifiesEnd } from './modules.js';
 export { S, DEFAULT_PREFS, FIELDS, TEXT_FIELDS, NULLABLE } from './state.js';
 
 // ---------------------------------------------------------------------------
@@ -51,7 +52,7 @@ export function newItem(fields = {}) {
     id: uuid(), user_id: S.user?.id || null, kind: 'inbox', status: 'active', title: '', body: '',
     url: null, image_path: null, parent_id: null, contexts: [], tags: [], duration_min: null,
     energy: null, due_date: null, scheduled_date: null, scheduled_time: null, day_order: null,
-    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null, spent_sec: 0, timer_started_at: null, end_at: null, completed_by: null,
+    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null, spent_sec: 0, timer_started_at: null, end_at: null, completed_by: null, meta: null,
     source: 'app', completed_at: null,
     created_at: now, updated_at: now, ...fields
   };
@@ -74,7 +75,7 @@ const denied = () => toast('Lecture seule : ce partage ne permet pas de modifier
 
 // Instant de fin d'un créneau (heure locale de l'appareil) pour la notification de fin ; null s'il n'y a rien à notifier
 export function endAt(it) {
-  if (!S.prefs.endNotify || it.kind !== 'task' || !['active', 'waiting'].includes(it.status) || !it.scheduled_date || !it.scheduled_time || !isMine(it)) return null;
+  if (!S.prefs.endNotify || !notifiesEnd(it) || !['active', 'waiting'].includes(it.status) || !it.scheduled_date || !it.scheduled_time || !isMine(it)) return null;
   const [y, m, d] = it.scheduled_date.split('-').map(Number), [h, mi] = it.scheduled_time.split(':').map(Number);
   const end = new Date(y, m - 1, d, h, mi + (it.duration_min || 30));
   return end.getTime() > Date.now() ? end.toISOString() : null;

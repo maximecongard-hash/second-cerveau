@@ -112,7 +112,7 @@ export async function sync() {
   } catch (e) {
     console.error('sync', e);
     S.lastError = /column|schema cache|violates check/i.test(e.message || '')
-      ? `base de données à mettre à jour (supabase/005 à 011, dans l'ordre) · détail : ${e.message}`
+      ? `base de données à mettre à jour (supabase/005 à 012, dans l'ordre) · détail : ${e.message}`
       : (e.message || String(e));
   } finally {
     S.syncing = false;

@@ -14,14 +14,16 @@ en **modules** (thèmes) dans une barre latérale.
   tri de l'Inbox, prochaines actions par contexte, projets, Top 3 du jour, agenda, revue du soir et revue hebdo.
 - **Agenda** (`agenda`) : grille horaire jour / semaine des tâches qui ont une heure, placement d'une tâche sur un créneau.
 - **Notes** (`notes`) : notes Markdown, signets à lire / lus, épinglés, liés aux tâches et projets.
-- **Sport** et **Courses** : coquilles en aperçu, désactivées par défaut. Contenu prévu en phase 2.
+- **Sport** (`sport`, désactivé par défaut, à activer dans Réglages > Modules) : préparer des séances de course et de renfo, les caler dans
+  l'Agenda, les faire en direct (chrono, minuteur de repos), historique et progression.
+- **Courses** : coquille en aperçu, désactivée par défaut. Contenu prévu en phase 2.
 
 Stack : HTML + CSS + modules ES natifs, sans build ni npm. Données dans Supabase (table unique `items`,
 RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.14.0**, cache SW `sc-v26` (0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.15.0**, cache SW `sc-v27`. La 0.15 demande `012_sport.sql` (colonne `meta`, à coller par l'utilisateur ; sans elle la synchro signale une erreur). (0.14.0 : cache `sc-v26` ; 0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -79,7 +81,16 @@ RLS), hors ligne via localStorage + service worker.
      « Personnalisée… » (jour du mois ou Nème jour de semaine au choix) ; « Terminé par … » quand ce n'est pas moi
      (`completed_by`, fixé par trigger) ; historique par projet (`item_events`, trigger `log_item_event`).
 
+  22. 0.15.0 : module Sport (`js/modules/sport`) : kinds `workout` / `workout_tpl` / `program`, contenu en `meta` jsonb, éditeur (blocs de course,
+     exercices et séries), vue Semaine, Modèles et semaines types (génération de séances datées), mode direct, historique + progression
+     (volume, série de semaines, records), « Copier pour la montre ». Hooks de modules ajoutés au cœur (`schedulable`, `endNotify`, `createAt`,
+     `todayRows`, `reviewStep`, `eveningHtml`). Testé en mode démo seulement.
+
 ## Pistes ouvertes
+
+- **Sport, partie 2** : suivi des séances faites via COROS vers Strava (Edge Function `strava`, OAuth une fois, webhook), rapprochement avec la séance
+  prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
+- **Sport 0.15 à valider en vrai** : migration 012 non passée sur Supabase, rien testé sur iPhone (écran allumé, son du minuteur).
 
 - **Calendrier 0.8 à valider sur l'iPhone** : raccourci « Agenda Apple » (identifiants d'actions non testés sur
   l'appareil) et abonnement ICS une fois l'Edge Function déployée.

@@ -711,4 +711,9 @@ drop trigger if exists items_log_event on public.items;
 create trigger items_log_event after insert or update or delete on public.items
   for each row execute function public.log_item_event();
 
+-- ---------------------------------------------------------------------------
+-- 0.15 : module Sport (contenu des séances en JSON)
+-- ---------------------------------------------------------------------------
+alter table public.items add column if not exists meta jsonb;
+
 notify pgrst, 'reload schema';

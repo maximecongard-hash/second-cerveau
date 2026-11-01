@@ -5,7 +5,7 @@ export const DEFAULT_PREFS = {
 };
 export const FIELDS = ['id', 'user_id', 'kind', 'status', 'title', 'body', 'url', 'image_path', 'parent_id',
   'contexts', 'tags', 'duration_min', 'energy', 'due_date', 'scheduled_date', 'scheduled_time',
-  'day_order', 'waiting_for', 'recurrence', 'focus', 'outcome', 'review_date', 'links', 'pinned', 'remind_at', 'spent_sec', 'timer_started_at', 'end_at', 'completed_by', 'source', 'completed_at', 'created_at'];
+  'day_order', 'waiting_for', 'recurrence', 'focus', 'outcome', 'review_date', 'links', 'pinned', 'remind_at', 'spent_sec', 'timer_started_at', 'end_at', 'completed_by', 'meta', 'source', 'completed_at', 'created_at'];
 export const TEXT_FIELDS = new Set(['title', 'body', 'waiting_for', 'tags', 'url', 'outcome']);
 export const NULLABLE = new Set(['parent_id', 'due_date', 'scheduled_date', 'scheduled_time', 'energy', 'recurrence', 'url', 'waiting_for', 'outcome', 'review_date', 'remind_at', 'timer_started_at', 'end_at', 'completed_by']);
 

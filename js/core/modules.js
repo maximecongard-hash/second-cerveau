@@ -21,6 +21,12 @@ import { S, DEFAULT_PREFS } from './state.js';
 //   afterSync(), seedDemo()        initialisations (renvoie true si quelque chose a changé)
 //   onInput(el), onChange(el)      saisies propres au module (renvoie true si traité)
 //   onResume()                     retour au premier plan
+//   schedulable                    kinds que l'Agenda peut placer comme des tâches (['workout'])
+//   endNotify                      kinds qui reçoivent une notification de fin de créneau (end_at)
+//   todayRows(day)                 HTML ajouté à « Aujourd'hui » (section du module)
+//   reviewStep()                   { key, title, desc } étape ajoutée à la revue hebdo
+//   createAt(kind, day, t)         crée un élément de ce module à une heure (bouton « + » de la feuille « Placer à… » de l'Agenda)
+//   eveningHtml()                  HTML ajouté à la revue du soir
 // ---------------------------------------------------------------------------
 export const MODULES = [];
 export const VIEWS = {};
@@ -52,3 +58,8 @@ export function enabledModules() {
   return on.length ? on : MODULES.slice(0, 1);
 }
 export const isEnabled = m => enabledModules().includes(m);
+// Kinds que l'Agenda sait placer : les tâches, plus ceux que déclare un module actif (schedulable)
+export const isSchedulable = it => it.kind === 'task' || (kindOwner(it.kind)?.schedulable?.includes(it.kind) && isEnabled(kindOwner(it.kind)));
+export const notifiesEnd = it => it.kind === 'task' || !!kindOwner(it.kind)?.endNotify?.includes(it.kind);
+// Contributions des modules actifs à une vue du cœur : `hook(m)` renvoie du HTML ou rien
+export const fromModules = (name, ...args) => enabledModules().map(m => m[name]?.(...args)).filter(Boolean);

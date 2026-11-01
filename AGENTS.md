@@ -17,7 +17,13 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
   et réglages du lien d'abonnement ICS.
 - **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
   Reliés aux tâches et projets par les liens du cœur.
-- **Sport** et **Courses** : en aperçu, désactivés par défaut, contenu prévu en phase 2.
+- **Sport** (`sport`, désactivé par défaut) : séances de course (blocs, répétitions, cibles allure / FC / RPE) et de renfo
+  (exercices, séries, charges), modèles, semaines types, mode direct (chrono, minuteur de repos), historique et progression.
+  Kinds `workout` (séance), `workout_tpl` (modèle), `program` (semaine type). Le contenu vit dans la colonne `meta` (jsonb) :
+  `{ sport, goal, blocks | exercises, result, tpl, manualDur }` (détail en tête de `js/modules/sport/model.js`). L'Agenda place
+  les séances comme des tâches via les hooks `schedulable` et `createAt`. Fichiers : `model.js` (données, estimations, export texte),
+  `editor.js`, `views.js`, `live.js`, `programs.js`, `stats.js`, `exercises.js`. Prévu ensuite : suivi COROS via Strava, envoi à la montre.
+- **Courses** : en aperçu, désactivé par défaut, contenu prévu en phase 2.
 
 Autres repères :
 
@@ -94,7 +100,9 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 
 - **Modules** : chaque module appelle `registerModule({...})` dans son `index.js`. La liste complète des propriétés
   (`id`, `label`, `home`, `tabs`, `views`, `acts`, `forms`, `kinds`, `editor`, `prefs`, `ui`, `afterSync`, `seedDemo`…)
-  est documentée en tête de `js/core/modules.js`. Modèle minimal : `js/modules/sport/index.js`.
+  est documentée en tête de `js/core/modules.js`. Modèle minimal : `js/modules/courses/index.js`. Hooks qui laissent un module alimenter
+  les vues du cœur sans import croisé : `schedulable` (placement dans l'Agenda), `endNotify` (`end_at`), `createAt`, `todayRows`, `reviewStep`, `eveningHtml`
+  (appelés par `fromModules()` / `isSchedulable()` / `notifiesEnd()` de `modules.js`).
 - **Imports** : le cœur ne doit jamais importer un module. Les modules importent le cœur, jamais un autre module.
   `state.js` reste sans import pour éviter les cycles.
 - **État global unique `S`** : `items` (Map id → item), `prefs`, `dirty` (ids à envoyer), `cursor` de synchro, `ui`.
