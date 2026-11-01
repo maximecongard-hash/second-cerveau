@@ -605,4 +605,11 @@ begin
   return new;
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- Répétitions : aussi « le N du mois » (monthday:25) et « Nème jour de semaine » (nth:1:6)
+-- ---------------------------------------------------------------------------
+alter table public.items drop constraint if exists items_recurrence_check;
+alter table public.items add constraint items_recurrence_check
+  check (recurrence ~ '^(daily|weekdays|weekly|monthly|yearly|monthday:[0-9]{1,2}|nth:[1-5]:[0-6])$');
+
 notify pgrst, 'reload schema';
