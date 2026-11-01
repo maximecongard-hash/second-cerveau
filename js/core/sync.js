@@ -22,6 +22,7 @@ function toRow(it) {
   r.tags = it.tags || [];
   r.links = it.links || [];
   r.pinned = !!it.pinned;
+  r.spent_sec = it.spent_sec || 0; // colonne not null : un élément ancien du cache n'a pas ce champ
   r.title = it.title || '';
   r.body = it.body || '';
   r.source = it.source || 'app';

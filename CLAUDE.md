@@ -23,7 +23,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.15.0**, cache SW `sc-v27`. La 0.15 demande `012_sport.sql` (colonne `meta`, à coller par l'utilisateur ; sans elle la synchro signale une erreur). (0.14.0 : cache `sc-v26` ; 0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.15.1**, cache SW `sc-v28` (0.15.1 : la synchro envoie `spent_sec` à 0 quand un élément ancien du cache n'a pas ce champ). 0.15.0 : cache `sc-v27`. La 0.15 demande `012_sport.sql` (colonne `meta`, passée sur Supabase le 1er novembre 2026). (0.14.0 : cache `sc-v26` ; 0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -90,7 +90,7 @@ RLS), hors ligne via localStorage + service worker.
 
 - **Sport, partie 2** : suivi des séances faites via COROS vers Strava (Edge Function `strava`, OAuth une fois, webhook), rapprochement avec la séance
   prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
-- **Sport 0.15 à valider en vrai** : migration 012 non passée sur Supabase, rien testé sur iPhone (écran allumé, son du minuteur).
+- **Sport 0.15 à valider en vrai** : migration 012 passée sur Supabase (1er novembre 2026), rien testé sur iPhone (écran allumé, son du minuteur).
 
 - **Calendrier 0.8 à valider sur l'iPhone** : raccourci « Agenda Apple » (identifiants d'actions non testés sur
   l'appareil) et abonnement ICS une fois l'Edge Function déployée.
