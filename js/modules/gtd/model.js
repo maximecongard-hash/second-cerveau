@@ -1,5 +1,6 @@
 import { uuid, today, parseYmd, addDays, daysBetween, ymd, nowIso, fmtDate } from '../../core/util.js';
-import { S, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
+import { DEMO, sb } from '../../core/config.js';
+import { S, endAt, sameInstant, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
 import { toast, route, openEditor } from '../../core/ui.js';
 
 // ---------------------------------------------------------------------------
@@ -124,6 +125,16 @@ export function spawnNext(t) {
   if (!t.scheduled_date && !t.due_date) copy.scheduled_date = next;
   saveItem(copy);
   return copy;
+}
+// Remet end_at d'aplomb (réglage changé, créneau passé). Écrit cette seule colonne, sans toucher au reste de la tâche :
+// une copie périmée sur cet appareil ne doit jamais écraser un créneau déplacé ailleurs.
+export function refreshEndAt() {
+  for (const t of ofKind('task')) {
+    const e = endAt(t);
+    if (sameInstant(t.end_at, e)) continue;
+    t.end_at = e;
+    if (sb && !DEMO && !S.dirty.has(t.id)) sb.from('items').update({ end_at: e }).eq('id', t.id).then(() => {}, () => {});
+  }
 }
 // Chronomètre : spent_sec cumule les temps passés, timer_started_at marque le départ en cours
 export const spentSec = t => (t.spent_sec || 0) + (t.timer_started_at ? Math.max(0, Math.round((Date.now() - Date.parse(t.timer_started_at)) / 1000)) : 0);

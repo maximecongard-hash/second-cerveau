@@ -1,8 +1,8 @@
 import { esc, I, sec, today, addDays } from '../../core/util.js';
-import { S, newItem, saveItem, ofKind, endAt, sameInstant } from '../../core/store.js';
+import { S, newItem, saveItem, ofKind } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
 import { queueRender, route } from '../../core/ui.js';
-import { fmtClock, spentSec, DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './model.js';
+import { refreshEndAt, fmtClock, spentSec, DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './model.js';
 import { anyRow } from './rows.js';
 import { views } from './views.js';
 import { editorHTML, setField } from './sheets.js';
@@ -37,10 +37,7 @@ function afterSync() {
     changed = true;
   }
   // fin de créneau : l'instant de fin suit la date, l'heure, la durée et le réglage
-  for (const t of ofKind('task')) {
-    const e = endAt(t);
-    if (!sameInstant(t.end_at, e)) { t.end_at = e; saveItem(t, { render: false }); changed = true; }
-  }
+  refreshEndAt();
   return changed;
 }
 

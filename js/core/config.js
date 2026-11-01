@@ -1,5 +1,5 @@
 // Configuration globale (clés publiques Supabase dans config.js à la racine)
-export const VERSION = '0.13.1';
+export const VERSION = '0.13.2';
 export const CFG = window.SC_CONFIG || {};
 export const DEMO = new URLSearchParams(location.search).has('demo');
 export const LS_KEY = DEMO ? 'sc.demo.v1' : 'sc.v1';

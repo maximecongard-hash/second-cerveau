@@ -1,7 +1,7 @@
 import { $, today, addDays, fmtDate, nowIso } from '../../core/util.js';
-import { S, newItem, saveItem, patch, savePrefs, ofKind, endAt, sameInstant } from '../../core/store.js';
+import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store.js';
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
-import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset } from './model.js';
+import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset, refreshEndAt } from './model.js';
 import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
@@ -46,10 +46,7 @@ export const acts = {
     patch(SH.editingId, { remind_at: remindPreset(it, el.dataset.v) });
     renderEditor();
   },
-  'end-notify': () => { S.prefs.endNotify = !S.prefs.endNotify; for (const t of ofKind('task')) {
-      const e = endAt(t);
-      if (!sameInstant(t.end_at, e)) { t.end_at = e; saveItem(t, { render: false }); }
-    }
+  'end-notify': () => { S.prefs.endNotify = !S.prefs.endNotify;     refreshEndAt();
     savePrefs();
   },
   'timer-toggle': el => {
