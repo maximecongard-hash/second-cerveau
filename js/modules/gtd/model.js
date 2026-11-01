@@ -1,6 +1,6 @@
 import { uuid, today, parseYmd, addDays, daysBetween, ymd, nowIso, fmtDate } from '../../core/util.js';
 import { DEMO, sb } from '../../core/config.js';
-import { S, endAt, sameInstant, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
+import { S, meId, endAt, sameInstant, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
 import { toast, route, openEditor } from '../../core/ui.js';
 
 // ---------------------------------------------------------------------------
@@ -101,24 +101,39 @@ export function recLabel(rec) {
   if (kind === 'nth') return `Chaque mois, le ${ORD[a]} ${DAYS[b]}`;
   return null;
 }
-// Choix proposés dans l'éditeur, calculés depuis la date de la tâche
-export function recOptions(base, current) {
-  const d = parseYmd(base || today());
-  const opts = [['', 'Jamais'], ['daily', 'Chaque jour'], ['weekdays', 'Jours ouvrés'], ['weekly', 'Chaque semaine'], ['monthly', 'Chaque mois'],
-    [`monthday:${d.getDate()}`, recLabel(`monthday:${d.getDate()}`)]];
-  const n = Math.min(5, Math.ceil(d.getDate() / 7)), nthRec = `nth:${n}:${d.getDay()}`;
-  opts.push([nthRec, recLabel(nthRec)]);
-  if (n < 5 && d.getDate() + 7 > dim(d.getFullYear(), d.getMonth())) opts.push([`nth:5:${d.getDay()}`, recLabel(`nth:5:${d.getDay()}`)]);
-  opts.push(['yearly', 'Chaque année']);
+// Choix proposés dans l'éditeur ; les règles « le N du mois » et « Nème jour de semaine » passent par « Personnalisée… »
+export function recOptions(current) {
+  const opts = [['', 'Jamais'], ['daily', 'Chaque jour'], ['weekdays', 'Jours ouvrés'], ['weekly', 'Chaque semaine'], ['monthly', 'Chaque mois'], ['yearly', 'Chaque année']];
   if (current && !opts.some(o => o[0] === current)) opts.push([current, recLabel(current) || current]);
+  opts.push(['custom', 'Personnalisée…']);
   return opts;
 }
+const REC_BASE = { daily: 'Chaque jour', weekdays: 'Jours ouvrés', weekly: 'Chaque semaine', monthly: 'Chaque mois', yearly: 'Chaque année' };
+export const recText = r => (r ? REC_BASE[r] || recLabel(r) || r : '');
+// Heure de fin d'un créneau (HH:MM) ; 30 min si la durée manque
+export function slotEnd(time, dur) {
+  const [h, m] = time.split(':').map(Number);
+  const t = (h * 60 + m + (dur || 30)) % 1440;
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+}
+export const WEEK_DAYS = [[1, 'lundi'], [2, 'mardi'], [3, 'mercredi'], [4, 'jeudi'], [5, 'vendredi'], [6, 'samedi'], [0, 'dimanche']];
+export const NTH = [[1, '1er'], [2, '2e'], [3, '3e'], [4, '4e'], [5, 'dernier']];
+// Brouillon de la règle personnalisée, prérempli depuis la règle actuelle ou la date de la tâche
+export function recDraftFor(it) {
+  const [k, a, b] = String(it.recurrence || '').split(':');
+  const d = parseYmd(it.scheduled_date || it.due_date || today());
+  const base = { id: it.id, mode: 'monthday', day: d.getDate(), n: Math.min(4, Math.ceil(d.getDate() / 7)), wd: d.getDay() };
+  if (k === 'monthday') return { ...base, day: +a };
+  if (k === 'nth') return { ...base, mode: 'nth', n: +a, wd: +b };
+  return base;
+}
+export const recRuleOf = d => (d.mode === 'nth' ? `nth:${d.n}:${d.wd}` : `monthday:${d.day}`);
 export function spawnNext(t) {
   const base = t.scheduled_date || t.due_date || today();
   const next = nextFuture(base, t.recurrence);
   const shift = s => (s ? addDays(s, daysBetween(base, next)) : null);
   const copy = newItem({
-    ...t, id: uuid(), status: 'active', completed_at: null, day_order: null, focus: null, created_at: nowIso(),
+    ...t, id: uuid(), status: 'active', completed_at: null, completed_by: null, spent_sec: 0, timer_started_at: null, end_at: null, day_order: null, focus: null, created_at: nowIso(),
     scheduled_date: shift(t.scheduled_date), due_date: shift(t.due_date),
     remind_at: t.remind_at ? new Date(+new Date(t.remind_at) + daysBetween(base, next) * 864e5).toISOString() : null
   });
@@ -162,12 +177,12 @@ export function timeStats() {
 export function complete(id) {
   const t = S.items.get(id);
   if (!t) return;
-  if (t.status === 'done') { patch(id, { status: 'active', completed_at: null }); return; }
+  if (t.status === 'done') { patch(id, { status: 'active', completed_at: null, completed_by: null }); return; }
   const prev = t.status;
-  patch(id, { status: 'done', completed_at: nowIso(), ...stopPatch(t) });
+  patch(id, { status: 'done', completed_at: nowIso(), completed_by: meId(), ...stopPatch(t) });
   const spawned = t.recurrence ? spawnNext(t) : null;
   toast(spawned ? `Terminé · prochaine le ${fmtDate(spawned.scheduled_date || spawned.due_date)}` : 'Terminé', () => {
-    patch(id, { status: prev, completed_at: null });
+    patch(id, { status: prev, completed_at: null, completed_by: null });
     if (spawned) patch(spawned.id, { status: 'trashed' });
   });
 }

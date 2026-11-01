@@ -2,6 +2,7 @@ import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetwee
 import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '../../core/store.js';
 import { kindOwner, viewOwner, isEnabled } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
+import { historyHTML } from './history.js';
 import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
 import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
@@ -167,6 +168,8 @@ views.project = id => {
   if (kindOwner('note')) html += sec('Notes', notes.map(itemRow).join('') || '<div class="muted pad">Aucune note.</div>', `<button class="link" data-act="new-note" data-id="${p.id}">+ Note</button>`);
   html += linkedSection(p, new Set([...ts, ...notes].map(x => x.id)));
   if (done.length) html += `<details class="done-sec"><summary>${plural(done.length, 'action terminée', 'actions terminées')}</summary>${done.map(t => taskRow(t, { noProject: true })).join('')}</details>`;
+  const hOpen = S.ui.histOpen?.[id];
+  html += `<section class="sec"><div class="sec-head"><h2>Historique</h2><button class="link" data-act="hist-toggle" data-id="${id}">${hOpen ? 'Masquer' : 'Afficher'}</button></div>${hOpen ? historyHTML(id) : ''}</section>`;
   return { title: 'Projet', html, fab: ro ? undefined : 'proj-task:' + p.id };
 };
 

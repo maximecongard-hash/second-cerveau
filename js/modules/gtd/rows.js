@@ -1,6 +1,6 @@
 import { esc, I, today, fmtDate, fmtDur, plural } from '../../core/util.js';
-import { S, ofKindAll, linkedIds } from '../../core/store.js';
-import { shareMeta } from '../../core/share.js';
+import { S, meId, ofKindAll, linkedIds } from '../../core/store.js';
+import { shareMeta, firstName } from '../../core/share.js';
 import { hasNextAction, spentSec, fmtClock } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -22,6 +22,7 @@ export function taskRow(t, o = {}) {
   if (t.recurrence) meta.push('<span>↻</span>');
   if (t.remind_at && !done && t.remind_at > new Date().toISOString()) meta.push(`<span class="m-bell" title="Rappel">${I.bell}</span>`);
   if (t.image_path) meta.push('<span>Photo</span>');
+  if (done && t.completed_by && t.completed_by !== meId()) meta.push(`<span class="m-by">Terminé par ${esc(firstName(t.completed_by))}</span>`);
   const sm = shareMeta(t);
   if (sm) meta.push(sm);
   const lm = linkMeta(t);

@@ -1,7 +1,8 @@
 import { $, today, addDays, fmtDate, nowIso } from '../../core/util.js';
 import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store.js';
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
-import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset, refreshEndAt } from './model.js';
+import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset, refreshEndAt, recRuleOf } from './model.js';
+import { loadEvents } from './history.js';
 import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
@@ -48,6 +49,26 @@ export const acts = {
   },
   'end-notify': () => { S.prefs.endNotify = !S.prefs.endNotify;     refreshEndAt();
     savePrefs();
+  },
+  'ed-sec': el => {
+    const secs = (S.ui.edSecs ??= { quand: true });
+    secs[el.dataset.v] = !secs[el.dataset.v];
+    const it = S.items.get(SH.editingId);
+    if (el.dataset.v === 'histo' && secs.histo && it?.parent_id) loadEvents(it.parent_id);
+    renderEditor();
+  },
+  'rec-mode': el => { S.ui.recDraft.mode = el.dataset.v; renderEditor(); },
+  'rec-cancel': () => { S.ui.recDraft = null; renderEditor(); },
+  'rec-apply': () => {
+    const d = S.ui.recDraft;
+    S.ui.recDraft = null;
+    setField(SH.editingId, 'recurrence', recRuleOf(d), true);
+  },
+  'hist-toggle': el => {
+    const open = (S.ui.histOpen ??= {});
+    open[el.dataset.id] = !open[el.dataset.id];
+    if (open[el.dataset.id]) loadEvents(el.dataset.id);
+    queueRender();
   },
   'timer-toggle': el => {
     const t = S.items.get(el.dataset.id);
@@ -143,6 +164,7 @@ export const forms = {
 
 // Saisies propres au module (renvoient true si traitées)
 export function onChange(t) {
+  if (t.dataset.rec && S.ui.recDraft) { S.ui.recDraft[t.dataset.rec] = +t.value; return true; }
   if (t.id === 'cap-file') { $('#cap-file-name').textContent = t.files[0] ? t.files[0].name : ''; return true; }
   if (t.dataset.evdate && t.value) { patch(t.dataset.evdate, { scheduled_date: t.value, day_order: nextOrder(t.value), focus: null }); toast(`Prévu ${fmtDate(t.value).toLowerCase()}`); return true; }
   return false;

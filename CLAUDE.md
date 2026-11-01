@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.13.3**, cache SW `sc-v24`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.14.0**, cache SW `sc-v26` (0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -75,6 +75,9 @@ RLS), hors ligne via localStorage + service worker.
   20. 0.13.0 : bouton lecture / pause du chrono sur les lignes de tâches, logo de la barre latérale gardé d'un rendu à l'autre
      (fin du clignotement), notification de fin de créneau (colonne `end_at` calculée par l'app, envoyée par `send-reminders`,
      réglage dans Réglages > Organisation).
+  21. 0.14.0 : fiche d'une tâche en résumé + sections repliables (Quand, Où et comment, Plus, Historique) ; répétition
+     « Personnalisée… » (jour du mois ou Nème jour de semaine au choix) ; « Terminé par … » quand ce n'est pas moi
+     (`completed_by`, fixé par trigger) ; historique par projet (`item_events`, trigger `log_item_event`).
 
 ## Pistes ouvertes
 

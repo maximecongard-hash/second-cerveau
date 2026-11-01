@@ -393,6 +393,27 @@ main {
 .row-meta .m-share { display: inline-flex; align-items: center; gap: 3px; font-family: var(--f-mono); font-size: 12px; }
 .row-meta .m-share svg { width: 14px; height: 14px; }
 .link-x { padding: 2px 8px; font-size: 20px; line-height: 1; color: var(--muted); }
+/* Fiche d'une tâche : résumé et sections repliables */
+.ed-sum { margin: 10px 0; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--radius, 10px); background: var(--accent-soft); }
+.ed-sum-row { display: flex; gap: 12px; align-items: center; padding: 7px 0; font-size: 14px; }
+.ed-sum-row + .ed-sum-row { border-top: 1px solid var(--line); }
+.ed-sum-row > span:first-child { width: 74px; flex: none; color: var(--muted); font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; }
+.ed-timer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ed-sec { border-top: 1px solid var(--line); }
+.ed-sec:last-of-type { border-bottom: 1px solid var(--line); }
+.ed-sec-h { display: flex; align-items: center; gap: 10px; width: 100%; padding: 14px 2px; text-align: left; }
+.ed-sec-t { font: 500 11px var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.ed-sec-hint { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--muted); text-align: right; }
+.ed-sec-h .chev { transition: transform .15s; }
+.ed-sec.open .ed-sec-h .chev { transform: rotate(90deg); }
+.ed-sec .fields { margin-top: 0; border-top: 0; }
+.ed-sec-b { padding-bottom: 10px; }
+.rec-custom { margin-top: 10px; display: grid; gap: 10px; }
+.rec-lbl { align-self: center; color: var(--muted); }
+.rec-custom select { flex: 1; min-width: 90px; }
+.hist-row { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.hist { padding: 0 2px; }
+.row-meta .m-by { font-style: italic; }
 .row-meta .m-timer, .timer-val { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
 .row-meta .m-timer { color: var(--accent, inherit); }
 .row-meta .m-timer.paused, .timer-val.paused { color: var(--danger); }

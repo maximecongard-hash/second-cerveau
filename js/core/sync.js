@@ -1,8 +1,8 @@
 import { DEMO, sb } from './config.js';
 import { nowIso } from './util.js';
-import { S, FIELDS, DEFAULT_PREFS, persist, isMine, saveItem } from './store.js';
+import { S, FIELDS, DEFAULT_PREFS, persist, isMine, saveItem, canEdit } from './store.js';
 import { MODULES } from './modules.js';
-import { queueRender } from './ui.js';
+import { queueRender, toast } from './ui.js';
 
 // ---------------------------------------------------------------------------
 // Synchronisation Supabase
@@ -41,15 +41,35 @@ export async function sync() {
   setSyncState();
   let changed = false;
   try {
-    // 1. envoi des modifications locales
+    // 1. envoi des modifications locales ; les droits à jour d'abord (un partage passé en lecture seule ne doit pas bloquer la synchro)
     if (S.dirty.size) {
-      const snap = new Map([...S.dirty].map(id => [id, S.items.get(id)?.updated_at]));
+      if (await pullSharing()) changed = true;
+      const refused = new Set([...S.dirty].filter(id => { const it = S.items.get(id); return it && !canEdit(it); }));
+      const snap = new Map([...S.dirty].filter(id => !refused.has(id)).map(id => [id, S.items.get(id)?.updated_at]));
       const rows = [...snap.keys()].map(id => S.items.get(id)).filter(Boolean).map(toRow);
       for (let i = 0; i < rows.length; i += 200) {
-        const { error } = await sb.from('items').upsert(rows.slice(i, i + 200));
-        if (error) throw error;
+        const part = rows.slice(i, i + 200);
+        const { error } = await sb.from('items').upsert(part);
+        if (!error) continue;
+        if (!/row-level security|permission denied/i.test(error.message || '')) throw error;
+        for (const r of part) {
+          const { error: e } = await sb.from('items').upsert(r);
+          if (!e) continue;
+          if (!/row-level security|permission denied/i.test(e.message || '')) throw e;
+          refused.add(r.id);
+          snap.delete(r.id);
+        }
       }
       for (const [id, v] of snap) if (S.items.get(id)?.updated_at === v) S.dirty.delete(id);
+      // modifications refusées par la base : on les abandonne et on reprend la version du serveur
+      for (const id of refused) {
+        S.dirty.delete(id);
+        const { data, error } = await sb.from('items').select('*').eq('id', id).maybeSingle();
+        if (error) throw error;
+        if (data) S.items.set(id, fromRow(data)); else S.items.delete(id);
+        changed = true;
+      }
+      if (refused.size) toast('Lecture seule : ' + refused.size + ' modification(s) refusée(s), version du propriétaire rétablie');
     }
     // 2. préférences
     if (S.prefsDirty) {
@@ -92,7 +112,7 @@ export async function sync() {
   } catch (e) {
     console.error('sync', e);
     S.lastError = /column|schema cache|violates check/i.test(e.message || '')
-      ? `base de données à mettre à jour (supabase/005 à 010, dans l'ordre) · détail : ${e.message}`
+      ? `base de données à mettre à jour (supabase/005 à 011, dans l'ordre) · détail : ${e.message}`
       : (e.message || String(e));
   } finally {
     S.syncing = false;

@@ -66,7 +66,7 @@ function seedDemo() {
   const p3 = add({ kind: 'project', title: 'Organiser l’anniversaire de Léa', user_id: cam.id, outcome: 'Fête réussie le 14/11, tout le monde est prévenu.' });
   S.shares.push({ id: 'demo-s2', item_id: p3.id, owner_id: cam.id, user_id: S.user.id, role: 'edit' });
   add({ kind: 'task', title: 'Réserver la salle', parent_id: p3.id, user_id: cam.id });
-  add({ kind: 'task', title: 'Commander le gâteau', parent_id: p3.id, user_id: cam.id, status: 'done', completed_at: new Date().toISOString() });
+  add({ kind: 'task', title: 'Commander le gâteau', parent_id: p3.id, user_id: cam.id, status: 'done', completed_at: new Date().toISOString(), completed_by: cam.id });
   S.prefs.seeded = true;
   S.prefs.areasV2 = true;
 }

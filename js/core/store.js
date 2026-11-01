@@ -1,4 +1,4 @@
-import { LS_KEY } from './config.js';
+import { LS_KEY, DEMO } from './config.js';
 import { uuid, nowIso } from './util.js';
 import { scheduleSync } from './sync.js';
 import { queueRender, toast } from './ui.js';
@@ -51,7 +51,7 @@ export function newItem(fields = {}) {
     id: uuid(), user_id: S.user?.id || null, kind: 'inbox', status: 'active', title: '', body: '',
     url: null, image_path: null, parent_id: null, contexts: [], tags: [], duration_min: null,
     energy: null, due_date: null, scheduled_date: null, scheduled_time: null, day_order: null,
-    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null, spent_sec: 0, timer_started_at: null, end_at: null,
+    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null, spent_sec: 0, timer_started_at: null, end_at: null, completed_by: null,
     source: 'app', completed_at: null,
     created_at: now, updated_at: now, ...fields
   };
@@ -59,7 +59,7 @@ export function newItem(fields = {}) {
 // ---------------------------------------------------------------------------
 // Partage : mes éléments, ceux des autres qui m'ont été partagés, et mon droit sur chacun
 // ---------------------------------------------------------------------------
-const meId = () => S.user?.id || S.uid;
+export const meId = () => S.user?.id || S.uid;
 export const isMine = it => !it.user_id || it.user_id === meId();
 // 'owner' (à moi, ou tâche d'un invité dans mon projet), 'edit', 'view' ou null
 export function roleOf(it) {
@@ -81,11 +81,29 @@ export function endAt(it) {
 }
 export const sameInstant = (a, b) => (a ? +new Date(a) : null) === (b ? +new Date(b) : null);
 
+// Mode démo : petit journal local, comme le trigger log_item_event du serveur
+const snaps = new Map();
+function demoLog(it, known) {
+  if (!DEMO || !['task', 'project'].includes(it.kind)) return;
+  const prev = snaps.get(it.id);
+  snaps.set(it.id, { status: it.status, title: it.title, parent_id: it.parent_id });
+  const proj = it.kind === 'project' ? it.id : it.parent_id;
+  const add = (project_id, action, detail = '') => project_id && action && (S.ui.demoEvents ??= []).unshift({ id: uuid(), project_id, item_id: it.id, kind: it.kind, actor: meId(), action, title: it.title, detail, at: nowIso() });
+  if (!prev) { if (!known) add(proj, 'created'); return; }
+  if (prev.status !== it.status) add(proj, it.status === 'trashed' ? 'trashed' : prev.status === 'trashed' ? 'restored' : it.status === 'done' ? 'done' : prev.status === 'done' ? 'reopened' : null);
+  if (prev.title !== it.title && prev.title) add(proj, 'renamed', prev.title);
+  if (it.kind === 'task' && prev.parent_id !== it.parent_id) {
+    add(it.parent_id, 'moved_in', S.items.get(prev.parent_id)?.title || '');
+    add(prev.parent_id, 'moved_out', S.items.get(it.parent_id)?.title || '');
+  }
+}
+
 export function saveItem(it, { render = true } = {}) {
   const known = S.items.get(it.id);
   const parent = it.parent_id && S.items.get(it.parent_id);
   if (known ? !canEdit(known) : parent && !canEdit(parent)) { denied(); return it; }
   if (isMine(it)) it.end_at = endAt(it);
+  demoLog(it, known);
   it.updated_at = nowIso();
   S.items.set(it.id, it);
   S.dirty.add(it.id);

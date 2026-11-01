@@ -15,7 +15,7 @@ const meId = () => S.user?.id || S.uid;
 let back = false;
 
 export const personName = id => (id === meId() ? 'toi' : S.people[id]?.name || S.people[id]?.email || 'un autre membre');
-const firstName = id => personName(id).split(/[\s@]/)[0];
+export const firstName = id => (S.people[id] || id === meId() ? personName(id).split(/[\s@]/)[0] : personName(id));
 export const sharesOf = id => S.shares.filter(s => s.item_id === id && s.owner_id === meId());
 // Éléments d'autrui partagés directement avec moi
 export const sharedWithMe = () => S.shares.filter(s => s.user_id === meId()).map(s => S.items.get(s.item_id)).filter(i => i && i.status !== 'trashed');
