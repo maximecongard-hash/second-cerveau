@@ -2,7 +2,7 @@ import { esc, I, sec, today, addDays } from '../../core/util.js';
 import { S, newItem, saveItem, ofKind } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
 import { queueRender, route } from '../../core/ui.js';
-import { DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './model.js';
+import { fmtClock, spentSec, DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './model.js';
 import { anyRow } from './rows.js';
 import { views } from './views.js';
 import { editorHTML, setField } from './sheets.js';
@@ -49,6 +49,7 @@ function seedDemo() {
   add({ kind: 'inbox', title: 'https://example.com/article-gtd', url: 'https://example.com/article-gtd', source: 'shortcut' });
   add({ kind: 'inbox', title: 'Appeler le garagiste pour le contrôle technique' });
   add({ kind: 'task', title: 'Comparer les prix des billets de train', parent_id: p1.id, contexts: ['@ordi'], duration_min: 30, scheduled_date: t0, day_order: 1, focus: 1 });
+  add({ kind: 'task', title: 'Trier les mails de la semaine', status: 'done', completed_at: new Date().toISOString(), duration_min: 30, spent_sec: 2700 });
   add({ kind: 'task', title: 'Courses pour le dîner', contexts: ['@courses'], scheduled_date: t0, scheduled_time: '18:30', duration_min: 45 });
   add({ kind: 'task', title: 'Répondre au mail de Julie', contexts: ['@ordi'], scheduled_date: t0, day_order: 2, duration_min: 15 });
   add({ kind: 'task', title: 'Payer la facture d’électricité', contexts: ['@ordi'], due_date: addDays(t0, 2), recurrence: 'monthly' });
@@ -66,6 +67,14 @@ function seedDemo() {
   S.prefs.seeded = true;
   S.prefs.areasV2 = true;
 }
+
+// Chronomètres affichés (lignes et éditeur) : mis à jour chaque seconde
+setInterval(() => {
+  for (const el of document.querySelectorAll('[data-timer]')) {
+    const t = S.items.get(el.dataset.timer);
+    if (t) el.textContent = fmtClock(spentSec(t));
+  }
+}, 1000);
 
 registerModule({
   id: 'gtd',

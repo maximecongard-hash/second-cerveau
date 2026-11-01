@@ -582,4 +582,10 @@ end $$;
 revoke all on function public.share_item(uuid, text, text) from public;
 grant execute on function public.share_item(uuid, text, text) to authenticated;
 
+-- ---------------------------------------------------------------------------
+-- Chronomètre des tâches : temps passé (secondes) et début du chrono en cours
+-- ---------------------------------------------------------------------------
+alter table public.items add column if not exists spent_sec int not null default 0;
+alter table public.items add column if not exists timer_started_at timestamptz;
+
 notify pgrst, 'reload schema';

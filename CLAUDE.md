@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.11.1**, cache SW `sc-v18`. La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.12.0**, cache SW `sc-v20`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -67,6 +67,11 @@ RLS), hors ligne via localStorage + service worker.
   18. 0.11.0 : plusieurs comptes et partage. Table `profiles` (le plus ancien compte = administrateur), Edge Function `add-user`
      (Réglages > Utilisateurs : email + mot de passe provisoire), tables `shares` + `share_item()`, RLS `row_role()`, droits
      modifier / lecture seule, section « Partagés avec moi » dans Projets, `core/share.js` et `core/users.js`.
+
+  19. 0.12.0 : chronomètre sur les tâches (éditeur > Chrono, un seul chrono à la fois, arrêté à la fin de la tâche), temps réel
+     affiché dans les listes, comparaison réel / prévu dans la revue hebdo. Colonnes `spent_sec` et `timer_started_at`.
+     0.11.2 : le vrai message d'erreur de `add-user` s'affiche. Accès agent : compte dédié + partage lecture seule,
+     lu par `scripts/brain-read.sh` (identifiants dans `.env.local`, ignoré par git).
 
 ## Pistes ouvertes
 

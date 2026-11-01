@@ -5,7 +5,7 @@ import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/
 import { linksBlock } from '../../core/links.js';
 import { shareBlock } from '../../core/share.js';
 import { kindOwner } from '../../core/modules.js';
-import { areas, nextActions, nextOrder, sortTasks, spawnNext, recOptions, toLocalInput, fromLocalInput } from './model.js';
+import { spentSec, fmtClock, areas, nextActions, nextOrder, sortTasks, spawnNext, recOptions, toLocalInput, fromLocalInput } from './model.js';
 import { pushHint } from '../../core/push.js';
 
 // ---------------------------------------------------------------------------
@@ -27,6 +27,11 @@ function editorHead(it) {
   const mid = it.kind === 'area' ? '<span class="sheet-kind">Domaine</span>'
     : `<div class="seg small">${kinds.map(([v, l]) => `<button class="${it.kind === v ? 'on' : ''}" data-act="kind" data-v="${v}">${l}</button>`).join('')}</div>`;
   return `<div class="sheet-head"><button class="link strong" data-act="close">OK</button>${mid}<button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+}
+function timerField(it) {
+  const run = !!it.timer_started_at, s = spentSec(it);
+  return `<div class="date-line"><span class="timer-val" data-timer="${it.id}">${fmtClock(s)}</span>${it.duration_min ? `<span class="muted small">sur ${fmtDur(it.duration_min)} prévu</span>` : ''}</div>
+    <div class="quick"><button class="chip ${run ? 'on' : ''}" data-act="${run ? 'timer-pause' : 'timer-start'}">${run ? 'Pause' : s ? 'Reprendre' : 'Démarrer'}</button>${s ? '<button class="chip" data-act="timer-reset">Remettre à zéro</button>' : ''}</div>`;
 }
 export function editorHTML(it) {
   const head = editorHead(it);
@@ -77,6 +82,7 @@ export function editorHTML(it) {
         ${it.remind_at ? pushHint() : ''}`)}
       ${fRow('Échéance', `<input type="date" data-f="due_date" value="${it.due_date || ''}">`)}
       ${fRow('Durée', sel('duration_min', it.duration_min, [['', '—'], [5, '5 min'], [10, '10 min'], [15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 h'], [90, '1 h 30'], [120, '2 h'], [180, '3 h'], [240, '4 h']]))}
+      ${fRow('Chrono', timerField(it))}
       ${fRow('Énergie', seg('energy', it.energy, [['low', 'Faible'], ['medium', 'Moyenne'], ['high', 'Forte']]))}
       ${fRow('Répéter', sel('recurrence', it.recurrence, recOptions(it.scheduled_date || it.due_date, it.recurrence)))}
       ${tagsF}${urlF}
@@ -110,7 +116,10 @@ export function setField(id, f, v) {
   }
   if (f === 'scheduled_time' && val && !it.scheduled_date) { p.scheduled_date = S.ui.day; p.day_order = nextOrder(S.ui.day); }
   if (f === 'status') {
-    if (val === 'done') { if (it.status !== 'done') p.completed_at = nowIso(); }
+    if (val === 'done') {
+      if (it.status !== 'done') p.completed_at = nowIso();
+      if (it.timer_started_at) Object.assign(p, { spent_sec: spentSec(it), timer_started_at: null });
+    }
     else p.completed_at = null;
   }
   const wasDone = it.status === 'done';

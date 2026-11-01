@@ -125,12 +125,35 @@ export function spawnNext(t) {
   saveItem(copy);
   return copy;
 }
+// Chronomètre : spent_sec cumule les temps passés, timer_started_at marque le départ en cours
+export const spentSec = t => (t.spent_sec || 0) + (t.timer_started_at ? Math.max(0, Math.round((Date.now() - Date.parse(t.timer_started_at)) / 1000)) : 0);
+const stopPatch = t => (t.timer_started_at ? { spent_sec: spentSec(t), timer_started_at: null } : {});
+export function fmtClock(sec) {
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  const p = n => String(n).padStart(2, '0');
+  return h ? `${h}:${p(m)}:${p(s)}` : `${p(m)}:${p(s)}`;
+}
+// Un seul chrono à la fois : en lancer un met l'autre en pause
+export function timerStart(id) {
+  for (const o of ofKind('task')) if (o.timer_started_at && o.id !== id) patch(o.id, stopPatch(o));
+  patch(id, { timer_started_at: nowIso() });
+}
+export function timerPause(id) {
+  const t = S.items.get(id);
+  if (t) patch(id, stopPatch(t));
+}
+export const timerReset = id => patch(id, { spent_sec: 0, timer_started_at: null });
+// Tâches terminées ces 7 derniers jours, chronométrées et estimées : temps réel contre temps prévu
+export function timeStats() {
+  const week = ofKind('task').filter(t => t.status === 'done' && t.spent_sec >= 60 && t.duration_min && t.completed_at && daysBetween(ymd(new Date(t.completed_at)), today()) < 7);
+  return { n: week.length, real: Math.round(week.reduce((s, t) => s + t.spent_sec, 0) / 60), planned: week.reduce((s, t) => s + t.duration_min, 0) };
+}
 export function complete(id) {
   const t = S.items.get(id);
   if (!t) return;
   if (t.status === 'done') { patch(id, { status: 'active', completed_at: null }); return; }
   const prev = t.status;
-  patch(id, { status: 'done', completed_at: nowIso() });
+  patch(id, { status: 'done', completed_at: nowIso(), ...stopPatch(t) });
   const spawned = t.recurrence ? spawnNext(t) : null;
   toast(spawned ? `Terminé · prochaine le ${fmtDate(spawned.scheduled_date || spawned.due_date)}` : 'Terminé', () => {
     patch(id, { status: prev, completed_at: null });

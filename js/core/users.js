@@ -75,8 +75,8 @@ Object.assign(FORMS, {
     const { error } = await sb.functions.invoke('add-user', { body: { email, name, password } });
     if (error) {
       let msg = error.message;
-      try { msg = (await error.context.json()).error || msg; } catch { /* corps illisible */ }
-      S.ui.userErr = /not found|Failed to send/i.test(msg) ? 'Fonction add-user introuvable : déploie-la dans Supabase (voir le README).' : msg;
+      try { const b = await error.context.json(); msg = b.error || b.message || msg; } catch { /* corps illisible */ }
+      S.ui.userErr = /not.?found|Failed to send/i.test(msg) ? 'Fonction add-user introuvable : déploie-la dans Supabase (voir le README).' : msg;
       render();
       return;
     }

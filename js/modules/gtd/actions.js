@@ -1,7 +1,7 @@
 import { $, today, addDays, fmtDate, nowIso } from '../../core/util.js';
 import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store.js';
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
-import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus } from './model.js';
+import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset } from './model.js';
 import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
@@ -46,6 +46,9 @@ export const acts = {
     patch(SH.editingId, { remind_at: remindPreset(it, el.dataset.v) });
     renderEditor();
   },
+  'timer-start': () => { timerStart(SH.editingId); renderEditor(); },
+  'timer-pause': () => { timerPause(SH.editingId); renderEditor(); },
+  'timer-reset': () => { timerReset(SH.editingId); renderEditor(); },
   'new-note': el => createAndEdit({ kind: 'note', parent_id: el.dataset.id }),
   clar: el => clarify(el.dataset.id, el.dataset.v),
   'clarify-one': el => { location.hash = '#/clarify/' + el.dataset.id; },

@@ -1,7 +1,7 @@
 import { esc, I, today, fmtDate, fmtDur, plural } from '../../core/util.js';
 import { S, ofKindAll, linkedIds } from '../../core/store.js';
 import { shareMeta } from '../../core/share.js';
-import { hasNextAction } from './model.js';
+import { hasNextAction, spentSec, fmtClock } from './model.js';
 
 // ---------------------------------------------------------------------------
 // Lignes de liste GTD
@@ -16,6 +16,8 @@ export function taskRow(t, o = {}) {
   if (o.showTime && t.scheduled_time) meta.push(`<span>${t.scheduled_time}</span>`);
   if (o.showSched && t.scheduled_date) meta.push(`<span class="${t.scheduled_date < today() && !done ? 'late' : ''}">Prévu ${fmtDate(t.scheduled_date).toLowerCase()}</span>`);
   if (t.duration_min) meta.push(`<span>${fmtDur(t.duration_min)}</span>`);
+  if (t.timer_started_at) meta.push(`<span class="m-timer" data-timer="${t.id}">${fmtClock(spentSec(t))}</span>`);
+  else if (t.spent_sec >= 60) meta.push(`<span>Réel ${fmtDur(Math.round(t.spent_sec / 60))}</span>`);
   if (t.due_date) meta.push(`<span class="m-due ${t.due_date <= today() && !done ? 'late' : ''}">Échéance ${fmtDate(t.due_date).toLowerCase()}</span>`);
   if (t.recurrence) meta.push('<span>↻</span>');
   if (t.remind_at && !done && t.remind_at > new Date().toISOString()) meta.push(`<span class="m-bell" title="Rappel">${I.bell}</span>`);

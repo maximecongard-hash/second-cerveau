@@ -148,6 +148,7 @@ Base créée avant une version : colle, dans l'ordre, les migrations qui manquen
 | 0.8 | [`005_calendrier.sql`](supabase/005_calendrier.sql) | Calendrier Apple (+ fonction `calendrier`) |
 | 0.9 | [`006_notifications.sql`](supabase/006_notifications.sql) | notifications (+ fonction `send-reminders`) |
 | 0.11 | [`007_partage.sql`](supabase/007_partage.sql) | comptes multiples et partage (+ fonction `add-user`) ; sans elle l'app marche, sans partage |
+| 0.12 | [`008_chrono.sql`](supabase/008_chrono.sql) | chronomètre des tâches (colonnes `spent_sec`, `timer_started_at`) ; sans elle la synchro signale une erreur |
 
 ---
 

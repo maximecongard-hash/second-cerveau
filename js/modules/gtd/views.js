@@ -1,7 +1,7 @@
 import { esc, I, empty, sec, chip, md, today, ymd, parseYmd, addDays, daysBetween, cap, domain, plural, fmtDate, fmtDur, fmtAgo, FMT_LONG } from '../../core/util.js';
 import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '../../core/store.js';
 import { kindOwner, viewOwner, isEnabled } from '../../core/modules.js';
-import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks } from './model.js';
+import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
 import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
 import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
@@ -193,6 +193,11 @@ views.logbook = () => {
   return { title: 'Terminé', html: html || empty('Rien de terminé pour l’instant') };
 };
 
+function timeDesc() {
+  const { n, real, planned } = timeStats();
+  if (!n) return 'Chronomètre une tâche estimée (éditeur > Chrono) pour comparer le réel au prévu.';
+  return `${plural(n, 'tâche chronométrée', 'tâches chronométrées')} cette semaine : ${fmtDur(real)} réel pour ${fmtDur(planned)} prévu (${Math.round(real / planned * 100)} %).`;
+}
 views.review = () => {
   const r = S.ui.review;
   const noNext = projectsBy('active').filter(p => !hasNextAction(p));
@@ -206,6 +211,7 @@ views.review = () => {
     step('collect', 'Rassembler', 'Notes papier, mails, messages, idées en tête : tout dans l’Inbox.'),
     step('inbox', 'Vider l’Inbox', `${plural(inboxItems().length, 'élément', 'éléments')} à trier. <a href="#/clarify">Trier</a>`),
     step('late', 'Retards et échéances', `${plural(lateN, 'tâche', 'tâches')} en retard ou échue(s). <a href="#/today">Voir</a>`),
+    step('time', 'Temps réel', timeDesc()),
     step('calendar', 'Calendrier', 'Revois la semaine passée et les 2 semaines à venir : quelque chose à préparer ?'),
     step('actions', 'Prochaines actions', 'Coche ce qui est fait, supprime ce qui n’a plus de sens. <a href="#/actions">Voir</a>'),
     step('projects', 'Projets', [
