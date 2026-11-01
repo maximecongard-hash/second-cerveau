@@ -50,9 +50,10 @@ Object.assign(ACTS, {
 Object.assign(FORMS, {
   'profile-name': async f => {
     const name = f.querySelector('input').value.trim().slice(0, 80);
-    const { error } = await sb.from('profiles').update({ name }).eq('id', S.user.id);
+    const { data, error } = await sb.from('profiles').update({ name }).eq('id', S.user.id).select('id, email, name, is_admin');
     if (error) { toast('Erreur : ' + error.message); return; }
-    S.people[S.user.id] = { ...me(), name };
+    if (!data?.length) { toast('Pseudo non enregistré : profil introuvable ou droit refusé'); return; }
+    S.people[S.user.id] = data[0];
     persist();
     toast('Pseudo enregistré');
   },
