@@ -29,9 +29,10 @@ export function taskRow(t, o = {}) {
   return `<div class="row task ${done ? 'done' : ''}" data-act="edit" data-id="${t.id}">
     <button class="check" data-act="toggle" data-id="${t.id}" aria-label="${done ? 'Rouvrir' : 'Terminer'}"></button>
     <div class="row-main"><div class="row-title"><span class="rt">${esc(t.title) || '<i>Sans titre</i>'}</span></div>${meta.length ? `<div class="row-meta">${meta.join('')}</div>` : ''}</div>
-    ${o.extra || ''}
+    ${o.extra || ''}${done ? '' : timerBtn(t)}
   </div>`;
 }
+const timerBtn = t => `<button class="timer-btn ${t.timer_started_at ? 'on' : ''}" data-act="timer-toggle" data-id="${t.id}" aria-label="${t.timer_started_at ? 'Pause du chrono' : 'Lancer le chrono'}">${t.timer_started_at ? I.pause : I.play}</button>`;
 const linkMeta = it => { const n = linkedIds(it.id).length; return n ? `<span class="m-link" title="Éléments liés">${I.link}${n}</span>` : ''; };
 export const starBtn = (t, day) => `<button class="star ${t.focus && t.scheduled_date === day ? 'on' : ''}" data-act="focus" data-id="${t.id}" aria-label="Top 3">${I.star}</button>`;
 export function projectRow(p) {

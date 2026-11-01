@@ -51,7 +51,7 @@ export function newItem(fields = {}) {
     id: uuid(), user_id: S.user?.id || null, kind: 'inbox', status: 'active', title: '', body: '',
     url: null, image_path: null, parent_id: null, contexts: [], tags: [], duration_min: null,
     energy: null, due_date: null, scheduled_date: null, scheduled_time: null, day_order: null,
-    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null, spent_sec: 0, timer_started_at: null,
+    waiting_for: null, recurrence: null, focus: null, outcome: null, review_date: null, links: [], pinned: false, remind_at: null, spent_sec: 0, timer_started_at: null, end_at: null,
     source: 'app', completed_at: null,
     created_at: now, updated_at: now, ...fields
   };
@@ -72,10 +72,20 @@ export function roleOf(it) {
 export const canEdit = it => ['owner', 'edit'].includes(roleOf(it));
 const denied = () => toast('Lecture seule : ce partage ne permet pas de modifier');
 
+// Instant de fin d'un créneau (heure locale de l'appareil) pour la notification de fin ; null s'il n'y a rien à notifier
+export function endAt(it) {
+  if (!S.prefs.endNotify || it.kind !== 'task' || !['active', 'waiting'].includes(it.status) || !it.scheduled_date || !it.scheduled_time || !isMine(it)) return null;
+  const [y, m, d] = it.scheduled_date.split('-').map(Number), [h, mi] = it.scheduled_time.split(':').map(Number);
+  const end = new Date(y, m - 1, d, h, mi + (it.duration_min || 30));
+  return end.getTime() > Date.now() ? end.toISOString() : null;
+}
+export const sameInstant = (a, b) => (a ? +new Date(a) : null) === (b ? +new Date(b) : null);
+
 export function saveItem(it, { render = true } = {}) {
   const known = S.items.get(it.id);
   const parent = it.parent_id && S.items.get(it.parent_id);
   if (known ? !canEdit(known) : parent && !canEdit(parent)) { denied(); return it; }
+  if (isMine(it)) it.end_at = endAt(it);
   it.updated_at = nowIso();
   S.items.set(it.id, it);
   S.dirty.add(it.id);

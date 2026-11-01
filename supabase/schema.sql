@@ -588,4 +588,21 @@ grant execute on function public.share_item(uuid, text, text) to authenticated;
 alter table public.items add column if not exists spent_sec int not null default 0;
 alter table public.items add column if not exists timer_started_at timestamptz;
 
+-- ---------------------------------------------------------------------------
+-- Notification de fin de créneau : instant de fin (calculé par l'app) et envoi fait
+-- ---------------------------------------------------------------------------
+alter table public.items add column if not exists end_at timestamptz;
+alter table public.items add column if not exists end_notified_at timestamptz;
+create index if not exists items_end_idx on public.items (end_at) where end_notified_at is null;
+create or replace function public.rearm_reminder() returns trigger language plpgsql as $$
+begin
+  if new.remind_at is distinct from old.remind_at then
+    new.reminded_at := null;
+  end if;
+  if new.end_at is distinct from old.end_at then
+    new.end_notified_at := null;
+  end if;
+  return new;
+end $$;
+
 notify pgrst, 'reload schema';

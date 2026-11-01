@@ -432,6 +432,9 @@ input[type="datetime-local"] { min-width: 0; }
 .login form { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
 
 /* Top 3 : le surligneur */
+.timer-btn { flex: none; color: color-mix(in srgb, var(--muted) 55%, transparent); padding: 1px; }
+.timer-btn svg { width: 20px; height: 20px; fill: currentColor; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.timer-btn.on { color: var(--accent); }
 .star { flex: none; color: color-mix(in srgb, var(--muted) 55%, transparent); padding: 1px; }
 .star svg { width: 20px; height: 20px; }
 .star.on { color: var(--star); }

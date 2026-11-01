@@ -51,6 +51,8 @@ export const I = {
   down: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
   left: '<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
   right: '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13M16 5.5v13"/></svg>',
   bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
   camera: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   calendar: '<svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="1.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg>',

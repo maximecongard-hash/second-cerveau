@@ -92,7 +92,7 @@ export async function sync() {
   } catch (e) {
     console.error('sync', e);
     S.lastError = /column|schema cache|violates check/i.test(e.message || '')
-      ? 'base de données à mettre à jour (supabase/005_calendrier.sql, 006_notifications.sql, 007_partage.sql puis 008_chrono.sql)'
+      ? 'base de données à mettre à jour (supabase/005_calendrier.sql, 006_notifications.sql, 007_partage.sql, 008_chrono.sql puis 009_fin_creneau.sql)'
       : (e.message || String(e));
   } finally {
     S.syncing = false;

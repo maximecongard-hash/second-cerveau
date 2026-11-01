@@ -131,6 +131,18 @@ async function notifyUser(userId: string, message: unknown, vapid: { public_key:
 
 const firstLine = (s: string | null) => (s || '').split('\n').map(l => l.trim()).find(Boolean)?.slice(0, 140) || '';
 
+// Créneaux qui viennent de finir (10 min de tolérance : un créneau ancien ne réveille personne)
+async function endedSlots(now: string, cfg: { public_key: string, private_jwk: JsonWebKey }) {
+  const since = new Date(Date.now() - 10 * 60000).toISOString();
+  const rows = await db(`items?select=id,user_id,title&end_at=lte.${now}&end_at=gte.${since}&end_notified_at=is.null&status=in.(active,waiting)&limit=100`);
+  if (!rows.length) return 0;
+  await db(`items?id=in.(${rows.map((i: { id: string }) => i.id).join(',')})`, { method: 'PATCH', body: JSON.stringify({ end_notified_at: now }), headers: { Prefer: 'return=minimal' } });
+  for (const it of rows) {
+    await notifyUser(it.user_id, { title: it.title || 'Créneau', body: 'Le créneau est terminé.', tag: `end-${it.id}`, url: `./#/open/${it.id}` }, cfg);
+  }
+  return rows.length;
+}
+
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   const json = (data: unknown, status = 200) =>
@@ -153,7 +165,8 @@ Deno.serve(async req => {
 
     const now = new Date().toISOString();
     const due = await db(`items?select=id,user_id,title,body,kind,parent_id&remind_at=lte.${now}&reminded_at=is.null&status=not.in.(done,trashed)&order=remind_at&limit=100`);
-    if (!due.length) return json({ due: 0 });
+    const ended = await endedSlots(now, cfg);
+    if (!due.length) return json({ due: 0, ended });
     // Marqué avant l'envoi : une notification ne part jamais deux fois
     await db(`items?id=in.(${due.map((i: { id: string }) => i.id).join(',')})`, { method: 'PATCH', body: JSON.stringify({ reminded_at: now }), headers: { Prefer: 'return=minimal' } });
     let sent = 0;
@@ -166,7 +179,7 @@ Deno.serve(async req => {
       }, cfg);
       sent += r.sent;
     }
-    return json({ due: due.length, sent });
+    return json({ due: due.length, sent, ended });
   } catch (e) {
     console.error(e);
     return json({ error: String(e) }, 500);

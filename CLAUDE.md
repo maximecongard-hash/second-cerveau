@@ -21,7 +21,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.12.0**, cache SW `sc-v20`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.13.0**, cache SW `sc-v21`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -72,6 +72,9 @@ RLS), hors ligne via localStorage + service worker.
      affiché dans les listes, comparaison réel / prévu dans la revue hebdo. Colonnes `spent_sec` et `timer_started_at`.
      0.11.2 : le vrai message d'erreur de `add-user` s'affiche. Accès agent : compte dédié + partage lecture seule,
      lu par `scripts/brain-read.sh` (identifiants dans `.env.local`, ignoré par git).
+  20. 0.13.0 : bouton lecture / pause du chrono sur les lignes de tâches, logo de la barre latérale gardé d'un rendu à l'autre
+     (fin du clignotement), notification de fin de créneau (colonne `end_at` calculée par l'app, envoyée par `send-reminders`,
+     réglage dans Réglages > Organisation).
 
 ## Pistes ouvertes
 

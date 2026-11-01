@@ -1,5 +1,5 @@
 import { esc, I, sec, today, addDays } from '../../core/util.js';
-import { S, newItem, saveItem, ofKind } from '../../core/store.js';
+import { S, newItem, saveItem, ofKind, endAt, sameInstant } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
 import { queueRender, route } from '../../core/ui.js';
 import { fmtClock, spentSec, DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './model.js';
@@ -13,7 +13,8 @@ import { acts, forms, fab, onChange } from './actions.js';
 // Les notes et signets vivent dans le module Notes (js/modules/notes)
 // ---------------------------------------------------------------------------
 function settings() {
-  return sec('Contextes', `<div class="chips wrap">${S.prefs.contexts.map(c => `<span class="chip on">${esc(c)}<button class="x" data-act="ctx-del" data-v="${esc(c)}" aria-label="Retirer">×</button></span>`).join('')}</div>
+  return sec('Fin de créneau', `<div class="muted small pad">Une notification quand le créneau d'une tâche (heure + durée) se termine. Demande les notifications activées plus haut.</div>
+      <div class="pad"><button class="chip ${S.prefs.endNotify ? 'on' : ''}" data-act="end-notify">${S.prefs.endNotify ? 'Activée' : 'Désactivée'}</button></div>`) + sec('Contextes', `<div class="chips wrap">${S.prefs.contexts.map(c => `<span class="chip on">${esc(c)}<button class="x" data-act="ctx-del" data-v="${esc(c)}" aria-label="Retirer">×</button></span>`).join('')}</div>
       <form class="inline-add" data-form="ctx-add"><input id="ctx-add" placeholder="+ Nouveau contexte (ex. @voiture)" autocomplete="off"></form>`) +
     sec('Domaines de vie', areas().map(a => `<div class="row" data-act="edit" data-id="${a.id}"><div class="row-main"><div class="row-title">${esc(a.title)}</div></div><span class="chev">${I.right}</span></div>`).join('') +
       `<form class="inline-add" data-form="area-add"><input id="area-add" placeholder="+ Nouveau domaine" autocomplete="off"></form>`);
@@ -34,6 +35,11 @@ function afterSync() {
     S.prefs.areasV2 = true;
     S.prefsDirty = true;
     changed = true;
+  }
+  // fin de créneau : l'instant de fin suit la date, l'heure, la durée et le réglage
+  for (const t of ofKind('task')) {
+    const e = endAt(t);
+    if (!sameInstant(t.end_at, e)) { t.end_at = e; saveItem(t, { render: false }); changed = true; }
   }
   return changed;
 }
@@ -98,7 +104,8 @@ registerModule({
     lastReview: null,
     lastEvening: null,
     seeded: false,
-    areasV2: false
+    areasV2: false,
+    endNotify: true
   },
   ui: { day: today(), ctx: 'all', reorder: false, review: new Set() },
   badge: () => inboxItems().length,

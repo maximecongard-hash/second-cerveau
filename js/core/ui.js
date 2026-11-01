@@ -73,6 +73,7 @@ export function render() {
   const focusId = document.activeElement && app.contains(document.activeElement) ? document.activeElement.id : null;
   const tabs = viewOwner(r.name) && mod.tabs.length > 1 ? mod.tabs : [];
   const active = mod.tabOf?.[r.name] || r.name;
+  const logoImg = app.querySelector('.side-head img'); // gardée d'un rendu à l'autre : évite le clignotement
   app.innerHTML = `${sidebar(r, mod)}
     <div class="page ${tabs.length ? '' : 'no-tabs'}">
       <header class="top"><button class="icon-btn side-btn" data-act="side-open" aria-label="Thèmes">${I.burger}</button><h1>${esc(v.title)}</h1><div class="top-actions">
@@ -83,6 +84,8 @@ export function render() {
       ${v.fab ? `<button class="fab" data-act="fab" data-v="${esc(v.fab)}" aria-label="Ajouter">${I.plus}</button>` : ''}
       ${tabs.length ? `<nav class="tabs">${tabs.map(([k, l, ic, badge]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${ic}<span>${l}</span>${badgeHtml(badge?.(), 'badge')}</a>`).join('')}</nav>` : ''}
     </div>`;
+  const fresh = app.querySelector('.side-head img');
+  if (logoImg && fresh && logoImg.getAttribute('src') === fresh.getAttribute('src')) fresh.replaceWith(logoImg);
   hydrateImages(app);
   window.scrollTo(0, keep);
   lastRouteKey = key;
