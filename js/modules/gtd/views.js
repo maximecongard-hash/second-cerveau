@@ -3,7 +3,7 @@ import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '.
 import { kindOwner, viewOwner, isEnabled, fromModules } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
 import { historyHTML } from './history.js';
-import { taskRow, starBtn, projectRow, planBtn } from './rows.js';
+import { taskRow, starBtn, projectRow, projectCard, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
 import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
 
@@ -128,9 +128,10 @@ views.projects = () => {
   const groups = areas().map(a => [a, act.filter(p => p.parent_id === a.id)]).filter(([, ps]) => ps.length);
   const orphan = act.filter(p => !p.parent_id || !S.items.get(p.parent_id) || S.items.get(p.parent_id).kind !== 'area' || S.items.get(p.parent_id).status === 'trashed');
   const clar = projectsBy('clarify');
-  let html = clar.length ? sec('À clarifier', clar.map(projectRow).join('')) : '';
-  html += groups.map(([a, ps]) => sec(esc(a.title), ps.map(projectRow).join(''))).join('');
-  if (orphan.length) html += sec(groups.length ? 'Sans domaine' : 'Projets actifs', orphan.map(projectRow).join(''));
+  const cards = ps => `<div class="pgrid">${ps.map(projectCard).join('')}</div>`;
+  let html = clar.length ? sec('À clarifier', cards(clar)) : '';
+  html += groups.map(([a, ps]) => sec(esc(a.title), cards(ps))).join('');
+  if (orphan.length) html += sec(groups.length ? 'Sans domaine' : 'Projets actifs', cards(orphan));
   const shared = sharedWithMe();
   if (shared.length) html += sec('Partagés avec moi', shared.map(itemRow).join(''));
   if (!act.length && !clar.length && !shared.length) html += empty('Aucun projet actif', 'Un projet = tout résultat qui demande plus d’une action.');

@@ -48,6 +48,23 @@ export function projectRow(p) {
     <span class="chev">${I.right}</span>
   </a>`;
 }
+// Carte de projet pour la page Projets
+export function projectCard(p) {
+  const tasks = ofKindAll('task').filter(t => t.parent_id === p.id);
+  const open = tasks.filter(t => t.status === 'active' || t.status === 'waiting').length;
+  const done = tasks.filter(t => t.status === 'done').length;
+  const next = tasks.filter(t => t.status === 'active').sort((a, b) => (a.due_date || '9999').localeCompare(b.due_date || '9999') || a.created_at.localeCompare(b.created_at))[0];
+  const warn = p.status === 'active' && !next;
+  const toReview = p.review_date && p.review_date <= today() && p.status !== 'done';
+  const pct = open + done ? Math.round(done / (open + done) * 100) : 0;
+  return `<a class="pcard ${p.status}" href="#/project/${p.id}">
+    <div class="pcard-head"><span class="row-icon proj ${p.status}">${I.folder}</span><div class="pcard-title">${esc(p.title) || '<i>Sans titre</i>'}</div></div>
+    ${p.outcome ? `<div class="row-snippet">${esc(p.outcome)}</div>` : ''}
+    ${next ? `<div class="pcard-next"><small>Prochaine action</small>${esc(next.title) || '<i>Sans titre</i>'}</div>` : ''}
+    <div class="pcard-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+    <div class="row-meta"><span>${plural(open, 'action', 'actions')}${done ? ` · ${done} faite${done > 1 ? 's' : ''}` : ''}</span>${shareMeta(p)}${p.due_date ? `<span class="m-due ${p.due_date <= today() ? 'late' : ''}">Échéance ${fmtDate(p.due_date).toLowerCase()}</span>` : ''}${warn ? '<span class="warn">Pas de prochaine action</span>' : ''}${toReview ? '<span class="warn">À revoir</span>' : ''}</div>
+  </a>`;
+}
 export function anyRow(it) {
   if (it.kind === 'task') return taskRow(it, { showSched: true });
   if (it.kind === 'project') return projectRow(it);

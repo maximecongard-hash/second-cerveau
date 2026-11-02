@@ -600,7 +600,11 @@ body.side-open .side-scrim { opacity: 1; pointer-events: auto; }
 .ag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ag-chip { max-width: 100%; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ag-chip.top { background-image: linear-gradient(var(--hl), var(--hl)); }
-.ag-due { margin-right: 6px; font: 500 10px var(--f-mono); text-transform: uppercase; color: var(--warn); }
+.ag-due { margin-right: 6px; font: 500 10px var(--f-mono); text-transform: uppercase; color: var(--danger); }
+.ag-chip.due { color: var(--danger); border-color: var(--danger); }
+.ag-ev.due { border-left: 3px solid var(--danger); }
+.ag-ev.due .ag-time { color: var(--danger); }
+.ag-head small.due { color: var(--danger); font-weight: 500; }
 .ag-grid.multi .ag-gutter-head { grid-column: 1; }
 .ag-heads { display: grid; grid-template-columns: repeat(var(--ag-n), minmax(0, 1fr)); position: sticky; top: 0; z-index: 3; background: var(--bg); border-bottom: 1px solid var(--line); }
 .ag-head { display: flex; flex-direction: column; align-items: center; padding: 6px 2px; font: 500 12px var(--f-mono); text-transform: capitalize; color: var(--muted); }
@@ -755,3 +759,15 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .sp-rec-main { flex: 1; min-width: 0; }
 .sp-spark { width: 80px; height: 30px; flex: none; }
 .sp-spark polyline { fill: none; stroke: var(--ok); stroke-width: 2; vector-effect: non-scaling-stroke; }
+
+/* Page Projets : cartes */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 10px; }
+.pcard { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.pcard:active { background: var(--surface-2); }
+.pcard-head { display: flex; align-items: flex-start; gap: 8px; }
+.pcard-title { font-family: var(--f-display); font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.pcard-next { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard-next small { display: block; font: 500 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pcard-bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; margin-top: auto; }
+.pcard-bar i { display: block; height: 100%; background: var(--proj); }
+.pcard .row-meta { margin-top: 0; }

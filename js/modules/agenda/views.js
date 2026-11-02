@@ -17,6 +17,16 @@ export const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 
 export const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 const shown = i => i.status !== 'someday';
 
+// Numéro de semaine ISO (le jeudi de la semaine décide de l'année)
+export function weekNum(day) {
+  const d = parseYmd(day);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const first = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - first) / 864e5 - 3 + ((first.getDay() + 6) % 7)) / 7);
+}
+// Échéance atteinte (aujourd'hui ou passée) sur une tâche à faire : affichée en rouge
+const dueLate = (i, day) => i.kind === 'task' && i.due_date && i.due_date <= day && i.status !== 'done';
+
 // Éléments placés à une heure ce jour-là, et éléments du jour sans heure (tâches) ou à échéance
 export const timedOn = day => live().filter(i => i.scheduled_date === day && i.scheduled_time && shown(i));
 export const untimedOn = day => live().filter(i => isSchedulable(i) && i.scheduled_date === day && !i.scheduled_time && (i.status === 'active' || i.status === 'waiting'));
@@ -78,7 +88,7 @@ function block(i, a, compact) {
   const dur = i.duration_min || DEFAULT_DUR;
   const h = Math.max(MIN_H, dur * PX_MIN - 2);
   const label = i.kind === 'task' ? '' : `<span class="ag-kind">${esc(kindLabel(i.kind))}</span>`;
-  return `<button class="ag-ev ag-k-${esc(i.kind)} ${done ? 'done' : ''} ${i.focus ? 'top' : ''} ${h < 40 ? 'short' : ''}" data-act="edit" data-id="${i.id}" data-drag
+  return `<button class="ag-ev ag-k-${esc(i.kind)} ${done ? 'done' : ''} ${i.focus ? 'top' : ''} ${h < 40 ? 'short' : ''} ${dueLate(i, i.scheduled_date) ? 'due' : ''}" data-act="edit" data-id="${i.id}" data-drag
       style="top:${(i._s - a) * PX_MIN + 1}px;height:${h}px;left:calc(${(i.col / i.n) * 100}% + 1px);width:calc(${100 / i.n}% - 2px)">
     <span class="ag-time">${i.scheduled_time}${!compact && i.duration_min ? ` · ${fmtDur(i.duration_min)}` : ''}</span>
     <span class="ag-title">${label}${esc(i.title) || '<i>Sans titre</i>'}</span>
@@ -117,7 +127,7 @@ function gutter(a, b) {
   return `<div class="ag-gutter" style="height:${(b - a) * PX_MIN}px">${h}</div>`;
 }
 
-const chipOf = (i, extra = '') => `<button class="ag-chip ${i.focus ? 'top' : ''}" data-act="edit" data-id="${i.id}">${extra}${esc(i.title) || '<i>Sans titre</i>'}</button>`;
+const chipOf = (i, extra = '') => `<button class="ag-chip ${i.focus ? 'top' : ''} ${extra ? 'due' : ''}" data-act="edit" data-id="${i.id}">${extra}${esc(i.title) || '<i>Sans titre</i>'}</button>`;
 const extChip = e => `<button class="ag-chip ext" data-act="ag-event" data-eid="${esc(e.id)}">${esc(e.title) || '<i>Sans titre</i>'}</button>`;
 
 // Panneau de tâches à glisser dans la grille (tablette et ordinateur, masqué sur téléphone par le CSS)
@@ -159,7 +169,7 @@ views.agenda = () => {
     <div class="ag-chips">${allDay.map(extChip).join('')}${untimed.map(i => chipOf(i)).join('')}${due.map(i => chipOf(i, '<span class="ag-due">Échéance</span>')).join('')}</div></div>`;
   return {
     title: 'Agenda',
-    html: `<div class="ag-layout"><div class="ag-main">` + nav(cap(FMT_LONG.format(parseYmd(day))), day === today() ? '' : fmtDate(day)) +
+    html: `<div class="ag-layout"><div class="ag-main">` + nav(cap(FMT_LONG.format(parseYmd(day))), `S${weekNum(day)}${day === today() ? '' : ` · ${fmtDate(day)}`}`) +
       `<div class="summary">${plural(timed.length, 'créneau', 'créneaux')}${total ? ` · ${fmtDur(total)} occupées` : ''}${untimed.length ? ` · ${untimed.length} sans heure` : ''}${ext.length + allDay.length ? ` · ${plural(ext.length + allDay.length, 'événement', 'événements')} Calendrier` : ''}</div>
       ${band}
       <div class="ag-grid one">${gutter(a, b)}<div class="ag-cols">${column(day, a, b, false)}</div></div></div>${panel(day)}</div>`,
@@ -174,14 +184,14 @@ views.week = () => {
   const [a, b] = range(days);
   const fmtShort = d => FMT_COL.format(parseYmd(d)).replace('.', '');
   const heads = days.map(d => {
-    const n = untimedOn(d).length, all = allDayOn(d);
+    const n = untimedOn(d).length, all = allDayOn(d), nd = dueOn(d).length;
     const sub = all.length ? esc(all[0].title) + (all.length > 1 ? ` +${all.length - 1}` : '') : n ? `${n} sans heure` : '';
-    return `<button class="ag-head ${d === today() ? 'is-today' : ''}" data-act="ag-open" data-d="${d}">${fmtShort(d)}${sub ? `<small class="${all.length ? 'ext' : ''}">${sub}</small>` : ''}</button>`;
+    return `<button class="ag-head ${d === today() ? 'is-today' : ''}" data-act="ag-open" data-d="${d}">${fmtShort(d)}${sub ? `<small class="${all.length ? 'ext' : ''}">${sub}</small>` : ''}${nd ? `<small class="due">${nd} éch.</small>` : ''}</button>`;
   }).join('');
   const label = `${fmtShort(days[0])} – ${fmtShort(days[span - 1])}`;
   return {
     title: 'Semaine',
-    html: `<div class="ag-layout"><div class="ag-main">` + nav(cap(label), days.includes(today()) ? '' : fmtDate(days[0])) +
+    html: `<div class="ag-layout"><div class="ag-main">` + nav(cap(label), `Semaine ${weekNum(days[0])}${days.includes(today()) ? '' : ` · ${fmtDate(days[0])}`}`) +
       `<div class="ag-grid multi" style="--ag-n:${span}"><div class="ag-gutter-head"></div><div class="ag-heads">${heads}</div>
         ${gutter(a, b)}<div class="ag-cols">${days.map(d => column(d, a, b, true)).join('')}</div></div></div>${panel(null)}</div>`,
     fab: 'slot'
