@@ -1,6 +1,6 @@
 import { I, uuid, pad, ymd, today, addDays, parseYmd, nowIso, fmtDur, fmtDate, esc } from '../../core/util.js';
 import { S, live, ofKind, newItem, saveItem, patch } from '../../core/store.js';
-import { restFor } from './exercises.js';
+import { restFor, findExercise } from './exercises.js';
 
 // ---------------------------------------------------------------------------
 // Modèle des séances. Une séance est un élément `workout` ; son contenu vit dans `meta` :
@@ -20,8 +20,15 @@ export const SPORTS = {
 export const sportOf = it => SPORTS[it.meta?.sport] || SPORTS.other;
 export const isEndurance = it => !!sportOf(it).endurance;
 export const isStrength = it => it.meta?.sport === 'strength';
+// Contenu en exercices (renfo, mobilité) ou en blocs (course, vélo, natation, rando, autre)
+export const EXERCISE_SPORTS = ['strength', 'mobility'];
+export const usesExercises = it => EXERCISE_SPORTS.includes(it.meta?.sport);
+export const isSwim = it => it.meta?.sport === 'swim';
 export const BLOCK_TYPES = { warmup: 'Échauffement', work: 'Effort', rest: 'Récupération', cooldown: 'Retour au calme', repeat: 'Répétitions' };
-export const TARGETS = { '': 'Aucune', pace: 'Allure', hr: 'Fréquence cardiaque', rpe: 'Ressenti (RPE)' };
+export const TARGETS = { '': 'Aucune', pace: 'Allure (min/km)', pace100: 'Allure (min/100 m)', power: 'Puissance (W)', hr: 'Fréquence cardiaque', rpe: 'Ressenti (RPE)' };
+// Cibles proposées selon le sport
+export const TARGETS_BY = { run: ['', 'pace', 'hr', 'rpe'], bike: ['', 'power', 'hr', 'rpe'], swim: ['', 'pace100', 'hr', 'rpe'] };
+export const targetsFor = sport => (TARGETS_BY[sport] || ['', 'hr', 'rpe']).map(k => [k, TARGETS[k]]);
 const sid = () => uuid().slice(0, 8);
 
 // ---------------------------------------------------------------------------
@@ -52,11 +59,17 @@ export function parseClock(v) {
 export const fmtKm = m => (m >= 1000 ? `${String(+(m / 1000).toFixed(2)).replace('.', ',')} km` : `${Math.round(m)} m`);
 export const kmInput = m => (m ? String(+(m / 1000).toFixed(3)).replace('.', ',') : '');
 export const parseKm = v => { const n = parseFloat(String(v || '').replace(',', '.')); return n > 0 ? Math.round(n * 1000) : null; };
+// Distance saisie : en mètres pour la natation, en km sinon
+export const distIn = (m, sport) => (sport === 'swim' ? (m ? String(Math.round(m)) : '') : kmInput(m));
+export const parseDist = (v, sport) => (sport === 'swim' ? (parseInt(v, 10) > 0 ? parseInt(v, 10) : null) : parseKm(v));
+export const distUnit = sport => (sport === 'swim' ? 'm' : 'km');
 export const paceStr = s => `${Math.floor(s / 60)}:${pad(Math.round(s % 60))}`;
 export function fmtTarget(t) {
   if (!t?.kind) return '';
   const rng = (lo, hi, f = x => x) => (hi && hi !== lo ? `${f(lo)}–${f(hi)}` : f(lo));
   if (t.kind === 'pace') return `${rng(t.lo, t.hi, paceStr)}/km`;
+  if (t.kind === 'pace100') return `${rng(t.lo, t.hi, paceStr)}/100 m`;
+  if (t.kind === 'power') return `${rng(t.lo, t.hi)} W`;
   if (t.kind === 'hr') return `${rng(t.lo, t.hi)} bpm`;
   return `RPE ${rng(t.lo, t.hi)}`;
 }
@@ -64,16 +77,16 @@ export function fmtTarget(t) {
 export const parseTargetVal = (kind, v) => {
   v = String(v || '').trim();
   if (!v) return null;
-  if (kind === 'pace') { const s = parseClock(v.includes(':') ? v : v + ':00'); return s || null; }
+  if (kind === 'pace' || kind === 'pace100') { const s = parseClock(v.includes(':') ? v : v + ':00'); return s || null; }
   const n = parseInt(v, 10);
   return n > 0 ? n : null;
 };
-export const targetInput = (kind, n) => (n == null ? '' : kind === 'pace' ? paceStr(n) : String(n));
+export const targetInput = (kind, n) => (n == null ? '' : kind === 'pace' || kind === 'pace100' ? paceStr(n) : String(n));
 
 // ---------------------------------------------------------------------------
 // Estimations
 // ---------------------------------------------------------------------------
-const midPace = t => (t?.kind === 'pace' && t.lo ? (t.lo + (t.hi || t.lo)) / 2 : 0);
+const midPace = t => ((t?.kind === 'pace' || t?.kind === 'pace100') && t.lo ? (t.lo + (t.hi || t.lo)) / 2 * (t.kind === 'pace100' ? 10 : 1) : 0); // secondes par km
 export function blockSec(b) {
   if (b.type === 'repeat') return (b.repeat || 1) * (b.children || []).reduce((s, c) => s + blockSec(c), 0);
   if (b.dur_s) return b.dur_s;
@@ -96,11 +109,11 @@ export const blockDist = b => distInfo(b).d;
 export const setsOf = ex => ex.sets || [];
 export function estimate(it) {
   const m = it.meta || {};
-  if (m.sport === 'strength' || (m.exercises?.length && !m.blocks?.length)) {
+  if (EXERCISE_SPORTS.includes(m.sport) || (m.exercises?.length && !m.blocks?.length)) {
     const ex = m.exercises || [];
     const sets = ex.reduce((s, e) => s + setsOf(e).length, 0);
-    const sec = ex.reduce((s, e) => s + setsOf(e).length * (40 + (e.rest_s || 0)), 0);
-    const tonnage = ex.reduce((s, e) => s + setsOf(e).reduce((a, x) => a + (x.reps || 0) * (x.w || 0), 0), 0);
+    const sec = ex.reduce((s, e) => s + setsOf(e).reduce((a, x) => a + (e.time ? x.reps || 0 : 40) + (e.rest_s || 0), 0), 0);
+    const tonnage = ex.reduce((s, e) => e.time ? s : s + setsOf(e).reduce((a, x) => a + (x.reps || 0) * (x.w || 0), 0), 0);
     return { sec, dist: 0, sets, exercises: ex.length, tonnage };
   }
   const bl = m.blocks || [];
@@ -113,7 +126,7 @@ export function estimate(it) {
 export function summary(it) {
   const e = estimate(it), r = it.meta?.result;
   const parts = [];
-  if (isStrength(it) || e.exercises) {
+  if (usesExercises(it) || e.exercises) {
     if (e.exercises) parts.push(`${e.exercises} exercice${e.exercises > 1 ? 's' : ''}`, `${e.sets} séries`);
     if (e.tonnage) parts.push(`${Math.round(e.tonnage).toLocaleString('fr-FR')} kg`);
   } else {
@@ -137,14 +150,67 @@ export const PRESETS = {
   tempo: ['Tempo / seuil', () => [blk('warmup', { dur_s: 900 }), blk('work', { label: 'Seuil', dur_s: 1200, target: { kind: 'rpe', lo: 7, hi: 7 } }), blk('cooldown', { dur_s: 600 })]],
   hills: ['Côtes', () => [blk('warmup', { dur_s: 900 }), blk('repeat', { repeat: 8, children: [blk('work', { label: 'Côte', dur_s: 45, target: { kind: 'rpe', lo: 8, hi: 9 } }), blk('rest', { label: 'Descente trot', dur_s: 90 })] }), blk('cooldown', { dur_s: 600 })]]
 };
+const rpe = (lo, hi = lo) => ({ kind: 'rpe', lo, hi });
+const slow = { kind: 'pace100', lo: 130, hi: 140 }; // allure d'échauffement en natation, pour estimer la durée
+Object.assign(PRESETS, {
+  bike_endu: ['Sortie endurance', () => [blk('warmup', { dur_s: 600 }), blk('work', { label: 'Endurance', dur_s: 5400, target: rpe(3, 4) }), blk('cooldown', { dur_s: 600 })]],
+  bike_int: ['Intervalles vélo', () => [blk('warmup', { dur_s: 900 }), blk('repeat', { repeat: 5, children: [blk('work', { dur_s: 240, target: rpe(8, 9) }), blk('rest', { dur_s: 180 })] }), blk('cooldown', { dur_s: 600 })]],
+  bike_sweet: ['Sweet spot', () => [blk('warmup', { dur_s: 900 }), blk('repeat', { repeat: 3, children: [blk('work', { dur_s: 720, target: rpe(7) }), blk('rest', { dur_s: 240 })] }), blk('cooldown', { dur_s: 600 })]],
+  bike_rec: ['Sortie récupération', () => [blk('work', { label: 'Souple', dur_s: 2700, target: rpe(2, 3) })]],
+  swim_tech: ['Technique', () => [blk('warmup', { dist_m: 200, target: slow }), blk('repeat', { repeat: 6, children: [blk('work', { label: 'Éducatif', dist_m: 50, target: rpe(3) }), blk('rest', { dur_s: 20 })] }), blk('cooldown', { dist_m: 100, target: slow })]],
+  swim_endu: ['Endurance', () => [blk('warmup', { dist_m: 300, target: slow }), blk('work', { label: 'Continu', dist_m: 1500, target: { kind: 'pace100', lo: 120, hi: 130 } }), blk('cooldown', { dist_m: 200, target: slow })]],
+  swim_int: ['Séries 8 × 100 m', () => [blk('warmup', { dist_m: 400, target: slow }), blk('repeat', { repeat: 8, children: [blk('work', { dist_m: 100, target: { kind: 'pace100', lo: 105, hi: 115 } }), blk('rest', { dur_s: 20 })] }), blk('cooldown', { dist_m: 200, target: slow })]],
+  hike_short: ['Balade', () => [blk('work', { label: 'Balade', dur_s: 5400, target: rpe(2, 3) })]],
+  hike_active: ['Marche active', () => [blk('warmup', { dur_s: 300 }), blk('work', { label: 'Marche rapide', dur_s: 3600, target: rpe(4, 5) }), blk('cooldown', { dur_s: 300 })]],
+  hike_day: ['Randonnée journée', () => [blk('work', { label: 'Randonnée', dur_s: 14400, target: rpe(3, 4) })]]
+});
+// Presets proposés selon le sport (clés de PRESETS)
+export const PRESET_KEYS = {
+  run: ['footing', 'long', 'short', 'interval', 'tempo', 'hills'],
+  bike: ['bike_endu', 'bike_int', 'bike_sweet', 'bike_rec'],
+  swim: ['swim_tech', 'swim_endu', 'swim_int'],
+  hike: ['hike_short', 'hike_active', 'hike_day']
+};
+// Séances types en exercices : [nom, séries, répétitions (ou secondes de tenue)]
+export const EX_PRESETS = {
+  strength: {
+    upper: ['Haut du corps', [['Développé couché', 4, 8], ['Rowing barre', 4, 8], ['Développé militaire', 3, 10], ['Tirage vertical', 3, 10], ['Curl biceps', 3, 12], ['Extension triceps', 3, 12]]],
+    lower: ['Bas du corps', [['Squat', 4, 6], ['Soulevé de terre roumain', 3, 8], ['Fentes marchées', 3, 10], ['Hip thrust', 3, 10], ['Mollets debout', 3, 15], ['Gainage', 3, 40]]],
+    full: ['Corps entier', [['Squat', 3, 8], ['Développé couché', 3, 8], ['Rowing barre', 3, 8], ['Développé militaire', 3, 10], ['Soulevé de terre roumain', 3, 8], ['Gainage', 3, 40]]],
+    push: ['Pousser', [['Développé couché', 4, 8], ['Développé incliné haltères', 3, 10], ['Développé militaire', 3, 10], ['Élévations latérales', 3, 15], ['Dips', 3, 10], ['Extension triceps', 3, 12]]],
+    pull: ['Tirer', [['Tractions', 4, 6], ['Rowing haltère', 3, 10], ['Tirage horizontal', 3, 10], ['Face pull', 3, 15], ['Oiseau', 3, 15], ['Curl biceps', 3, 12]]],
+    home: ['Poids du corps', [['Pompes', 4, 15], ['Fentes marchées', 3, 12], ['Montées sur banc', 3, 12], ['Dips', 3, 10], ['Gainage', 3, 45], ['Burpees', 3, 10]]],
+    core: ['Tronc', [['Gainage', 3, 45], ['Gainage latéral', 3, 30], ['Crunch', 3, 15], ['Relevé de jambes', 3, 12], ['Russian twist', 3, 20]]]
+  },
+  mobility: {
+    wake: ['Réveil articulaire', [['Chat-vache', 2, 30], ['Rotation thoracique', 2, 30], ['Cercles d’épaules', 2, 30], ['Hanches 90/90', 2, 30], ['Cercles de chevilles', 2, 30]]],
+    postrun: ['Après la course', [['Étirement mollets', 2, 30], ['Étirement ischio-jambiers', 2, 30], ['Étirement quadriceps', 2, 30], ['Fente basse (psoas)', 2, 30], ['Pigeon (fessiers)', 2, 45]]],
+    back: ['Dos et épaules', [['Posture de l’enfant', 2, 45], ['Étirement pectoraux', 2, 30], ['Rotation thoracique', 2, 30], ['Chat-vache', 2, 30], ['Étirement dos / lombaires', 2, 30]]],
+    core: ['Gainage', [['Gainage', 3, 40], ['Gainage latéral', 3, 30], ['Pont fessier tenu', 3, 30]]]
+  }
+};
+export const exPreset = (sport, key) => (EX_PRESETS[sport]?.[key]?.[1] || []).map(([name, n, v]) => {
+  const e = newExercise(name);
+  e.sets = Array.from({ length: n }, () => ({ reps: v, w: 0, done: false }));
+  return e;
+});
+// Titres posés par défaut : on peut les remplacer sans perdre un nom choisi par l'utilisateur
+export const isGenericTitle = t => {
+  const names = new Set(['Séance', ...Object.values(SPORTS).map(x => x.label), ...Object.values(PRESETS).map(x => x[0]), ...Object.values(EX_PRESETS).flatMap(g => Object.values(g).map(x => x[0]))]);
+  return names.has(String(t || '').trim());
+};
 export function defaultMeta(sport = 'run') {
-  if (sport === 'strength') return { sport, goal: '', exercises: [] };
-  if (SPORTS[sport]?.endurance) return { sport, goal: '', blocks: sport === 'run' ? PRESETS.footing[1]() : [blk('work', { label: SPORTS[sport].label, dur_s: 2700 })] };
+  if (EXERCISE_SPORTS.includes(sport)) return { sport, goal: '', exercises: [] };
+  if (SPORTS[sport]?.endurance) return { sport, goal: '', blocks: sport === 'run' ? PRESETS.footing[1]() : sport === 'swim' ? PRESETS.swim_endu[1]() : sport === 'bike' ? PRESETS.bike_endu[1]() : sport === 'hike' ? PRESETS.hike_short[1]() : [blk('work', { label: SPORTS[sport].label, dur_s: 2700 })] };
   return { sport, goal: '', blocks: [blk('work', { label: SPORTS[sport]?.label || 'Séance', dur_s: 1800 })] };
 }
 export const newBlock = (type, o) => blk(type, o);
-export const newSet = (ex, last) => ({ reps: last?.reps ?? 8, w: last?.w ?? 0, done: false });
-export const newExercise = name => ({ id: sid(), name, note: '', rest_s: restFor(name), sets: [newSet(), newSet(), newSet()] });
+export const newSet = (ex, last) => ({ reps: last?.reps ?? (ex?.time ? 30 : 8), w: last?.w ?? 0, done: false });
+export function newExercise(name) {
+  const info = findExercise(name), time = info?.unit === 's';
+  const mk = () => (time ? { reps: info.group === 'Tronc' ? 40 : 30, w: 0, done: false } : newSet());
+  return { id: sid(), name, note: '', rest_s: restFor(name), ...(time ? { time: true } : {}), sets: Array.from({ length: time && info.group !== 'Tronc' ? 2 : 3 }, mk) };
+}
 export const clone = o => JSON.parse(JSON.stringify(o ?? null));
 // Copie d'un contenu : nouveaux identifiants, séries remises à faire, pas de résultat
 export function freshMeta(meta) {
@@ -225,11 +291,12 @@ export function lastPerf(name, exceptId) {
     if (w.id === exceptId) continue;
     const ex = (w.meta?.exercises || []).find(e => e.name.trim().toLowerCase() === k);
     const sets = ex && setsOf(ex).filter(s => s.done);
-    if (sets?.length) return { day: doneDay(w), sets };
+    if (sets?.length) return { day: doneDay(w), sets, time: !!ex.time };
   }
   return null;
 }
 export const perfText = p => {
+  if (p.time) return p.sets.map(s => `${s.reps} s`).join(' · ');
   const g = [];
   for (const s of p.sets) { const key = `${s.reps}×${s.w || 'PdC'}`; const last = g[g.length - 1]; if (last?.key === key) last.n++; else g.push({ key, n: 1, s }); }
   return g.map(x => `${x.n > 1 ? x.n + ' × ' : ''}${x.s.reps} ${x.s.w ? `à ${fmtW(x.s.w)}` : 'au poids du corps'}`).join(', ');
@@ -268,6 +335,7 @@ export function exportText(it) {
   const head = `${it.title}${it.scheduled_date ? ` · ${fmtDate(it.scheduled_date).toLowerCase()}${it.scheduled_time ? ' ' + it.scheduled_time : ''}` : ''}`;
   const lines = [head, m.goal].filter(Boolean);
   if (m.exercises?.length) for (const e of m.exercises) {
+    if (e.time) { const ss = setsOf(e); lines.push(`- ${e.name} : ${ss.length} × ${ss[0]?.reps || 0} s`); continue; }
     const ss = setsOf(e), same = ss.every(s => s.reps === ss[0]?.reps && s.w === ss[0]?.w);
     lines.push(`- ${e.name} : ${same && ss.length ? `${ss.length} × ${ss[0].reps}${ss[0].w ? ` à ${fmtW(ss[0].w)}` : ''}` : ss.map(s => `${s.reps}${s.w ? `×${fmtW(s.w)}` : ''}`).join(' / ')}${e.rest_s ? `, repos ${human(e.rest_s)}` : ''}`);
   }

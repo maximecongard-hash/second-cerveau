@@ -17,8 +17,8 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
   et réglages du lien d'abonnement ICS.
 - **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
   Reliés aux tâches et projets par les liens du cœur.
-- **Sport** (`sport`, désactivé par défaut) : séances de course (blocs, répétitions, cibles allure / FC / RPE) et de renfo
-  (exercices, séries, charges), modèles, semaines types, mode direct (chrono, minuteur de repos), historique et progression.
+- **Sport** (`sport`, désactivé par défaut) : séances en blocs (course, vélo, natation, rando : presets et cibles propres à chaque sport) et en exercices
+  (renfo, mobilité : séances types, bibliothèque par groupe, exercices chronométrés `time` en secondes), modèles, semaines types, mode direct (chrono, minuteur de repos), historique et progression.
   Kinds `workout` (séance), `workout_tpl` (modèle), `program` (semaine type). Le contenu vit dans la colonne `meta` (jsonb) :
   `{ sport, goal, blocks | exercises, result, tpl, manualDur }` (détail en tête de `js/modules/sport/model.js`). L'Agenda place
   les séances comme des tâches via les hooks `schedulable` et `createAt`. Fichiers : `model.js` (données, estimations, export texte),

@@ -3,9 +3,9 @@ import { S, patch, ofKind, byTitle, newItem, saveItem } from '../../core/store.j
 import { SH, render, renderEditor, toast, closeSheet, openEditor } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { pushHint } from '../../core/push.js';
-import { library, restFor } from './exercises.js';
+import { library, restFor, GROUPS_BY } from './exercises.js';
 import {
-  SPORTS, BLOCK_TYPES, TARGETS, PRESETS, sportOf, isStrength, isEndurance, estimate, summary, human, clock, parseClock, kmInput, parseKm, fmtKm, targetInput, parseTargetVal,
+  SPORTS, BLOCK_TYPES, PRESETS, PRESET_KEYS, EX_PRESETS, exPreset, isGenericTitle, targetsFor, distIn, parseDist, distUnit, usesExercises, sportOf, isEndurance, estimate, summary, human, clock, parseClock, fmtKm, targetInput, parseTargetVal,
   defaultMeta, newBlock, newSet, newExercise, findBlock, findEx, mutate, clone, setsOf, lastPerf, perfText, fmtW, createWorkout, duplicate, saveAsTemplate,
   toLocalInput, fromLocalInput, remindPreset, exportText, icon, label
 } from './model.js';
@@ -26,7 +26,7 @@ const projectOptions = cur => [['', 'Aucun'], ...ofKind('project').filter(p => [
 // ---------------------------------------------------------------------------
 // Contenu : course / vélo / natation (blocs)
 // ---------------------------------------------------------------------------
-function blockCard(b, depth = 0) {
+function blockCard(b, depth = 0, sport = 'run') {
   const f = (k, label, val, ph = '', attrs = '') => `<label class="sp-f"><span>${label}</span><input data-sp="blk" data-id="${b.id}" data-k="${k}" value="${esc(val)}" placeholder="${ph}" autocomplete="off" ${attrs}></label>`;
   const types = depth ? [['work', 'Effort'], ['rest', 'Récupération']] : Object.entries(BLOCK_TYPES).filter(([k]) => k !== 'repeat');
   const t = b.target || {};
@@ -36,19 +36,20 @@ function blockCard(b, depth = 0) {
   if (b.type === 'repeat') {
     return `<div class="sp-blk t-repeat">${head}
       <div class="sp-row">${f('repeat', 'Fois', b.repeat || 1, '6', 'inputmode="numeric"')}</div>
-      <div class="sp-sub">${(b.children || []).map(c => blockCard(c, 1)).join('')}</div>
+      <div class="sp-sub">${(b.children || []).map(c => blockCard(c, 1, sport)).join('')}</div>
       <div class="quick"><button type="button" class="chip" data-act="sp-blk-add" data-v="work" data-p="${b.id}">+ Effort</button><button type="button" class="chip" data-act="sp-blk-add" data-v="rest" data-p="${b.id}">+ Récup</button></div></div>`;
   }
   return `<div class="sp-blk t-${b.type}">${head}
     <div class="sp-row">${f('label', 'Nom', b.label, BLOCK_TYPES[b.type])}</div>
-    <div class="sp-row">${f('dur', 'Durée', b.dur_s ? clock(b.dur_s) : '', 'mm:ss', 'inputmode="numeric"')}${f('dist', 'Distance (km)', kmInput(b.dist_m), '', 'inputmode="decimal"')}</div>
-    <div class="sp-row"><label class="sp-f"><span>Cible</span><select data-sp="blk" data-id="${b.id}" data-k="tkind">${Object.entries(TARGETS).map(([v, l]) => `<option value="${v}" ${(t.kind || '') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-      ${t.kind ? f('tlo', t.kind === 'pace' ? 'De (min/km)' : 'De', targetInput(t.kind, t.lo), t.kind === 'pace' ? '4:30' : '', 'inputmode="numeric"') + f('thi', 'À', targetInput(t.kind, t.hi), '', 'inputmode="numeric"') : ''}</div></div>`;
+    <div class="sp-row">${f('dur', 'Durée', b.dur_s ? clock(b.dur_s) : '', 'mm:ss', 'inputmode="numeric"')}${f('dist', `Distance (${distUnit(sport)})`, distIn(b.dist_m, sport), '', 'inputmode="decimal"')}</div>
+    <div class="sp-row"><label class="sp-f"><span>Cible</span><select data-sp="blk" data-id="${b.id}" data-k="tkind">${targetsFor(sport).map(([v, l]) => `<option value="${v}" ${(t.kind || '') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      ${t.kind ? f('tlo', t.kind === 'pace' || t.kind === 'pace100' ? 'De (min)' : 'De', targetInput(t.kind, t.lo), t.kind === 'pace' ? '4:30' : t.kind === 'pace100' ? '1:50' : t.kind === 'power' ? '200' : '', 'inputmode="numeric"') + f('thi', 'À', targetInput(t.kind, t.hi), '', 'inputmode="numeric"') : ''}</div></div>`;
 }
 function enduranceContent(it) {
   const bl = it.meta?.blocks || [], e = estimate(it);
-  return `<div class="chips scroll">${Object.entries(PRESETS).map(([k, [l]]) => `<button type="button" class="chip" data-act="sp-preset" data-v="${k}">${l}</button>`).join('')}</div>
-    <div class="sp-blocks">${bl.map(b => blockCard(b)).join('') || '<div class="muted small pad">Aucun bloc. Choisis un modèle ci-dessus ou ajoute un bloc.</div>'}</div>
+  const sport = it.meta?.sport || 'run', keys = PRESET_KEYS[sport] || [];
+  return `${keys.length ? `<div class="chips scroll">${keys.map(k => `<button type="button" class="chip" data-act="sp-preset" data-v="${k}">${PRESETS[k][0]}</button>`).join('')}</div>` : ''}
+    <div class="sp-blocks">${bl.map(b => blockCard(b, 0, sport)).join('') || '<div class="muted small pad">Aucun bloc. Choisis un modèle ci-dessus ou ajoute un bloc.</div>'}</div>
     <div class="quick sp-add">${[['warmup', '+ Échauffement'], ['work', '+ Effort'], ['rest', '+ Récup'], ['repeat', '+ Répétitions'], ['cooldown', '+ Retour au calme']].map(([v, l]) => `<button type="button" class="chip" data-act="sp-blk-add" data-v="${v}">${l}</button>`).join('')}</div>
     <div class="sp-total">${e.sec ? `${human(e.sec)}${e.dist ? ` · ~${fmtKm(e.dist)}` : ''}${e.intervals ? ` · ${e.intervals} répétitions` : ''}` : 'Ajoute des durées pour obtenir un total.'}</div>`;
 }
@@ -57,22 +58,37 @@ function enduranceContent(it) {
 // Contenu : renforcement (exercices et séries)
 // ---------------------------------------------------------------------------
 export const stepper = (exId, i, k, val, step) => `<div class="sp-step"><button type="button" class="icon-btn" data-act="sp-step" data-ex="${exId}" data-i="${i}" data-k="${k}" data-d="-${step}" aria-label="Moins">${I.minus}</button><input inputmode="decimal" data-sp="set" data-ex="${exId}" data-i="${i}" data-k="${k}" value="${esc(String(val ?? 0).replace('.', ','))}" aria-label="${k === 'w' ? 'Charge' : 'Répétitions'}"><button type="button" class="icon-btn" data-act="sp-step" data-ex="${exId}" data-i="${i}" data-k="${k}" data-d="${step}" aria-label="Plus">${I.plus}</button></div>`;
+// Une série : répétitions × charge, ou secondes de tenue pour les exercices chronométrés
+export const setInputs = (ex, i, s) => (ex.time
+  ? `${stepper(ex.id, i, 'reps', s.reps, 5)}<span class="sp-u">s</span>`
+  : `${stepper(ex.id, i, 'reps', s.reps, 1)}<span class="sp-x">×</span>${stepper(ex.id, i, 'w', s.w, 2.5)}<span class="sp-u">kg</span>`);
 function exerciseCard(ex, it) {
   const last = lastPerf(ex.name, it.id);
   return `<div class="sp-ex"><div class="sp-ex-h"><input class="sp-ex-name" data-sp="ex" data-ex="${ex.id}" data-k="name" value="${esc(ex.name)}" list="sp-lib" autocomplete="off" aria-label="Exercice">
       <span class="sp-blk-btns"><button type="button" class="icon-btn" data-act="sp-ex-up" data-ex="${ex.id}" aria-label="Monter">${I.up}</button><button type="button" class="icon-btn" data-act="sp-ex-down" data-ex="${ex.id}" aria-label="Descendre">${I.down}</button><button type="button" class="icon-btn" data-act="sp-ex-del" data-ex="${ex.id}" aria-label="Supprimer l'exercice">${I.minus}</button></span></div>
     ${last ? `<div class="sp-last">Dernière fois (${esc(fmtDate(last.day).toLowerCase())}) : ${esc(perfText(last))} <button type="button" class="link" data-act="sp-ex-last" data-ex="${ex.id}">Reprendre</button></div>` : ''}
-    <div class="sp-sets">${setsOf(ex).map((s, i) => `<div class="sp-set"><span class="sp-n">${i + 1}</span>${stepper(ex.id, i, 'reps', s.reps, 1)}<span class="sp-x">×</span>${stepper(ex.id, i, 'w', s.w, 2.5)}<span class="sp-u">kg</span><button type="button" class="icon-btn" data-act="sp-set-del" data-ex="${ex.id}" data-i="${i}" aria-label="Supprimer la série">${I.minus}</button></div>`).join('')}</div>
+    <div class="sp-sets">${setsOf(ex).map((s, i) => `<div class="sp-set"><span class="sp-n">${i + 1}</span>${setInputs(ex, i, s)}<button type="button" class="icon-btn" data-act="sp-set-del" data-ex="${ex.id}" data-i="${i}" aria-label="Supprimer la série">${I.minus}</button></div>`).join('')}</div>
     <div class="sp-ex-f"><button type="button" class="chip" data-act="sp-set-add" data-ex="${ex.id}">+ Série</button>
       <label class="sp-f inline"><span>Repos</span><input inputmode="numeric" data-sp="ex" data-ex="${ex.id}" data-k="rest" value="${ex.rest_s ? clock(ex.rest_s) : ''}" placeholder="01:30"></label></div>
     <input class="sp-note" data-sp="ex" data-ex="${ex.id}" data-k="note" value="${esc(ex.note || '')}" placeholder="Note (tempo, variante…)" autocomplete="off"></div>`;
 }
 function strengthContent(it) {
+  const sport = it.meta?.sport === 'mobility' ? 'mobility' : 'strength';
   const ex = it.meta?.exercises || [], e = estimate(it);
-  return `<datalist id="sp-lib">${library().map(x => `<option value="${esc(x.name)}"></option>`).join('')}</datalist>
-    ${ex.map(x => exerciseCard(x, it)).join('') || '<div class="muted small pad">Aucun exercice.</div>'}
-    <form class="inline-add" data-form="sp-ex-add" data-id="${it.id}"><input id="sp-ex-new" list="sp-lib" placeholder="+ Exercice (choisis ou écris)" enterkeyhint="done" autocomplete="off"></form>
-    <div class="sp-total">${e.sets ? `${e.exercises} exercice${e.exercises > 1 ? 's' : ''} · ${e.sets} séries · ${Math.round(e.tonnage).toLocaleString('fr-FR')} kg · ~${fmtDur(Math.round(e.sec / 60))}` : ''}</div>`;
+  const groups = GROUPS_BY[sport], g = groups.includes(S.ui.spExGroup) ? S.ui.spExGroup : groups[0];
+  const have = new Set(ex.map(x => x.name.trim().toLowerCase()));
+  const picks = library(sport).filter(x => x.group === g && !have.has(x.name.toLowerCase()));
+  const presets = Object.entries(EX_PRESETS[sport] || {});
+  const total = e.sets ? `${e.exercises} exercice${e.exercises > 1 ? 's' : ''} · ${e.sets} séries${e.tonnage ? ` · ${Math.round(e.tonnage).toLocaleString('fr-FR')} kg` : ''} · ~${fmtDur(Math.round(e.sec / 60))}` : '';
+  return `<datalist id="sp-lib">${library(sport).map(x => `<option value="${esc(x.name)}"></option>`).join('')}</datalist>
+    <div class="muted small pad">Séance type</div>
+    <div class="chips scroll">${presets.map(([k, [l]]) => `<button type="button" class="chip" data-act="sp-ex-preset" data-v="${k}">${l}</button>`).join('')}</div>
+    ${ex.map(x => exerciseCard(x, it)).join('') || '<div class="muted small pad">Aucun exercice. Pars d’une séance type ou choisis-en ci-dessous.</div>'}
+    <div class="muted small pad">Ajouter un exercice</div>
+    <div class="chips scroll">${groups.map(x => chip(x, x === g, 'sp-ex-group', x)).join('')}</div>
+    <div class="chips wrap sp-picks">${picks.map(x => `<button type="button" class="chip" data-act="sp-ex-pick" data-name="${esc(x.name)}">+ ${esc(x.name)}</button>`).join('') || '<span class="muted small">Tout est déjà dans la séance.</span>'}</div>
+    <form class="inline-add" data-form="sp-ex-add" data-id="${it.id}"><input id="sp-ex-new" list="sp-lib" placeholder="Autre exercice (écris son nom)" enterkeyhint="done" autocomplete="off"></form>
+    <div class="sp-total">${total}</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,11 +122,11 @@ export function editorHTML(it) {
     ${fRow('Rappel', `<div class="date-line"><input type="datetime-local" data-f="remind_at" value="${toLocalInput(it.remind_at)}"></div>
       <div class="quick">${[['before30', '30 min avant'], ['before60', '1 h avant'], ['eve', 'La veille 20 h'], ['clear', 'Effacer']].map(([v, l]) => `<button type="button" class="chip" data-act="sp-remind" data-v="${v}">${l}</button>`).join('')}</div>${it.remind_at ? pushHint() : ''}`)}`;
 
-  const contenu = isStrength(it) ? strengthContent(it) : enduranceContent(it);
+  const contenu = usesExercises(it) ? strengthContent(it) : enduranceContent(it);
   const r = m.result || {};
   const resultat = `
     ${fRow('Durée réelle', `<input data-sp="res" data-k="dur" inputmode="numeric" value="${r.dur_s ? clock(r.dur_s) : ''}" placeholder="mm:ss">`)}
-    ${isEndurance(it) ? fRow('Distance (km)', `<input data-sp="res" data-k="dist" inputmode="decimal" value="${kmInput(r.dist_m)}">`) + fRow('FC moyenne', `<input data-sp="res" data-k="hr" inputmode="numeric" value="${r.avg_hr || ''}" placeholder="bpm">`) : ''}
+    ${isEndurance(it) ? fRow(`Distance (${distUnit(m.sport)})`, `<input data-sp="res" data-k="dist" inputmode="decimal" value="${distIn(r.dist_m, m.sport)}">`) + fRow('FC moyenne', `<input data-sp="res" data-k="hr" inputmode="numeric" value="${r.avg_hr || ''}" placeholder="bpm">`) : ''}
     ${fRow('Effort (RPE)', sel('res_rpe', r.rpe, [['', '—'], ...Array.from({ length: 10 }, (_, i) => [i + 1, String(i + 1)])]))}
     ${fRow('Ressenti', sel('res_feeling', r.feeling, [['', '—'], [1, '1 · Pénible'], [2, '2 · Moyen'], [3, '3 · Correct'], [4, '4 · Bien'], [5, '5 · Excellent']]))}
     ${fRow('Note', `<input data-sp="res" data-k="note" value="${esc(r.note || '')}" placeholder="Sensations, météo…" autocomplete="off">`)}`;
@@ -180,7 +196,7 @@ export function onChange(t) {
       if (k === 'label') b.label = v.trim();
       else if (k === 'type') b.type = v;
       else if (k === 'dur') b.dur_s = parseClock(v);
-      else if (k === 'dist') b.dist_m = parseKm(v);
+      else if (k === 'dist') b.dist_m = parseDist(v, m.sport);
       else if (k === 'repeat') b.repeat = Math.max(1, parseInt(v, 10) || 1);
       else if (k === 'tkind') b.target = v ? { kind: v, lo: null, hi: null } : null;
       else if (k === 'tlo' || k === 'thi') { b.target = b.target || { kind: 'rpe' }; b.target[k === 'tlo' ? 'lo' : 'hi'] = parseTargetVal(b.target.kind, v); }
@@ -214,7 +230,7 @@ export function onChange(t) {
     mutate(id, m => {
       const r = (m.result ??= {});
       if (k === 'dur') r.dur_s = parseClock(v);
-      else if (k === 'dist') r.dist_m = parseKm(v);
+      else if (k === 'dist') r.dist_m = parseDist(v, m.sport);
       else if (k === 'hr') r.avg_hr = parseInt(v, 10) || null;
       else if (k === 'note') r.note = v.trim();
     });
@@ -252,9 +268,9 @@ export const editorActs = {
     mutate(it.id, x => {
       const fresh = defaultMeta(sport);
       x.sport = sport;
-      if (untouched || (sport === 'strength') !== (m.sport === 'strength')) { x.blocks = fresh.blocks; x.exercises = fresh.exercises; if (!fresh.blocks) delete x.blocks; if (!fresh.exercises) delete x.exercises; }
+      if (untouched || usesExercises({ meta: { sport } }) !== usesExercises({ meta: m })) { x.blocks = fresh.blocks; x.exercises = fresh.exercises; if (!fresh.blocks) delete x.blocks; if (!fresh.exercises) delete x.exercises; }
     });
-    if (/^(Course|Renfo|Vélo|Natation|Rando|Mobilité|Autre|Séance)$/.test(it.title)) patch(it.id, { title: SPORTS[sport].label });
+    if (isGenericTitle(it.title)) patch(it.id, { title: SPORTS[sport].label });
     renderEditor();
   },
   'sp-sched': el => {
@@ -269,7 +285,7 @@ export const editorActs = {
     if (!it) return;
     const prev = clone(it.meta), title = it.title;
     mutate(it.id, m => { m.blocks = PRESETS[key][1](); delete m.manualDur; });
-    if (/^(Course|Vélo|Natation|Rando|Autre|Séance|Footing|Sortie longue|Fractionné court|Fractionné long|Tempo \/ seuil|Côtes)$/.test(title)) patch(it.id, { title: PRESETS[key][0] });
+    if (isGenericTitle(title)) patch(it.id, { title: PRESETS[key][0] });
     renderEditor();
     toast(PRESETS[key][0] + ' appliqué', () => { patch(it.id, { meta: prev, title }); refresh(); });
   },
@@ -295,6 +311,20 @@ export const editorActs = {
       r.list.splice(r.i + 1, 0, c);
     });
     renderEditor();
+  },
+  'sp-ex-group': el => { S.ui.spExGroup = el.dataset.v; renderEditor(); },
+  'sp-ex-pick': el => {
+    mutate(SH.editingId, m => { (m.exercises ??= []).push(newExercise(el.dataset.name)); });
+    renderEditor();
+  },
+  'sp-ex-preset': el => {
+    const it = cur(); if (!it) return;
+    const sport = it.meta?.sport === 'mobility' ? 'mobility' : 'strength', key = el.dataset.v;
+    const prev = clone(it.meta), title = it.title, name = EX_PRESETS[sport][key][0];
+    mutate(it.id, m => { m.exercises = exPreset(sport, key); delete m.manualDur; });
+    if (isGenericTitle(title)) patch(it.id, { title: name });
+    renderEditor();
+    toast(name + ' appliqué', () => { patch(it.id, { meta: prev, title }); refresh(); });
   },
   'sp-ex-del': el => { mutate(SH.editingId, m => { m.exercises = (m.exercises || []).filter(e => e.id !== el.dataset.ex); }); renderEditor(); },
   'sp-ex-up': el => { mutate(SH.editingId, m => { const l = m.exercises || []; move(l, l.findIndex(e => e.id === el.dataset.ex), -1); }); renderEditor(); },

@@ -3,9 +3,9 @@ import { S, patch } from '../../core/store.js';
 import { SH, sheet, showSheet, closeSheet, render, renderEditor, route, toast } from '../../core/ui.js';
 import { restFor } from './exercises.js';
 import {
-  isStrength, estimate, human, clock, parseClock, parseKm, kmInput, fmtKm, fmtTarget, BLOCK_TYPES, setsOf, findEx, mutate, clone, lastPerf, perfText, fmtW, isEndurance, icon
+  usesExercises, distIn, parseDist, distUnit, estimate, human, clock, parseClock, fmtKm, fmtTarget, BLOCK_TYPES, setsOf, findEx, mutate, clone, lastPerf, perfText, fmtW, isEndurance, icon
 } from './model.js';
-import { stepper } from './editor.js';
+import { setInputs } from './editor.js';
 
 // ---------------------------------------------------------------------------
 // Mode direct : chrono de la séance, séries à cocher avec minuteur de repos (renfo),
@@ -101,7 +101,7 @@ function strengthLive(it) {
     <div class="sp-ex live"><div class="sp-ex-h"><div class="sp-ex-title">${esc(ex.name)}</div></div>
       ${last ? `<div class="sp-last">Dernière fois (${esc(fmtDate(last.day).toLowerCase())}) : ${esc(perfText(last))}</div>` : ''}
       ${ex.note ? `<div class="sp-last">${esc(ex.note)}</div>` : ''}
-      <div class="sp-sets">${setsOf(ex).map((s, i) => `<div class="sp-set ${s.done ? 'done' : ''}"><span class="sp-n">${i + 1}</span>${stepper(ex.id, i, 'reps', s.reps, 1)}<span class="sp-x">×</span>${stepper(ex.id, i, 'w', s.w, 2.5)}<span class="sp-u">kg</span>
+      <div class="sp-sets">${setsOf(ex).map((s, i) => `<div class="sp-set ${s.done ? 'done' : ''}"><span class="sp-n">${i + 1}</span>${setInputs(ex, i, s)}
         <button type="button" class="sp-check ${s.done ? 'on' : ''}" data-act="sp-set-check" data-ex="${ex.id}" data-i="${i}" aria-label="${s.done ? 'Série faite' : 'Valider la série'}">${I.check}</button></div>`).join('')}</div>
       <div class="sp-ex-f"><button type="button" class="chip" data-act="sp-set-add" data-ex="${ex.id}">+ Série</button></div></div>
     <div class="chips scroll sp-exnav">${exs.map(e => `<button type="button" class="chip ${e.id === ex.id ? 'on' : ''} ${setsOf(e).length && setsOf(e).every(s => s.done) ? 'ok' : ''}" data-act="sp-ex-go" data-ex="${e.id}">${esc(e.name)}</button>`).join('')}</div>`;
@@ -127,7 +127,7 @@ export const liveViews = {
     if (!it || it.kind !== 'workout') return { title: 'Séance', html: '<div class="muted pad">Séance introuvable. <a href="#/sport">Retour</a></div>' };
     if (it.status === 'done') return { title: it.title, html: `<div class="muted pad">Cette séance est terminée. <a href="#/sport">Retour à la semaine</a></div>` };
     S.ui.spLive = { id: it.id };
-    return { title: it.title, html: `<div class="sp-live">${header(it)}${isStrength(it) ? strengthLive(it) : enduranceLive(it)}${footer(it)}</div>` };
+    return { title: it.title, html: `<div class="sp-live">${header(it)}${usesExercises(it) ? strengthLive(it) : enduranceLive(it)}${footer(it)}</div>` };
   }
 };
 
@@ -146,7 +146,7 @@ export function liveTick() {
     document.querySelectorAll('[data-sprestbar]').forEach(el => { el.style.width = Math.max(0, Math.round((rest.until - Date.now()) / (rest.total * 10))) + '%'; });
     if (left <= 0) { S.ui.spRest = null; beep(3); render(); }
   }
-  if (!isStrength(it) && it.timer_started_at) {
+  if (!usesExercises(it) && it.timer_started_at) {
     const list = steps(it), i = S.ui.spStep?.i ?? 0, cur = list[i];
     if (cur?.dur_s) {
       const left = cur.dur_s - Math.floor(stepElapsed() / 1000);
@@ -172,7 +172,7 @@ function readFin() {
   const f = S.ui.spFin, g = i => document.getElementById(i);
   if (!f || !g('fin-dur')) return;
   f.dur = parseClock(g('fin-dur').value) ?? f.dur;
-  if (g('fin-dist')) f.dist = parseKm(g('fin-dist').value);
+  if (g('fin-dist')) f.dist = parseDist(g('fin-dist').value, S.items.get(f.id)?.meta?.sport);
   if (g('fin-hr')) f.hr = parseInt(g('fin-hr').value, 10) || null;
   f.note = g('fin-note')?.value ?? f.note;
 }
@@ -184,7 +184,7 @@ export function renderFinish() {
     <form data-form="sp-finish-save"><div class="title-static">${esc(it.title)}</div>
     <div class="fields">
       <div class="f-row"><label for="fin-dur">Durée</label><div class="f-val"><input id="fin-dur" inputmode="numeric" value="${f.dur ? clock(f.dur) : ''}" placeholder="mm:ss"></div></div>
-      ${isEndurance(it) ? `<div class="f-row"><label for="fin-dist">Distance (km)</label><div class="f-val"><input id="fin-dist" inputmode="decimal" value="${kmInput(f.dist)}"></div></div>
+      ${isEndurance(it) ? `<div class="f-row"><label for="fin-dist">Distance (${distUnit(it.meta?.sport)})</label><div class="f-val"><input id="fin-dist" inputmode="decimal" value="${distIn(f.dist, it.meta?.sport)}"></div></div>
       <div class="f-row"><label for="fin-hr">FC moyenne</label><div class="f-val"><input id="fin-hr" inputmode="numeric" value="${f.hr || ''}" placeholder="bpm"></div></div>` : ''}
     </div>
     <div class="sp-q">Effort ressenti (1 facile · 10 maximal)</div>${scale('rpe', 1, 10)}
@@ -201,7 +201,7 @@ function saveFinish() {
   const meta = clone(it.meta) || {};
   meta.result = { dur_s: f.dur || null, dist_m: f.dist || null, avg_hr: f.hr || null, rpe: f.rpe || null, feeling: f.feeling || null, note: (f.note || '').trim(), source: 'manual', ext_id: null };
   // séance de renfo marquée faite sans avoir coché de série : on la compte comme réalisée telle que prévue
-  if (isStrength(it) && !(meta.exercises || []).some(e => setsOf(e).some(s => s.done))) (meta.exercises || []).forEach(e => setsOf(e).forEach(s => { s.done = true; }));
+  if (usesExercises(it) && !(meta.exercises || []).some(e => setsOf(e).some(s => s.done))) (meta.exercises || []).forEach(e => setsOf(e).forEach(s => { s.done = true; }));
   patch(it.id, { meta, status: 'done', completed_at: nowIso(), spent_sec: f.dur || spent(it), timer_started_at: null, scheduled_date: it.scheduled_date || today() }, { render: false });
   S.ui.spRest = null; S.ui.spLive = null; S.ui.spFin = null;
   closeSheet();

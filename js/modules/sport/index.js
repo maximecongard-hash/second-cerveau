@@ -2,7 +2,7 @@ import { esc, I, sec, today, addDays, plural, fmtDate, fmtDur } from '../../core
 import { S, newItem, saveItem, patch, savePrefs } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
 import { SH, sheet, showSheet, closeSheet, render, toast, openEditor } from '../../core/ui.js';
-import { DEFAULT_EXERCISES, GROUPS, library, restFor } from './exercises.js';
+import { DEFAULT_EXERCISES, GROUPS, TIMED_GROUPS, library, restFor } from './exercises.js';
 import {
   SPORTS, PRESETS, createWorkout, freshMeta, monday, onDay, templates, newExercise, defaultMeta, doneDay, label
 } from './model.js';
@@ -79,7 +79,7 @@ const forms = {
   'sp-lib-add': f => {
     const name = f.querySelector('input').value.trim(), group = f.querySelector('select').value;
     if (!name || library().some(e => e.name.toLowerCase() === name.toLowerCase())) return;
-    S.prefs.sportExercises = [...library(), { name, group, rest: S.prefs.sportRest || 90 }].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    S.prefs.sportExercises = [...library(), { name, group, rest: S.prefs.sportRest || 90, ...(TIMED_GROUPS.includes(group) ? { unit: 's' } : {}) }].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     savePrefs();
   }
 };
