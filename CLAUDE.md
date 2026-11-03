@@ -16,14 +16,14 @@ en **modules** (thèmes) dans une barre latérale.
 - **Notes** (`notes`) : notes Markdown, signets à lire / lus, épinglés, liés aux tâches et projets.
 - **Sport** (`sport`, désactivé par défaut, à activer dans Réglages > Modules) : préparer des séances de course et de renfo, les caler dans
   l'Agenda, les faire en direct (chrono, minuteur de repos), historique et progression.
-- **Courses** : coquille en aperçu, désactivée par défaut. Contenu prévu en phase 2.
+- **Courses** (`courses`, désactivé par défaut) : banque de recettes (0.17). Prévu : panier à trier, liste de courses, partage du foyer (voir Pistes ouvertes).
 
 Stack : HTML + CSS + modules ES natifs, sans build ni npm. Données dans Supabase (table unique `items`,
 RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (31 octobre 2026)
 
-- Version **0.16.1**, cache SW `sc-v30` (0.16.1 : contenu des séances de Sport adapté au type : presets et cibles propres à la course, au vélo, à la natation (en mètres) et à la rando ; renfo et mobilité en exercices avec séances types, bibliothèque filtrée par groupe et exercices chronométrés en secondes ; pas de migration). 0.16.0 : cache `sc-v29` ( échéances en rouge dans l'Agenda, numéros de semaine, page Projets en cartes ; pas de migration). 0.15.1 : cache `sc-v28` (0.15.1 : la synchro envoie `spent_sec` à 0 quand un élément ancien du cache n'a pas ce champ). 0.15.0 : cache `sc-v27`. La 0.15 demande `012_sport.sql` (colonne `meta`, passée sur Supabase le 1er novembre 2026). (0.14.0 : cache `sc-v26` ; 0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
+- Version **0.17.0**, cache SW `sc-v31` (0.17.0 : module Courses, banque de recettes : kind `recipe`, ingrédients structurés dans `meta`, favoris, tags Rapide / Batch cooking, filtre Saison d'après la date ; pas de migration. 0.16.1 : contenu des séances de Sport adapté au type : presets et cibles propres à la course, au vélo, à la natation (en mètres) et à la rando ; renfo et mobilité en exercices avec séances types, bibliothèque filtrée par groupe et exercices chronométrés en secondes ; pas de migration). 0.16.0 : cache `sc-v29` ( échéances en rouge dans l'Agenda, numéros de semaine, page Projets en cartes ; pas de migration). 0.15.1 : cache `sc-v28` (0.15.1 : la synchro envoie `spent_sec` à 0 quand un élément ancien du cache n'a pas ce champ). 0.15.0 : cache `sc-v27`. La 0.15 demande `012_sport.sql` (colonne `meta`, passée sur Supabase le 1er novembre 2026). (0.14.0 : cache `sc-v26` ; 0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
   `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
   La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
@@ -87,6 +87,8 @@ RLS), hors ligne via localStorage + service worker.
      `todayRows`, `reviewStep`, `eveningHtml`). Testé en mode démo seulement.
 
 ## Pistes ouvertes
+
+- **Courses, suite** : 0.18 panier (recettes cochées, fusion des ingrédients, parts) + écran de tri « J'ai déjà » + liste par rayon (kind `shop_item`, `meta.stage` check / list) ; 0.19 racine `foyer` partagée avec la conjointe (`parent_id`), validation du partage 0.11 en vrai ; 0.20 mode magasin. Ensuite : planning de repas dans l'Agenda, import par URL.
 
 - **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today` dans `supabase/013_widget.sql`, README partie 4) : écrit sans version de l'app, non testé sur iPhone ; la migration 013 reste à coller par l'utilisateur.
 

@@ -771,3 +771,21 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .pcard-bar { height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; margin-top: auto; }
 .pcard-bar i { display: block; height: 100%; background: var(--proj); }
 .pcard .row-meta { margin-top: 0; }
+
+/* Courses : banque de recettes */
+.rc-heart { background: none; border: 0; padding: 6px; margin-right: -6px; color: var(--muted); cursor: pointer; display: inline-flex; }
+.rc-heart svg { width: 20px; height: 20px; }
+.rc-heart.on { color: var(--star); }
+.rc-heart.on svg { fill: currentColor; }
+.rc-seasons { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; margin: 0 0 8px; }
+.rc-seasons-t { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rc-seasons .chips { margin: 6px 0 0; }
+.rc-h { margin-top: 18px; }
+.rc-parts { display: flex; align-items: center; gap: 8px; }
+.rc-parts input { width: 70px; }
+.rc-ing { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
+.rc-ing input { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: 15px var(--f-ui); }
+.rc-ing .rc-q { width: 56px; flex: none; text-align: right; font-family: var(--f-mono); }
+.rc-ing .rc-u { width: 76px; flex: none; }
+.rc-ing .rc-n { flex: 1; }
+.rc-ing input:focus { border-color: var(--accent); outline: 0; }

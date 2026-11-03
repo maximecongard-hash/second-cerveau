@@ -23,7 +23,7 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
   `{ sport, goal, blocks | exercises, result, tpl, manualDur }` (détail en tête de `js/modules/sport/model.js`). L'Agenda place
   les séances comme des tâches via les hooks `schedulable` et `createAt`. Fichiers : `model.js` (données, estimations, export texte),
   `editor.js`, `views.js`, `live.js`, `programs.js`, `stats.js`, `exercises.js`. Prévu ensuite : suivi COROS via Strava, envoi à la montre.
-- **Courses** : en aperçu, désactivé par défaut, contenu prévu en phase 2.
+- **Courses** (`courses`, désactivé par défaut) : banque de recettes. Kind `recipe` : étapes dans `body`, tags dans `tags` (Rapide, Batch cooking en raccourcis), favori dans `pinned`, durée dans `duration_min`, `meta` = `{ servings, seasons, ingredients: [{ id, qty, unit, name }] }` (`seasons` vide = toute l'année, saison courante calculée par `seasonOf()`). Fichiers : `model.js` (saisons, `parseIngredient`), `views.js`, `editor.js`. Prévu : panier, tri, liste de courses (`shop_item`), foyer partagé.
 
 Autres repères :
 
