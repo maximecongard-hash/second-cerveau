@@ -9,7 +9,7 @@ import { SH, sheet, showSheet, closeSheet, openEditor, toast, queueRender } from
 // Un projet partagé donne aussi accès à ses tâches. Seul le propriétaire partage et gère les droits.
 // En mode démo, tout reste local avec des comptes fictifs.
 // ---------------------------------------------------------------------------
-const SHAREABLE = new Set(['project', 'task', 'note']);
+const SHAREABLE = new Set(['project', 'task', 'note', 'foyer']);
 const ROLES = { edit: 'Peut modifier', view: 'Lecture seule' };
 const meId = () => S.user?.id || S.uid;
 let back = false;
@@ -53,7 +53,7 @@ function shareSheet(id) {
   const others = Object.values(S.people).filter(p => p.id !== meId() && !shared.has(p.id)).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'fr'));
   sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="share-back">${back ? 'Retour' : 'Fermer'}</button><span class="sheet-kind">Partager</span><span></span></div>
     <div class="pad"><b>${esc(it?.title) || '<i>Sans titre</i>'}</b>
-      <div class="muted small">${it?.kind === 'project' ? 'Les tâches du projet sont partagées avec lui.' : 'Seul cet élément est partagé.'}</div></div>
+      <div class="muted small">${it?.kind === 'project' ? 'Les tâches du projet sont partagées avec lui.' : it?.kind === 'foyer' ? 'Les recettes et la liste de courses du foyer sont partagées avec lui.' : 'Seul cet élément est partagé.'}</div></div>
     <div class="list">${list.length ? list.map(s => `<div class="row"><div class="row-main"><div class="row-title">${esc(personName(s.user_id))}</div>
         <div class="row-meta"><span>${esc(S.people[s.user_id]?.email || '')}</span></div></div>
         <button class="chip" data-act="share-role" data-id="${s.id}">${ROLES[s.role]}</button>

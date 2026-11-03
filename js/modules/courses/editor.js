@@ -2,7 +2,8 @@ import { esc, I, fRow, chip } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
 import { SH, renderEditor, openEditor } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
-import { SEASONS, QUICK_TAGS, UNITS, metaOf, newIngredient, fmtQty, parseQty, parseIngredient } from './model.js';
+import { inFoyer, foyerEditor } from './foyer.js';
+import { SEASONS, QUICK_TAGS, UNITS, AISLES, metaOf, shopMeta, fmtQty, parseQty, parseIngredient } from './model.js';
 
 // ---------------------------------------------------------------------------
 // Éditeur d'une recette : titre, favori, parts, durée, tags, saisons, ingrédients, étapes
@@ -16,7 +17,22 @@ function ingredientRow(g) {
     <button type="button" class="icon-btn" data-act="rc-ing-del" data-id="${g.id}" aria-label="Retirer l’ingrédient">${I.minus}</button></div>`;
 }
 
+// Produit de la liste de courses
+function shopEditor(it) {
+  const m = shopMeta(it), done = it.status === 'done';
+  const aisles = [...new Set([...AISLES, m.aisle])];
+  return `<div class="sheet-head"><button class="link strong" data-act="close">OK</button><span class="sheet-kind">Produit</span><button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>
+    <input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Produit" autocomplete="off">
+    <div class="fields">
+      ${fRow('Quantité', `<div class="rc-ing" style="margin:0"><input class="rc-q" data-rc="shop" data-k="qty" value="${esc(fmtQty(m.qty))}" placeholder="Qté" inputmode="decimal" autocomplete="off"><input class="rc-u" data-rc="shop" data-k="unit" value="${esc(m.unit)}" placeholder="Unité" list="rc-units" autocomplete="off"></div><datalist id="rc-units">${UNITS.map(u => `<option value="${esc(u)}"></option>`).join('')}</datalist>`)}
+      ${fRow('Rayon', `<select data-rc="shop" data-k="aisle">${aisles.map(a => `<option ${a === m.aisle ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select>`)}
+      ${fRow('Statut', `<button type="button" class="chip ${done ? 'on' : ''}" data-act="sh-check" data-id="${it.id}">${done ? 'Pris' : 'À prendre'}</button>`)}
+    </div>`;
+}
+
 export function editorHTML(it) {
+  if (it.kind === 'shop_item') return shopEditor(it);
+  if (it.kind === 'foyer') return foyerEditor(it);
   const m = metaOf(it);
   const head = `<div class="sheet-head"><button class="link strong" data-act="close">OK</button><span class="sheet-kind">Recette</span><button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
   const title = `<input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Nom de la recette" autocomplete="off">`;
@@ -79,6 +95,12 @@ export function editorChange(t) {
     editMeta(SH.editingId, m => { m.servings = n; });
     return true;
   }
+  if (t.dataset.rc === 'shop') {
+    const k = t.dataset.k;
+    editMeta(SH.editingId, m => { m[k] = k === 'qty' ? parseQty(t.value) : t.value.trim(); });
+    if (k === 'qty') t.value = fmtQty(parseQty(t.value));
+    return true;
+  }
   if (t.dataset.rc !== 'ing') return false;
   const { id, k } = t.dataset;
   editMeta(SH.editingId, m => {
@@ -92,7 +114,7 @@ export function editorChange(t) {
 }
 
 export function createAndEdit(fields = {}) {
-  const it = saveItem(newItem({ kind: 'recipe', meta: { servings: 4, seasons: [], ingredients: [] }, ...fields }));
+  const it = saveItem(newItem({ kind: 'recipe', meta: { servings: 4, seasons: [], ingredients: [] }, ...inFoyer(), ...fields }));
   SH.draftId = it.id;
   openEditor(it.id, { focus: 'title' });
 }

@@ -6,7 +6,7 @@ import { uuid } from '../../core/util.js';
 //   { servings, seasons: ['Automne', ...], ingredients: [{ id, qty, unit, name }] }
 // `seasons` vide = toute l'année. `qty` est un nombre ou null (« sel », « un peu de »).
 // ---------------------------------------------------------------------------
-export const KINDS = ['recipe'];
+export const KINDS = ['recipe', 'shop_item', 'foyer'];
 export const SEASONS = ['Printemps', 'Été', 'Automne', 'Hiver'];
 export const QUICK_TAGS = ['Rapide', 'Batch cooking'];
 export const UNITS = ['g', 'kg', 'mg', 'ml', 'cl', 'l', 'c. à s.', 'c. à c.', 'pincée', 'sachet', 'boîte', 'gousse', 'tranche', 'botte'];
@@ -57,3 +57,32 @@ export function parseIngredient(text) {
 
 // Recette visible pour une saison : elle la cite, ou elle n'a pas de saison (toute l'année)
 export const inSeason = (it, s) => { const ss = metaOf(it).seasons; return !ss.length || ss.includes(s); };
+
+// ---------------------------------------------------------------------------
+// Liste de courses. Un produit est un élément `shop_item` : nom dans `title`, `status` active (à prendre) ou done (pris),
+// `meta` = { qty, unit, aisle, stage }. `stage` vaut 'list' (la vraie liste) ; 'check' sert au tri des ingrédients (à venir).
+// ---------------------------------------------------------------------------
+export const AISLES = ['Fruits et légumes', 'Boucherie et poisson', 'Boulangerie', 'Frais', 'Épicerie', 'Surgelés', 'Boissons', 'Maison', 'Autre'];
+const strip = s => s.replace(/œ/g, 'oe').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const AISLE_RULES = [
+  ['Surgelés', /surgel|glace|frites/],
+  ['Maison', /papier|eponge|lessive|vaisselle|savon|dentifrice|shampo|essuie|sac poubelle|pile/],
+  ['Boissons', /\beau\b|\bjus\b|\bvin\b|biere|soda|sirop|limonade/],
+  ['Épicerie', /coco|bouillon|concasse|huile|vinaigre/],
+  ['Boucherie et poisson', /poulet|boeuf|\bporc|veau|agneau|lardon|jambon|saucisse|steak|hache|saumon|poisson|crevette|dinde|canard/],
+  ['Boulangerie', /\bpain|baguette|brioche|croissant|viennoiserie/],
+  ['Frais', /\blait\b|creme|beurre|yaourt|fromage|mozzarella|parmesan|gruyere|\boeuf|jaune|pate (fraiche|sablee|brisee|feuilletee)|tofu|bechamel/],
+  ['Fruits et légumes', /pomme|poire|banane|fraise|orange|citron|tomate|oignon|\bail\b|echalote|carotte|courgette|aubergine|poivron|champignon|salade|potimarron|potiron|persil|basilic|coriandre|menthe|avocat|concombre|poireau|haricots verts|\bchou|epinard|patate|raisin|framboise|ciboulette/],
+  ['Épicerie', /farine|sucre|\bsel\b|poivre|\briz\b|pates|spaghetti|lasagne|lentille|haricots|pois chiche|paprika|curry|epice|muscade|conserve|chocolat|cafe|\bthe\b|moutarde|miel|cereale|semoule|\bble\b|chapelure/]
+];
+export function guessAisle(name) {
+  const n = strip(name);
+  return (AISLE_RULES.find(([, re]) => re.test(n)) || ['Autre'])[0];
+}
+export const shopMeta = it => ({ qty: null, unit: '', aisle: 'Autre', stage: 'list', ...(it.meta || {}) });
+// Champs d'un produit à partir d'un texte (« 2 l de lait », « sel »)
+export function shopFields(text) {
+  const g = parseIngredient(text);
+  return { kind: 'shop_item', title: g.name, meta: { qty: g.qty, unit: g.unit, aisle: guessAisle(g.name), stage: 'list' } };
+}
+export const sameProduct = (a, b) => strip(a).replace(/s$/, '').trim() === strip(b).replace(/s$/, '').trim();

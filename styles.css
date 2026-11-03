@@ -789,3 +789,6 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .rc-ing .rc-u { width: 76px; flex: none; }
 .rc-ing .rc-n { flex: 1; }
 .rc-ing input:focus { border-color: var(--accent); outline: 0; }
+.sh-row { align-items: center; }
+.sh-q { font: 500 13px var(--f-mono); color: var(--accent); margin-left: 4px; }
+.sh-row.done .row-title { color: var(--muted); text-decoration: line-through; }
