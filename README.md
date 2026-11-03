@@ -222,12 +222,13 @@ Voir la partie 5.
 
 ### Widget Scriptable « Ma journée »
 
-Un widget d'écran d'accueil (petit, moyen ou grand) : date, avancement, Top 3, créneaux du jour (tâches et événements de Calendrier), tâches sans heure, compteurs en retard et Inbox.
+Un widget d'écran d'accueil. En grand format : date, avancement et numéro de semaine, Top 3 (trois emplacements), grille horaire du jour (tâches et événements de Calendrier, heure actuelle en rouge), compteurs en retard / Inbox / sans heure. En petit et moyen : liste courte.
 
 1. Supabase > SQL Editor : coller et lancer `supabase/013_widget.sql`.
 2. Installer l'app **Scriptable** (gratuite), créer un script « Brain » et y coller le contenu de [`widget/Brain.js`](widget/Brain.js).
-3. Lancer le script une fois dans Scriptable : il demande le jeton de capture (Réglages > Capture iPhone) et le garde dans le Trousseau.
-4. Écran d'accueil > ajouter un widget Scriptable > Script : Brain. Il se rafraîchit environ toutes les 15 minutes (iOS décide) et garde la dernière version hors ligne.
+3. Lancer le script dans Scriptable : il demande le jeton de capture (Réglages > Capture iPhone) et le garde dans le Trousseau. Le menu propose aussi des aperçus.
+4. Écran d'accueil > ajouter un widget Scriptable grand format > Script : Brain. Il se rafraîchit environ toutes les 15 minutes (iOS décide) et garde la dernière version hors ligne.
+5. Fond transparent (grand format seulement) : iOS n'en permet pas, le script découpe une capture de ton écran d'accueil. Fais une capture sur une page sans icône sous le widget, puis menu du script > « Configurer le fond transparent », choisis la capture, l'emplacement (haut ou bas) et ajuste le décalage. À refaire si tu changes de fond d'écran ou de place.
 
 Le jeton de capture donne maintenant aussi la lecture du résumé du jour. Révoque-le dans les Réglages s'il fuit.
 

@@ -90,7 +90,7 @@ RLS), hors ligne via localStorage + service worker.
 
 - **Courses, suite** : 0.18 panier (recettes cochées, fusion des ingrédients, parts) + écran de tri « J'ai déjà » + liste par rayon (kind `shop_item`, `meta.stage` check / list) ; 0.19 racine `foyer` partagée avec la conjointe (`parent_id`), validation du partage 0.11 en vrai ; 0.20 mode magasin. Ensuite : planning de repas dans l'Agenda, import par URL.
 
-- **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today` dans `supabase/013_widget.sql`, README partie 4) : écrit sans version de l'app, non testé sur iPhone ; la migration 013 reste à coller par l'utilisateur.
+- **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today` dans `supabase/013_widget.sql`, README partie 4) : écrit sans version de l'app, fusion résumé + grille horaire du jour, fond transparent par découpe de capture (positions estimées par taille d'écran, réglables) ; non testé sur iPhone ; la migration 013 reste à coller par l'utilisateur.
 
 - **Sport, partie 2** : suivi des séances faites via COROS vers Strava (Edge Function `strava`, OAuth une fois, webhook), rapprochement avec la séance
   prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
