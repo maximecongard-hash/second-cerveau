@@ -36,7 +36,7 @@ export function recipesList() {
   if (q) list = list.filter(r => matches(r, q));
   if (f !== 'saison') list.sort(byFav);
   if (list.length) return list.map(recipeRow).join('');
-  return q || f !== 'all' ? empty('Aucune recette trouvée') : empty('Ta banque de recettes', 'Écris tes recettes avec leurs ingrédients : elles alimenteront la liste de courses.<br><button class="btn" data-act="rc-starters">Ajouter des recettes d’exemple</button>');
+  return q || f !== 'all' ? empty('Aucune recette trouvée') : empty('Ta banque de recettes', 'Écris tes recettes avec leurs ingrédients : elles alimenteront la liste de courses.');
 }
 
 function filterChips() {

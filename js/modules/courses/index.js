@@ -23,7 +23,6 @@ const acts = {
   'rc-tag': el => toggleIn(SH.editingId, 'tags', el.dataset.v),
   'rc-season': el => toggleIn(SH.editingId, 'seasons', el.dataset.v),
   'rc-ing-del': el => delIngredient(SH.editingId, el.dataset.id),
-  'rc-starters': () => { const n = addStarters(); render(); toast(n ? `${n} recettes ajoutées` : 'Déjà là'); },
   'fy-create': () => { createFoyer(); render(); toast('Foyer créé'); },
   // liste de courses
   'sh-check': el => {
