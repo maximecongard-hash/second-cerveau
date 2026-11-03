@@ -5,11 +5,11 @@
 -- p_day : le jour vu par l'iPhone (évite le décalage de fuseau du serveur).
 
 create or replace function public.widget_today(p_token text, p_day date default current_date)
-returns jsonb language plpgsql stable security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_user uuid;
 begin
-  select user_id into v_user from public.capture_tokens where token = p_token;
+  v_user := public.use_token(p_token, 'widget');  -- compte l'utilisation (migration 014)
   if v_user is null then
     raise exception 'Jeton de capture invalide' using errcode = '28000';
   end if;

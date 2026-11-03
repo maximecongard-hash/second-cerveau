@@ -57,11 +57,18 @@ const fold = (id, icon, title, meta, inner) => `<details class="fold" ${S.ui.fol
 VIEWS.settings = () => {
   if (!DEMO && S.ui.tokens === undefined) { S.ui.tokens = null; loadTokens(); }
   const tokens = S.ui.tokens;
+  const DOORS = { capture: 'capture', agenda: 'agenda', widget: 'widget' };
+  const useLine = t => {
+    const u = t.uses || {};
+    const parts = Object.entries(DOORS).filter(([k]) => u[k]).map(([k, l]) => `${u[k]} ${l}`);
+    const total = Object.values(u).reduce((n, v) => n + (+v || 0), 0);
+    return total ? `${total} utilisation${total > 1 ? 's' : ''} (${parts.join(' · ')})${t.last_used_at ? ` · dernière ${new Date(t.last_used_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}` : 'Jamais utilisée';
+  };
   const tokenHtml = DEMO ? '<div class="muted pad">Indisponible en mode démo.</div>'
     : tokens === null ? '<div class="muted pad">Chargement…</div>'
-    : (tokens.length ? tokens.map(t => `<div class="kv"><code class="token">${esc(t.token)}</code><div class="btn-row"><button class="btn" data-act="copy" data-v="${esc(t.token)}">Copier</button><button class="btn danger" data-act="token-del" data-v="${esc(t.token)}">Révoquer</button></div></div>`).join('')
-      : '<div class="muted pad">Aucun jeton. Génère-en un pour tes raccourcis.</div>') +
-      `<button class="btn block" data-act="token-new">Générer un jeton</button>${S.ui.tokenErr ? `<div class="err pad">${esc(S.ui.tokenErr)}</div>` : ''}`;
+    : (tokens.length ? tokens.map(t => `<div class="kv"><span class="row-main"><span class="row-title">${esc(t.name || 'Sans nom')}</span><span class="muted small">${esc(useLine(t))}</span><code class="token">${esc(t.token)}</code></span><div class="btn-row"><button class="btn" data-act="token-name" data-v="${esc(t.token)}">Nommer</button><button class="btn" data-act="copy" data-v="${esc(t.token)}">Copier</button><button class="btn danger" data-act="token-del" data-v="${esc(t.token)}">Révoquer</button></div></div>`).join('')
+      : '<div class="muted pad">Aucune clé. Crée-en une pour tes raccourcis et ton widget.</div>') +
+      `<button class="btn block" data-act="token-new">Créer une clé d’accès</button>${S.ui.tokenErr ? `<div class="err pad">${esc(S.ui.tokenErr)}</div>` : ''}`;
   const html =
     fold('account', I.user, 'Compte', esc(DEMO ? 'Mode démo' : (S.people[S.user.id]?.name || S.user.email)),
       `<div class="kv"><span>${esc(S.user.email)}</span><span class="sync ${syncClass()}"></span></div>
@@ -72,11 +79,11 @@ VIEWS.settings = () => {
     fold('notif', I.bell, 'Notifications', 'Rappels des tâches', pushSettings()) +
     fold('modules', I.grid, 'Modules', enabledModules().map(m => esc(m.label)).join(' · '), modulesList()) +
     enabledModules().filter(m => m.settings).map(m => fold('mod-' + m.id, m.icon, esc(m.label), esc(m.settingsMeta || ''), m.settings())).join('') +
-    fold('capture', I.inbox, 'Capture iPhone', 'Raccourcis et jeton',
+    fold('capture', I.inbox, 'Accès iPhone', 'Raccourcis, widget et clés d’accès',
       `<div class="muted small pad">Valeurs à coller dans tes raccourcis (voir le guide).</div>
       <div class="kv"><span>URL du projet</span><button class="btn" data-act="copy" data-v="${esc(CFG.url)}">Copier</button></div>
       <div class="kv"><span>Clé publique</span><button class="btn" data-act="copy" data-v="${esc(CFG.key)}">Copier</button></div>
-      <div class="muted small pad">Jeton de capture (secret, ne le partage pas) :</div>${tokenHtml}`) +
+      <div class="muted small pad">Clés d’accès (secrètes, ne les partage pas). Donne une clé par appareil ou par usage pour voir ce qui s’en sert :</div>${tokenHtml}`) +
     fold('icon', I.image, 'Icône', iconChoice().label, iconSettings()) +
     fold('data', I.save, 'Données', 'Export · version ' + VERSION,
       `<div class="btn-row"><button class="btn" data-act="export">Exporter (JSON)</button></div>
@@ -93,7 +100,7 @@ function iconSettings() {
       : 'Choisis l’icône avant de faire Partager > Sur l’écran d’accueil dans Safari.'}</div>`;
 }
 async function loadTokens() {
-  const { data, error } = await sb.from('capture_tokens').select('token, created_at').order('created_at');
+  const { data, error } = await sb.from('capture_tokens').select('token, name, uses, last_used_at, created_at').order('created_at');
   S.ui.tokens = error ? [] : data;
   S.ui.tokenErr = error ? error.message : null;
   queueRender();
@@ -160,12 +167,22 @@ Object.assign(ACTS, {
   copy: async el => { try { await navigator.clipboard.writeText(el.dataset.v); toast('Copié'); } catch { toast('Copie impossible'); } },
   'token-new': async () => {
     const token = [...crypto.getRandomValues(new Uint8Array(24))].map(b => b.toString(16).padStart(2, '0')).join('');
-    const { error } = await sb.from('capture_tokens').insert({ token });
+    const name = prompt('Nom de cette clé (ex. iPhone, widget, Siri) :', '');
+    if (name === null) return;
+    const { error } = await sb.from('capture_tokens').insert({ token, name: name.trim() || null });
     if (error) { toast('Erreur : ' + error.message); return; }
-    S.ui.tokens = undefined; render(); toast('Jeton créé');
+    S.ui.tokens = undefined; render(); toast('Clé créée');
+  },
+  'token-name': async el => {
+    const cur = (S.ui.tokens || []).find(t => t.token === el.dataset.v);
+    const name = prompt('Nom de cette clé :', cur?.name || '');
+    if (name === null) return;
+    const { error } = await sb.from('capture_tokens').update({ name: name.trim() || null }).eq('token', el.dataset.v);
+    if (error) { toast('Erreur : ' + error.message); return; }
+    S.ui.tokens = undefined; render();
   },
   'token-del': async el => {
-    if (!confirm('Révoquer ce jeton ? Les raccourcis qui l’utilisent ne marcheront plus.')) return;
+    if (!confirm('Révoquer cette clé ? Les raccourcis et widgets qui l’utilisent ne marcheront plus.')) return;
     const { error } = await sb.from('capture_tokens').delete().eq('token', el.dataset.v);
     if (error) { toast('Erreur : ' + error.message); return; }
     S.ui.tokens = undefined; render();

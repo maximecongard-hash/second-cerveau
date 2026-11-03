@@ -94,7 +94,7 @@ Ce script est complet et à jour : il contient aussi les migrations `002` à `00
 |---|---|
 | table `items` | inbox, tâches, projets, domaines, notes, signets |
 | table `prefs` | contextes, modules, date de la dernière revue… |
-| table `capture_tokens`, fonction `capture()` | jetons des raccourcis iPhone, ajout dans l'Inbox |
+| table `capture_tokens`, fonction `capture()` | clés d'accès des raccourcis iPhone et du widget (nom, compteur par porte), ajout dans l'Inbox |
 | bucket `captures` (privé) | photos |
 | table `calendar_tokens`, fonction `calendar_feed()` | lien d'abonnement de Calendrier |
 | table `events`, fonction `sync_events()` | événements de Calendrier envoyés par le raccourci |
@@ -170,9 +170,9 @@ Base créée avant une version : colle, dans l'ordre, les migrations qui manquen
 
 Les données se synchronisent à la connexion : rien d'autre à transférer.
 
-### 3.2 Générer un jeton de capture
+### 3.2 Créer une clé d'accès
 
-Dans l'app installée : **⋯** > **Réglages** > **Capture iPhone** > **Générer un jeton**, puis **Copier**. Un jeton peut servir sur plusieurs appareils. Garde-le pour toi ; s'il fuit, **révoque**-le puis génères-en un autre, et réinstalle les raccourcis avec le nouveau.
+Dans l'app installée : **⋯** > **Réglages** > **Accès iPhone** > **Créer une clé d’accès** (donne-lui un nom : iPhone, widget…), puis **Copier**. Chaque clé affiche son nombre d'utilisations par porte (capture, agenda, widget) : crée une clé par appareil pour savoir ce qui s'en sert (migration `014_acces.sql`). Garde-le pour toi ; s'il fuit, **révoque**-le puis génères-en un autre, et réinstalle les raccourcis avec le nouveau.
 
 ### 3.3 Télécharger et installer les raccourcis
 

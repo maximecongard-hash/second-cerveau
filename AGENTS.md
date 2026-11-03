@@ -168,7 +168,7 @@ L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'u
 
 - `config.js` ne contient que la clé **publishable**. Ne jamais y mettre, ni committer, une clé `service_role` / secret.
 - Toute nouvelle table : `enable row level security` + politique `user_id = auth.uid()` (les éléments partagés passent par `row_role()`, voir Partage). `profiles` ne laisse modifier que `name` (grant par colonne) ; `is_admin` ne se change que dans le SQL Editor. La clé `service_role` n'existe que dans l'Edge Function `add-user`, jamais dans l'app.
-- Les raccourcis iOS passent par la fonction `capture()` (security definer, jeton dans `capture_tokens`) et ne peuvent
+- Les raccourcis iOS passent par la fonction `capture()` (security definer, clé d'accès dans `capture_tokens`, comptée par `use_token()`) et ne peuvent
   qu'ajouter dans l'Inbox. Seules autres portes `anon`, toutes derrière un jeton : `sync_events()` (jeton de capture,
   remplace la copie des événements de Calendrier dans `events`) et `calendar_feed()` (jeton de `calendar_tokens`,
   lecture des créneaux pour le flux ICS). Ne pas élargir ce que l'accès `anon` peut faire au-delà.

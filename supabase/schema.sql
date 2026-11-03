@@ -74,12 +74,15 @@ create policy "prefs_owner" on public.prefs
   with check (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
--- Jetons de capture pour les raccourcis iOS (générés depuis l'app)
+-- Clés d'accès des raccourcis iOS et du widget (générées depuis l'app ; table historique capture_tokens)
 -- ---------------------------------------------------------------------------
 create table if not exists public.capture_tokens (
   token      text primary key check (length(token) >= 32),
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  name       text,                                 -- nom donné à la clé (0.17.3)
+  uses       jsonb not null default '{}'::jsonb,   -- compteur par porte : capture, agenda, widget
+  last_used_at timestamptz
 );
 
 alter table public.capture_tokens enable row level security;
@@ -88,6 +91,22 @@ create policy "tokens_owner" on public.capture_tokens
   for all to authenticated
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- Vérifie la clé, compte l'utilisation et rend le compte propriétaire (migration 014)
+create or replace function public.use_token(p_token text, p_door text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid;
+begin
+  update public.capture_tokens
+     set uses = jsonb_set(uses, array[p_door], to_jsonb(coalesce((uses ->> p_door)::int, 0) + 1)),
+         last_used_at = now()
+   where token = p_token
+   returning user_id into v_user;
+  return v_user;
+end $$;
+
+revoke all on function public.use_token(text, text) from public;
 
 create or replace function public.capture_token_valid(p_token text)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -115,7 +134,7 @@ declare
   v_body  text := '';
   v_nl    int;
 begin
-  select user_id into v_user from public.capture_tokens where token = p_token;
+  v_user := public.use_token(p_token, 'capture');
   if v_user is null then
     raise exception 'Jeton de capture invalide' using errcode = '28000';
   end if;
@@ -277,7 +296,7 @@ declare
   v_user  uuid;
   v_count int;
 begin
-  select user_id into v_user from public.capture_tokens where token = p_token;
+  v_user := public.use_token(p_token, 'agenda');
   if v_user is null then
     raise exception 'Jeton de capture invalide' using errcode = '28000';
   end if;
