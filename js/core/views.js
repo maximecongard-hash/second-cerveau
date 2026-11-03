@@ -66,7 +66,7 @@ VIEWS.settings = () => {
   };
   const tokenHtml = DEMO ? '<div class="muted pad">Indisponible en mode démo.</div>'
     : tokens === null ? '<div class="muted pad">Chargement…</div>'
-    : (tokens.length ? tokens.map(t => `<div class="kv"><span class="row-main"><span class="row-title">${esc(t.name || 'Sans nom')}</span><span class="muted small">${esc(useLine(t))}</span><code class="token">${esc(t.token)}</code></span><div class="btn-row"><button class="btn" data-act="token-name" data-v="${esc(t.token)}">Nommer</button><button class="btn" data-act="copy" data-v="${esc(t.token)}">Copier</button><button class="btn danger" data-act="token-del" data-v="${esc(t.token)}">Révoquer</button></div></div>`).join('')
+    : (tokens.length ? tokens.map(t => `<div class="kv"><span class="row-main"><span class="row-title">${esc(t.name || 'Sans nom')}</span><span class="muted small">${esc(useLine(t))}</span></span><div class="btn-row"><button class="btn" data-act="token-name" data-v="${esc(t.token)}">Nommer</button><button class="btn" data-act="copy" data-v="${esc(t.token)}">Copier</button><button class="btn danger" data-act="token-del" data-v="${esc(t.token)}">Révoquer</button></div></div>`).join('')
       : '<div class="muted pad">Aucune clé. Crée-en une pour tes raccourcis et ton widget.</div>') +
       `<button class="btn block" data-act="token-new">Créer une clé d’accès</button>${S.ui.tokenErr ? `<div class="err pad">${esc(S.ui.tokenErr)}</div>` : ''}`;
   const html =
