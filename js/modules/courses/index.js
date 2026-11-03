@@ -4,7 +4,9 @@ import { registerModule } from '../../core/modules.js';
 import { SH, render, renderEditor, toast } from '../../core/ui.js';
 import { KINDS, views, recipesList, recipeRow, shopRow } from './views.js';
 import { editorHTML, setField, createAndEdit, toggleIn, addIngredient, delIngredient, editorChange } from './editor.js';
-import { parseIngredient, shopFields, shopMeta, sameProduct } from './model.js';
+import { parseIngredient } from './model.js';
+import { addProduct } from './shop.js';
+import { panierActs } from './panier.js';
 import { STARTERS } from './starters.js';
 import { createFoyer, inFoyer } from './foyer.js';
 
@@ -12,6 +14,7 @@ import { createFoyer, inFoyer } from './foyer.js';
 // Module « Courses » : banque de recettes (0.17). Panier, tri et liste partagée suivent.
 // ---------------------------------------------------------------------------
 const acts = {
+  ...panierActs,
   'rc-fav': el => {
     const it = S.items.get(el.dataset.id);
     if (!it) return;
@@ -55,15 +58,6 @@ const forms = {
   }
 };
 
-// Ajoute un produit ; un produit déjà à prendre avec la même unité voit sa quantité augmenter
-function addProduct(text) {
-  const fields = shopFields(text), m = fields.meta;
-  const twin = ofKindAll('shop_item').find(i => i.status !== 'done' && sameProduct(i.title, fields.title) && shopMeta(i).unit === m.unit);
-  if (!twin) { saveItem(newItem({ ...fields, ...inFoyer() }), { render: false }); return; }
-  const tm = shopMeta(twin);
-  if (m.qty != null && tm.qty != null) patch(twin.id, { meta: { ...tm, qty: Math.round((tm.qty + m.qty) * 100) / 100 } }, { render: false });
-  else toast('Déjà dans la liste');
-}
 // Recettes de départ : ajoute celles dont le titre n'existe pas encore
 function addStarters() {
   const have = new Set(ofKindAll('recipe').map(r => r.title.toLowerCase()));
@@ -101,10 +95,11 @@ registerModule({
   tabs: [['recettes', 'Recettes', I.heart], ['courses', 'Listes', I.cart]],
   kinds: KINDS,
   kindLabel: { recipe: 'Recette', shop_item: 'Produit', foyer: 'Foyer' },
-  tabOf: { foyer: 'courses' },
+  tabOf: { foyer: 'courses', panier: 'recettes' },
   menu: () => [['#/foyer', 'Foyer et partage']],
   views, acts, forms, fab,
-  ui: { rcQuery: '', rcFilter: 'all', rcSeason: null },
+  prefs: { rcHave: [] },
+  ui: { rcQuery: '', rcFilter: 'all', rcSeason: null, rcSel: [], rcParts: {}, pnHave: {} },
   editor: editorHTML,
   setField,
   row: it => (it.kind === 'shop_item' ? shopRow(it) : recipeRow(it)),

@@ -1,6 +1,7 @@
 import { esc, I, empty, chip, fmtDur } from '../../core/util.js';
 import { S, ofKindAll } from '../../core/store.js';
 import { foyerView } from './foyer.js';
+import { panierView } from './panier.js';
 import { KINDS, AISLES, metaOf, seasonOf, seasonOrder, inSeason, shopMeta, fmtQty } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -13,7 +14,9 @@ const heart = on => `<button type="button" class="rc-heart ${on ? 'on' : ''}" ar
 export function recipeRow(r) {
   const m = metaOf(r), n = m.ingredients.length;
   const meta = [r.duration_min ? fmtDur(r.duration_min) : '', ...(r.tags || []).map(t => esc(t)), m.seasons.length ? esc(m.seasons.join(' / ')) : '', n ? `${n} ingrédient${n > 1 ? 's' : ''}` : ''].filter(Boolean);
+  const on = (S.ui.rcSel || []).includes(r.id);
   return `<div class="row" data-act="edit" data-id="${r.id}">
+    <button type="button" class="check ${on ? 'on' : ''}" data-act="rc-sel" data-id="${r.id}" aria-label="${on ? 'Retirer du panier' : 'Ajouter au panier'}"></button>
     <div class="row-main"><div class="row-title">${esc(r.title) || '<i>Sans titre</i>'}</div>
     ${meta.length ? `<div class="row-meta">${meta.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div>
     <span data-act="rc-fav" data-id="${r.id}">${heart(r.pinned)}</span>
@@ -51,14 +54,19 @@ function seasonChips() {
   return `<div class="rc-seasons"><div class="rc-seasons-t">Saison · d’après la date</div><div class="chips wrap">${seasonOrder().map(s => chip(s + (s === cur ? ' · en cours' : ''), s === sel, 'rc-season-pick', s)).join('')}</div></div>`;
 }
 
+function selBar() {
+  const n = (S.ui.rcSel || []).length;
+  return n ? `<div class="rc-bar"><span class="muted small">${n} recette${n > 1 ? 's' : ''}</span><button class="link" data-act="rc-sel-clear">Vider</button><button class="btn primary" data-act="rc-prepare">Préparer les courses</button></div>` : '';
+}
 export const views = {};
 views.recettes = () => ({
   title: 'Recettes',
   html: `<input id="rc-q" class="search" type="search" placeholder="Rechercher une recette ou un ingrédient" value="${esc(S.ui.rcQuery)}" data-live="recipes" autocomplete="off">
     ${filterChips()}${seasonChips()}
-    <div id="rc-list" class="list">${recipesList()}</div>`,
-  fab: 'recipe'
+    <div id="rc-list" class="list">${recipesList()}</div>${selBar()}`,
+  fab: (S.ui.rcSel || []).length ? undefined : 'recipe'
 });
+views.panier = panierView;
 // ---------------------------------------------------------------------------
 // Liste de courses : produits par rayon, ajout libre, cocher en magasin
 // ---------------------------------------------------------------------------
@@ -67,7 +75,7 @@ export function shopRow(it) {
   const q = [fmtQty(m.qty), m.unit].filter(Boolean).join(' ');
   return `<div class="row sh-row ${done ? 'done' : ''}" data-act="edit" data-id="${it.id}">
     <button type="button" class="check ${done ? 'on' : ''}" data-act="sh-check" data-id="${it.id}" aria-label="${done ? 'Remettre dans la liste' : 'Marquer comme pris'}"></button>
-    <div class="row-main"><div class="row-title">${esc(it.title)}${q ? ` <span class="sh-q">${esc(q)}</span>` : ''}</div></div>
+    <div class="row-main"><div class="row-title">${esc(it.title)}${q ? ` <span class="sh-q">${esc(q)}</span>` : ''}</div>${m.from?.length ? `<div class="sh-from">${esc(m.from.join(', '))}</div>` : ''}</div>
   </div>`;
 }
 const byName = (a, b) => a.title.localeCompare(b.title, 'fr');

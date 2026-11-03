@@ -86,3 +86,5 @@ export function shopFields(text) {
   return { kind: 'shop_item', title: g.name, meta: { qty: g.qty, unit: g.unit, aisle: guessAisle(g.name), stage: 'list' } };
 }
 export const sameProduct = (a, b) => strip(a).replace(/s$/, '').trim() === strip(b).replace(/s$/, '').trim();
+// Clé de rapprochement d'un produit (sans accents, sans pluriel) : sert à fusionner les lignes et à retenir le placard
+export const productKey = name => strip(name).replace(/s$/, '').trim();
