@@ -220,6 +220,18 @@ Pour un lien partagé, le raccourci demande « Titre ou note ? » : la première
 
 Voir la partie 5.
 
+### Widget Scriptable « Ma journée »
+
+Un widget d'écran d'accueil (petit, moyen ou grand) : date, avancement, Top 3, créneaux du jour (tâches et événements de Calendrier), tâches sans heure, compteurs en retard et Inbox.
+
+1. Supabase > SQL Editor : coller et lancer `supabase/013_widget.sql`.
+2. Installer l'app **Scriptable** (gratuite), créer un script « Brain » et y coller le contenu de [`widget/Brain.js`](widget/Brain.js).
+3. Lancer le script une fois dans Scriptable : il demande le jeton de capture (Réglages > Capture iPhone) et le garde dans le Trousseau.
+4. Écran d'accueil > ajouter un widget Scriptable > Script : Brain. Il se rafraîchit environ toutes les 15 minutes (iOS décide) et garde la dernière version hors ligne.
+
+Le jeton de capture donne maintenant aussi la lecture du résumé du jour. Révoque-le dans les Réglages s'il fuit.
+
+
 ---
 
 ## 5. Calendrier Apple (iCloud)

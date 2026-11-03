@@ -88,6 +88,8 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Pistes ouvertes
 
+- **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today` dans `supabase/013_widget.sql`, README partie 4) : écrit sans version de l'app, non testé sur iPhone ; la migration 013 reste à coller par l'utilisateur.
+
 - **Sport, partie 2** : suivi des séances faites via COROS vers Strava (Edge Function `strava`, OAuth une fois, webhook), rapprochement avec la séance
   prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
 - **Sport 0.15 à valider en vrai** : migration 012 passée sur Supabase (1er novembre 2026), rien testé sur iPhone (écran allumé, son du minuteur).
