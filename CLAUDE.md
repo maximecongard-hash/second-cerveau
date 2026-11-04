@@ -8,7 +8,7 @@ Le [README.md](README.md) s'adresse à l'utilisateur final (installation Supabas
 
 « Brain » est le nom d'usage de l'app ; le dépôt et le code s'appellent **Second Cerveau**.
 PWA personnelle, mono-utilisateur, installée en plein écran sur iPhone : un second cerveau organisé
-en **modules** (thèmes) dans une barre latérale.
+en **modules** dans une barre latérale.
 
 - **Organisation** (`gtd`) : le cœur actuel. Capture rapide (app, bouton Action, Siri, partage, photo),
   tri de l'Inbox, prochaines actions par contexte, projets, Top 3 du jour, agenda, revue du soir et revue hebdo.
@@ -16,90 +16,43 @@ en **modules** (thèmes) dans une barre latérale.
 - **Notes** (`notes`) : notes Markdown, signets à lire / lus, épinglés, liés aux tâches et projets.
 - **Sport** (`sport`, désactivé par défaut, à activer dans Réglages > Modules) : préparer des séances de course et de renfo, les caler dans
   l'Agenda, les faire en direct (chrono, minuteur de repos), historique et progression.
-- **Courses** (`courses`, désactivé par défaut) : banque de recettes (0.17). Prévu : panier à trier, liste de courses, partage du foyer (voir Pistes ouvertes).
+- **Courses** (`courses`, désactivé par défaut) : banque de recettes, panier de la semaine, liste de courses, foyer partageable.
 
 Stack : HTML + CSS + modules ES natifs, sans build ni npm. Données dans Supabase (table unique `items`,
 RLS), hors ligne via localStorage + service worker.
 
-## Où en est le projet (31 octobre 2026)
+## Où en est le projet (4 novembre 2026)
 
-- Version **0.18.0**, cache SW `sc-v37` (0.18.0 : panier de courses : recettes cochées dans la banque, page Panier (parts par recette, ingrédients fusionnés, tri « Déjà là / Acheter » avec placard retenu dans `prefs.rcHave`), envoi à la liste avec provenance (`meta.from`) ; pas de migration. 0.17.5 : le code d'une clé d'accès n'est plus affiché, seulement le bouton Copier ; 0.17.4 : bouton « Ajouter des recettes d'exemple » retiré, `starters.js` ne sert plus qu'à la démo ; 0.17.3 : « jetons de capture » devenus clés d'accès nommées (Réglages > Accès iPhone), compteur d'utilisations par porte (capture, agenda, widget) et dernière utilisation ; demande `014_acces.sql`, à coller par l'utilisateur ; 0.17.2 : foyer (kind `foyer`, racine partageable : recettes et produits y sont rattachés par `parent_id`), page Courses > ⋯ > Foyer et partage, script `scripts/brain-write.sh` pour que Claude (compte agent, partage en « Peut modifier ») ajoute des recettes ; pas de migration. 0.17.1 : liste de courses (kind `shop_item`, ajout libre « 2 l de lait », rayons devinés, fusion des quantités, cocher, vider) et recettes d'exemple (`starters.js`) ; pas de migration. 0.17.0 : module Courses, banque de recettes : kind `recipe`, ingrédients structurés dans `meta`, favoris, tags Rapide / Batch cooking, filtre Saison d'après la date ; pas de migration. 0.16.1 : contenu des séances de Sport adapté au type : presets et cibles propres à la course, au vélo, à la natation (en mètres) et à la rando ; renfo et mobilité en exercices avec séances types, bibliothèque filtrée par groupe et exercices chronométrés en secondes ; pas de migration). 0.16.0 : cache `sc-v29` ( échéances en rouge dans l'Agenda, numéros de semaine, page Projets en cartes ; pas de migration). 0.15.1 : cache `sc-v28` (0.15.1 : la synchro envoie `spent_sec` à 0 quand un élément ancien du cache n'a pas ce champ). 0.15.0 : cache `sc-v27`. La 0.15 demande `012_sport.sql` (colonne `meta`, passée sur Supabase le 1er novembre 2026). (0.14.0 : cache `sc-v26` ; 0.13.4 : synchro débloquée quand un partage passe en lecture seule). La 0.14 demande `011_historique.sql`. La 0.13.3 demande `010_repetitions.sql`. La 0.13 demande `009_fin_creneau.sql` **et** le redéploiement de `send-reminders`. La 0.12 demande `008_chrono.sql` (à coller par l'utilisateur). La 0.11 demande `007_partage.sql` **et** le déploiement de la fonction `add-user` (JWT activé), à faire par l'utilisateur. Migrations 003 et 004 passées sur Supabase (31/10/2026). La 0.8 demande
-  `005_calendrier.sql` et le déploiement de l'Edge Function `calendrier` (à faire par l'utilisateur).
-  La 0.9 demande `006_notifications.sql` **et** le déploiement de la fonction `send-reminders` (README, partie 7).
+- Version **0.19.0**, cache SW `sc-0.19.0`, schéma 19.
+- La 0.19 est une remise à plat, sans nouveau module :
+  - **Installation** : `supabase/schema.sql` est le seul fichier SQL (installe et met à jour, idempotent) ; une seule Edge Function `brain` (routes `ping`, `calendrier`, `reminders`, `add-user`, Verify JWT désactivé) ; premier compte = administrateur ; purge de la corbeille après 30 jours (`brain-purge`) ; `brain_status()` et `SCHEMA_VERSION`.
+  - **Synchro** : démarrage immédiat sur le cache, connexion demandée seulement si la session est invalide ; envoi par champ (`S.dirty` = Map id → champs) ; ligne refusée isolée (`S.stuck`) ; préférences fusionnées clé par clé ; rien n'est échangé sans session ; service worker servi depuis le cache de la version.
+  - **Réglages** : un groupe ouvert à la fois, `#/settings/<groupe>`, Corbeille, Installation, clés d'accès sans `prompt()` ; `sheetHead()` commun, Supprimer en bas des feuilles.
+  - **Code** : `ITEM_DEFAULTS` dans `state.js`, `scripts/check.py`.
+- **À faire par l'utilisateur pour passer en 0.19** (README, partie 3) : déployer `brain`, coller `schema.sql`, vérifier Réglages > Installation, supprimer `send-reminders` et `add-user`, garder `calendrier` si Calendrier est déjà abonné. Tant que ce n'est pas fait, le point de synchro reste rouge avec le message « Base à mettre à jour ».
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
-- Historique :
-  1. Prototype GTD PWA + synchro Supabase.
-  2. Pack 1 : Top 3 du jour, revue du soir, projets enrichis, nouveaux domaines (migration `002_pack1.sql`).
-  3. Phase 1 (PR #1, fusionnée) : découpage en modules avec barre latérale.
-  4. AGENTS.md pour les agents de code.
-  5. 0.4.0 : DA « carnet » (papier, encre, surligneur ; Newsreader / Instrument Sans / IBM Plex Mono).
-  6. 0.4.1 : correctif de mise à jour de l'app installée.
-  7. 0.4.2 : nouvelle icône (cerveau + réseau d'idées qui dessine une coche), en deux versions au choix
-     dans Réglages > Icône : Encre (fond bleu-noir, par défaut) et Papier (fond crème).
-  8. 0.4.3 : l'app s'affiche sous le nom « Brain » (logotype « Brain. » en Newsreader italique, point
-     au surligneur) ; l'icône de la barre latérale et de la connexion suit le choix des Réglages.
-  9. 0.5.0 : liens entre éléments de tous les modules (colonne `links`, `core/links.js`) : bloc « Liés » dans
-     les éditeurs, feuille « Lier à… », section « Liés » sur la fiche projet, « + Action liée » depuis une note,
-     `[[wikiliens]]` vers notes, projets et tâches, épingle des notes (colonne `pinned`).
-  10. 0.6.0 : module Notes séparé (`js/modules/notes`) avec notes, signets (kind `bookmark`) et épinglés ;
-     choix « Signet » au tri de l'Inbox ; bouton + routé par module (`fab`) ; migration 004 qui ouvre `kind`.
-  11. 0.7.0 : module Agenda (`js/modules/agenda`) : grille jour, semaine (3 jours sur iPhone, 7 sur grand écran),
-     blocs = `scheduled_time` + `duration_min`, chevauchements en colonnes, feuille « Placer à… » sur un créneau,
-     heures affichées dans les Réglages, lien « Voir la grille » depuis Aujourd'hui.
-  12. 0.8.0 : Calendrier Apple (iCloud), lecture seule dans les deux sens. Brain vers Calendrier : flux ICS servi par
-     l'Edge Function `supabase/functions/calendrier` (jeton dans `calendar_tokens`, fonction `calendar_feed`).
-     Calendrier vers Brain : raccourci « Agenda Apple » qui envoie les prochains événements à `sync_events`
-     (jeton de capture), table `events`, blocs gris dans la grille (`js/modules/agenda/apple.js`).
-  13. Raccourcis iOS prêts à installer (`raccourcis/`, signés par `build.py`), Capturer demande un titre pour un lien,
-     vibration au lieu des notifications.
-  14. 0.9.0 : notifications de Brain (Web Push) à la place du raccourci « Rappel GTD » : champ `remind_at` dans
-     les tâches, `js/core/push.js` (abonnement, Réglages > Notifications), push dans `sw.js`, fonction
-     `supabase/functions/send-reminders` (Web Push fait main en WebCrypto, testé sur le vecteur RFC 8291) appelée
-     chaque minute par pg_cron ; clés VAPID créées par la fonction et rangées dans `push_config` (pas de RLS ouverte).
-  15. 0.9.1 : Réglages en groupes repliables (Compte, Notifications, Modules, un groupe par module actif, Capture,
-     Icône, Données) ; la liste des modules vit dans les Réglages, plus de lien « Modules » dans la barre latérale.
-     Sélecteurs date / heure de l'éditeur : l'éditeur se redessine à leur fermeture (sinon iOS les refermait).
-  16. 0.9.2 : répétitions « le 25 de chaque mois » (`monthday:25`) et « 1er samedi du mois » (`nth:1:6`), proposées dans
-     « Répéter » d'après la date de la tâche ; une tâche terminée en retard saute au prochain créneau futur (`nextFuture`).
-  17. 0.10.0 : Agenda sur tablette et ordinateur (≥ 700 px) : panneau « Tâches à placer » à côté de la grille, glisser-déposer aux
-     pointeurs (`js/modules/agenda/dnd.js`, appui long au doigt), poignée en bas d'un créneau pour changer la durée
-     (pas de 15 min), dépôt sur le panneau pour retirer l'heure. Semaine : 7 jours si la place le permet, sinon 5.
-  18. 0.11.0 : plusieurs comptes et partage. Table `profiles` (le plus ancien compte = administrateur), Edge Function `add-user`
-     (Réglages > Utilisateurs : email + mot de passe provisoire), tables `shares` + `share_item()`, RLS `row_role()`, droits
-     modifier / lecture seule, section « Partagés avec moi » dans Projets, `core/share.js` et `core/users.js`.
-
-  19. 0.12.0 : chronomètre sur les tâches (éditeur > Chrono, un seul chrono à la fois, arrêté à la fin de la tâche), temps réel
-     affiché dans les listes, comparaison réel / prévu dans la revue hebdo. Colonnes `spent_sec` et `timer_started_at`.
-     0.11.2 : le vrai message d'erreur de `add-user` s'affiche. Accès agent : compte dédié + partage lecture seule,
-     lu par `scripts/brain-read.sh` (identifiants dans `.env.local`, ignoré par git).
-  20. 0.13.0 : bouton lecture / pause du chrono sur les lignes de tâches, logo de la barre latérale gardé d'un rendu à l'autre
-     (fin du clignotement), notification de fin de créneau (colonne `end_at` calculée par l'app, envoyée par `send-reminders`,
-     réglage dans Réglages > Organisation).
-  21. 0.14.0 : fiche d'une tâche en résumé + sections repliables (Quand, Où et comment, Plus, Historique) ; répétition
-     « Personnalisée… » (jour du mois ou Nème jour de semaine au choix) ; « Terminé par … » quand ce n'est pas moi
-     (`completed_by`, fixé par trigger) ; historique par projet (`item_events`, trigger `log_item_event`).
-
-  22. 0.15.0 : module Sport (`js/modules/sport`) : kinds `workout` / `workout_tpl` / `program`, contenu en `meta` jsonb, éditeur (blocs de course,
-     exercices et séries), vue Semaine, Modèles et semaines types (génération de séances datées), mode direct, historique + progression
-     (volume, série de semaines, records), « Copier pour la montre ». Hooks de modules ajoutés au cœur (`schedulable`, `endNotify`, `createAt`,
-     `todayRows`, `reviewStep`, `eveningHtml`). Testé en mode démo seulement.
+- Historique condensé :
+  - 0.1 à 0.3 : prototype GTD + synchro, Top 3 et revue du soir, découpage en modules.
+  - 0.4 : DA « carnet », nom « Brain », icônes Encre et Papier.
+  - 0.5 à 0.7 : liens entre éléments, module Notes, module Agenda.
+  - 0.8 à 0.10 : Calendrier Apple (ICS + raccourci), notifications Web Push faites main (vecteur RFC 8291), glisser-déposer sur grand écran.
+  - 0.11 à 0.14 : comptes et partage (`shares`, `row_role`), chrono, fin de créneau, fiche repliable, historique par projet.
+  - 0.15 et 0.16 : module Sport, contenu par type de séance, Projets en cartes.
+  - 0.17 et 0.18 : module Courses (recettes, liste, foyer, clés d'accès nommées), panier.
+  - 0.19 : remise à plat (voir ci-dessus).
 
 ## Pistes ouvertes
 
-- **Courses, suite** : 0.19 partage du foyer avec la conjointe et validation du partage 0.11 en vrai (le foyer existe depuis la 0.17.2) ; 0.20 mode magasin. Ensuite : planning de repas dans l'Agenda, import par URL.
-
-- **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today` dans `supabase/013_widget.sql`, README partie 4) : écrit sans version de l'app, fusion résumé + grille horaire du jour, fond transparent par découpe de capture (positions estimées par taille d'écran, réglables) ; non testé sur iPhone ; la migration 013 reste à coller par l'utilisateur.
-
-- **Sport, partie 2** : suivi des séances faites via COROS vers Strava (Edge Function `strava`, OAuth une fois, webhook), rapprochement avec la séance
-  prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
-- **Sport 0.15 à valider en vrai** : migration 012 passée sur Supabase (1er novembre 2026), rien testé sur iPhone (écran allumé, son du minuteur).
-
-- **Calendrier 0.8 à valider sur l'iPhone** : raccourci « Agenda Apple » (identifiants d'actions non testés sur
-  l'appareil) et abonnement ICS une fois l'Edge Function déployée.
-- **Partage 0.11 à valider en vrai** : migration 007 + fonction `add-user` non testées sur Supabase (testé en mode démo seulement). Pistes : assigner une tâche partagée, notification à l'invité, planifier un élément reçu.
-- **Phase 2** : remplir les modules Sport et Courses.
+- **Fiabilité 0.19 à valider en vrai** : testée sur un faux serveur local et un Postgres WASM, pas sur Supabase. À vérifier : `schema.sql` sur la vraie base, déploiement de `brain`, purge et cron réels, mise à jour de l'app installée sur iPhone, ouverture hors ligne.
+- **Courses, suite** : 0.20 partage du foyer avec la conjointe et validation du partage 0.11 en vrai ; 0.21 mode magasin. Ensuite : planning de repas dans l'Agenda, import par URL.
+- **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today`, README partie 5) : non testé sur iPhone.
+- **Sport, partie 2** : suivi des séances faites via COROS vers Strava (route `strava` de la fonction `brain`, OAuth une fois, webhook), rapprochement avec la séance prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
+- **Sport à valider en vrai** : rien testé sur iPhone (écran allumé, son du minuteur).
+- **Calendrier à valider sur l'iPhone** : raccourci « Agenda Apple » (identifiants d'actions non testés sur l'appareil) et abonnement ICS.
+- **Partage à valider en vrai** : testé en mode démo seulement. Pistes : assigner une tâche partagée, notification à l'invité, planifier un élément reçu.
+- **Risques connus** (README partie 10) : clé dans le chemin des photos, photos non visibles par l'invité, double répétition hors ligne, photos orphelines après purge.
 - **Import Notion** : un script ponctuel (`build.py` → `import-notion.sql`) a généré l'import des tâches
   Notion ouvertes. Il contient des données personnelles et n'est volontairement pas dans le dépôt.
 
@@ -110,16 +63,16 @@ python3 -m http.server 5173
 ```
 
 Ouvrir `http://localhost:5173/?demo=1` (données fictives). Ne jamais tester sur le compte réel.
-Pas de tests automatisés : vérifier à la main en largeur mobile (~390 px), en mode sombre, et dans la console.
+Pas de tests automatisés de l'interface : vérifier à la main en largeur mobile (~390 px), en mode sombre, et dans la console.
 
 ## Rappels qui reviennent souvent
 
-- Chaque nouvelle version : `VERSION` dans `js/core/config.js` **et** `CACHE` dans `sw.js`.
-- Chaque nouveau fichier JS : l'ajouter à `SHELL` dans `sw.js`.
-- Changement de schéma : préparer le SQL, l'utilisateur le colle lui-même dans le SQL Editor Supabase.
+- Chaque nouvelle version : `VERSION` dans `js/core/config.js` **et** `CACHE` dans `sw.js`. L'app se sert depuis le cache : sans nouvelle version, personne ne reçoit les changements.
+- Chaque nouveau fichier JS : l'ajouter à `SHELL` dans `sw.js`. `python3 scripts/check.py` vérifie tout ça.
+- Changement de schéma : modifier `supabase/schema.sql` (seul fichier SQL) et `SCHEMA_VERSION` ; l'utilisateur le recolle lui-même dans le SQL Editor Supabase.
 - Interface en français, ton calme, pas de point d'exclamation.
 - Raccourcis iOS : fichiers signés dans `raccourcis/`, refaits sur Mac par `python3 raccourcis/build.py`
-  (jeton demandé à l'installation, jamais dans les fichiers). Le raccourci « Rappel GTD » n'existe plus (remplacé par les notifications). Si `capture()`, l'URL ou la clé publique changent, refaire les raccourcis.
+  (clé d'accès demandée à l'installation, jamais dans les fichiers). Si `capture()`, l'URL ou la clé publique changent, refaire les raccourcis.
 - Committer et pousser seulement sur demande.
 
 ## Tenir ce fichier à jour

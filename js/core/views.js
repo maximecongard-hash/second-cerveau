@@ -95,7 +95,7 @@ function iphoneBody() {
   return sec('Clés d’accès', `<div class="muted small pad">Les raccourcis et le widget s’identifient avec une clé secrète. Crée-en une par appareil ou par usage, pour voir ce qui s’en sert.</div>${tokensHtml()}`) +
     sec('Raccourcis', `<div class="muted small pad">Ouvre le lien sur l’iPhone. Le raccourci demande une clé d’accès à l’installation : copie-la d’abord.</div>
       ${SHORTCUTS.map(([name, what]) => `<div class="kv"><span class="row-main"><span class="row-title">${name}</span><span class="muted small">${what}</span></span><a class="btn" href="raccourcis/${encodeURIComponent(name)}.shortcut">Installer</a></div>`).join('')}`) +
-    sec('Widget', `<div class="muted small pad">Dans l’app Scriptable : crée un script avec <a href="widget/Brain.js" target="_blank" rel="noopener">ce fichier</a>, puis colle une clé d’accès dans ses paramètres (voir le README).</div>`) +
+    sec('Widget', `<div class="muted small pad">Dans l’app Scriptable : crée un script avec <a href="widget/Brain.js" target="_blank" rel="noopener">ce fichier</a>, puis lance-le : il demande une clé d’accès (voir le README).</div>`) +
     fromModules('accessSettings').join('');
 }
 
@@ -141,8 +141,8 @@ function installBody() {
   const fn = {
     ok: ['ok', 'Déployée et accessible.'],
     jwt: ['todo', 'Déployée, mais « Verify JWT » est activé : désactive-le dans Supabase > Edge Functions > brain > Details.'],
-    absent: ['todo', 'Introuvable : crée la fonction brain avec supabase/functions/brain/index.ts (README, partie 3).'],
-    unreachable: ['todo', 'Injoignable : fonction absente, « Verify JWT » activé, ou réseau coupé (README, partie 3).']
+    absent: ['todo', 'Introuvable : crée la fonction brain avec supabase/functions/brain/index.ts (README, Installer, étape 5).'],
+    unreachable: ['todo', 'Injoignable : fonction absente, « Verify JWT » activé, ou réseau coupé (README, Installer, étape 5).']
   }[S.ui.fnState] || ['', 'Vérification…'];
   const unknown = ['', 'Vérifié à la prochaine synchro.'];
   const row = (cond, ok, todo) => (!st ? unknown : cond ? ['ok', ok] : ['todo', todo]);
