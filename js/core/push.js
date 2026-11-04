@@ -6,7 +6,7 @@ import { render, toast } from './ui.js';
 
 // ---------------------------------------------------------------------------
 // Notifications de Brain (Web Push). L'envoi se fait côté Supabase :
-// fonction supabase/functions/send-reminders, appelée chaque minute par pg_cron.
+// fonction supabase/functions/brain, route reminders, appelée chaque minute par pg_cron.
 // Sur iPhone, il faut l'app installée sur l'écran d'accueil (iOS 16.4 ou plus).
 // ---------------------------------------------------------------------------
 const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -61,7 +61,7 @@ async function disable() {
 }
 
 async function test() {
-  const { data, error } = await sb.functions.invoke('send-reminders', { body: { test: true } });
+  const { data, error } = await sb.functions.invoke('brain/reminders', { body: { test: true } });
   if (error) { toast('Erreur : ' + (error.message || error)); return; }
   toast(data?.sent ? 'Notification envoyée' : 'Aucun appareil abonné');
 }
@@ -102,5 +102,5 @@ export function pushHint() {
   if (DEMO || !supported()) return '';
   if (S.ui.pushSub === undefined) { S.ui.pushSub = null; checkSub(); }
   if (S.ui.pushSub === null || pushOn()) return '';
-  return '<div class="muted small">Notifications désactivées sur cet appareil : <a href="#/settings" data-act="close-go">les activer</a>.</div>';
+  return '<div class="muted small">Notifications désactivées sur cet appareil : <a href="#/settings/notif" data-act="close-go">les activer</a>.</div>';
 }

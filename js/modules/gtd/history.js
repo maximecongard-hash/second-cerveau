@@ -5,7 +5,7 @@ import { SH, queueRender, renderEditor } from '../../core/ui.js';
 import { firstName } from '../../core/share.js';
 
 // ---------------------------------------------------------------------------
-// Historique d'un projet : évènements écrits par le trigger log_item_event (supabase/011_historique.sql)
+// Historique d'un projet : évènements écrits par le trigger log_item_event (supabase/schema.sql)
 // ---------------------------------------------------------------------------
 const DONE = { created: 'créé', done: 'terminé', reopened: 'rouvert', trashed: 'mis à la corbeille', restored: 'restauré', deleted: 'supprimé définitivement',
   renamed: 'renommé', moved_in: 'rangé dans ce projet', moved_out: 'retiré de ce projet' };
@@ -21,7 +21,7 @@ export function loadEvents(projectId) {
   };
   if (DEMO) { done((S.ui.demoEvents || []).filter(e => e.project_id === projectId)); return; }
   sb.from('item_events').select('*').eq('project_id', projectId).order('at', { ascending: false }).limit(100).then(({ data, error }) => {
-    done(data, error ? (/item_events|schema cache/i.test(error.message) ? 'Historique indisponible : passe supabase/011_historique.sql.' : error.message) : null);
+    done(data, error ? error.message : null);
   });
 }
 

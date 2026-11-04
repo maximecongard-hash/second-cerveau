@@ -1,6 +1,6 @@
 import { esc, I, fRow, chip } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
-import { SH, renderEditor, openEditor } from '../../core/ui.js';
+import { SH, renderEditor, openEditor, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { inFoyer, foyerEditor } from './foyer.js';
 import { SEASONS, QUICK_TAGS, UNITS, AISLES, metaOf, shopMeta, fmtQty, parseQty, parseIngredient } from './model.js';
@@ -21,7 +21,7 @@ function ingredientRow(g) {
 function shopEditor(it) {
   const m = shopMeta(it), done = it.status === 'done';
   const aisles = [...new Set([...AISLES, m.aisle])];
-  return `<div class="sheet-head"><button class="link strong" data-act="close">OK</button><span class="sheet-kind">Produit</span><button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>
+  return `${sheetHead('Produit')}
     <input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Produit" autocomplete="off">
     <div class="fields">
       ${fRow('Quantité', `<div class="rc-ing" style="margin:0"><input class="rc-q" data-rc="shop" data-k="qty" value="${esc(fmtQty(m.qty))}" placeholder="Qté" inputmode="decimal" autocomplete="off"><input class="rc-u" data-rc="shop" data-k="unit" value="${esc(m.unit)}" placeholder="Unité" list="rc-units" autocomplete="off"></div><datalist id="rc-units">${UNITS.map(u => `<option value="${esc(u)}"></option>`).join('')}</datalist>`)}
@@ -34,7 +34,7 @@ export function editorHTML(it) {
   if (it.kind === 'shop_item') return shopEditor(it);
   if (it.kind === 'foyer') return foyerEditor(it);
   const m = metaOf(it);
-  const head = `<div class="sheet-head"><button class="link strong" data-act="close">OK</button><span class="sheet-kind">Recette</span><button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+  const head = sheetHead('Recette');
   const title = `<input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Nom de la recette" autocomplete="off">`;
   const tags = it.tags || [];
   const fields = `${fRow('Favori', `<button type="button" class="chip ${it.pinned ? 'on' : ''}" data-act="rc-fav" data-id="${it.id}">${I.heart}${it.pinned ? 'Dans les favoris' : 'Mettre en favori'}</button>`)}

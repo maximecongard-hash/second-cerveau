@@ -82,7 +82,7 @@ async function addShare(id, email, role) {
     return { id: uuid(), item_id: id, owner_id: meId(), user_id: p.id, role };
   }
   const { data, error } = await sb.rpc('share_item', { p_item: id, p_email: email, p_role: role });
-  if (error) throw new Error(/function .*share_item|schema cache/i.test(error.message) ? 'Partage indisponible : lance d’abord supabase/007_partage.sql' : error.message);
+  if (error) throw new Error(error.message);
   S.people[data.user_id] = { ...S.people[data.user_id], id: data.user_id, email: data.email, name: data.name };
   return data;
 }

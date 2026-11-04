@@ -1,17 +1,17 @@
 import { DEMO, CFG, LS_KEY, sb } from '../../core/config.js';
-import { esc, sec, today, addDays, fmtDate, FMT_TIME } from '../../core/util.js';
+import { esc, sec, today, addDays, fmtDate, FMT_TIME, switchBtn, newToken } from '../../core/util.js';
 import { S, live, savePrefs } from '../../core/store.js';
-import { SH, sheet, showSheet, render, queueRender, toast } from '../../core/ui.js';
+import { SH, sheet, showSheet, render, queueRender, toast, sheetHead } from '../../core/ui.js';
 
 // ---------------------------------------------------------------------------
 // Calendrier Apple, dans les deux sens et en lecture seule :
-//   Brain vers Calendrier : lien d'abonnement ICS (Edge Function « calendrier », jeton calendrier)
+//   Brain vers Calendrier : lien d'abonnement ICS (fonction brain, route calendrier)
 //   Calendrier vers Brain : table events, remplie par le raccourci « Agenda Apple »
 // Les événements sont gardés à part des éléments : ils ne se modifient que dans Calendrier.
 // ---------------------------------------------------------------------------
 const EV_KEY = LS_KEY + '.events';
 const EVERY = 5 * 60 * 1000;   // relecture au plus toutes les 5 minutes
-const EV = { list: [], at: 0, uid: null, loading: false, missing: false };
+const EV = { list: [], at: 0, uid: null, loading: false };
 
 try {
   const d = JSON.parse(localStorage.getItem(EV_KEY) || 'null');
@@ -27,13 +27,7 @@ export async function loadEvents(force = false) {
   const { data, error } = await sb.from('events').select('id, calendar, title, location, starts_at, ends_at, all_day')
     .gte('starts_at', addDays(today(), -31)).order('starts_at').limit(3000);
   EV.loading = false;
-  if (error) {
-    // table absente tant que supabase/005_calendrier.sql n'est pas passé : on se tait
-    EV.missing = /events|schema cache|does not exist/i.test(error.message || '');
-    if (!EV.missing) console.warn('events', error);
-    return;
-  }
-  EV.missing = false;
+  if (error) { console.warn('events', error); return; }
   EV.list = data; EV.uid = S.user.id; EV.fetched = new Date().toISOString();
   save();
   queueRender();
@@ -77,7 +71,7 @@ export function openEvent(id) {
   const d = dayOf(e.starts_at);
   const when = e.all_day ? 'Journée entière'
     : `${timeOf(e.starts_at)} – ${dayOf(e.ends_at) > d ? `${fmtDate(dayOf(e.ends_at)).toLowerCase()} ` : ''}${timeOf(e.ends_at)}`;
-  sheet.innerHTML = `<div class="sheet-head"><span></span><span class="sheet-kind">Calendrier</span><button class="link strong" data-act="close">Fermer</button></div>
+  sheet.innerHTML = `${sheetHead('Calendrier', { ok: 'Fermer' })}
     <h2 class="ag-ev-title">${esc(e.title) || '<i>Sans titre</i>'}</h2>
     <div class="fields">
       <div class="f-row"><label>Date</label><div class="f-val">${esc(fmtDate(d))}</div></div>
@@ -90,51 +84,52 @@ export function openEvent(id) {
 }
 
 // ---------------------------------------------------------------------------
-// Réglages > Agenda > Calendrier Apple
+// Réglages : affichage dans le groupe Agenda, abonnement dans iPhone et Calendrier
 // ---------------------------------------------------------------------------
-const feedUrl = t => `${CFG.url}/functions/v1/calendrier?token=${t}`;
+const feedUrl = t => `${CFG.url}/functions/v1/brain/calendrier?token=${t}`;
 
 async function loadCalTokens() {
   const { data, error } = await sb.from('calendar_tokens').select('token, created_at').order('created_at');
   S.ui.calTokens = error ? [] : data;
-  S.ui.calErr = error ? (/calendar_tokens|schema cache/i.test(error.message) ? 'Base à mettre à jour : passe supabase/005_calendrier.sql.' : error.message) : null;
+  S.ui.calErr = error ? error.message : null;
   queueRender();
 }
 
 export function appleSettings() {
   const on = S.prefs.agApple !== false;
+  const n = EV.list.filter(e => dayOf(e.starts_at) >= today()).length;
+  const status = DEMO ? `${n} événements d’exemple`
+    : EV.fetched ? `${n} événement${n > 1 ? 's' : ''} à venir · relu à ${FMT_TIME.format(new Date(EV.fetched))}`
+    : 'Aucun événement reçu pour l’instant.';
+  return sec('Événements de Calendrier', `<div class="kv"><span>Afficher dans la grille</span>${switchBtn(on, 'cal-toggle', 'Afficher les événements de Calendrier')}</div>
+    <div class="kv"><span>${esc(status)}</span>${DEMO ? '' : '<button class="btn" data-act="cal-refresh">Relire</button>'}</div>`);
+}
+
+// Dans les deux sens : lien d'abonnement (Brain vers Calendrier), raccourci (Calendrier vers Brain)
+export function calendarAccess() {
   let feed;
   if (DEMO) feed = '<div class="muted pad">Indisponible en mode démo.</div>';
   else {
     if (S.ui.calTokens === undefined) { S.ui.calTokens = null; loadCalTokens(); }
     const ts = S.ui.calTokens;
     feed = ts === null ? '<div class="muted pad">Chargement…</div>'
-      : ts.length ? ts.map(t => `<div class="kv"><code class="token">${esc(feedUrl(t.token).replace(/token=.*/, 'token=…'))}</code>
-          <div class="btn-row"><a class="btn" href="${esc(feedUrl(t.token).replace(/^https:/, 'webcal:'))}">S’abonner</a>
-          <button class="btn" data-act="copy" data-v="${esc(feedUrl(t.token))}">Copier</button>
-          <button class="btn danger" data-act="cal-token-del" data-v="${esc(t.token)}">Révoquer</button></div></div>`).join('')
-      : `<button class="btn block" data-act="cal-token-new">Créer le lien d’abonnement</button>`;
+      : ts.length ? ts.map(t => `<div class="btn-row"><a class="btn" href="${esc(feedUrl(t.token).replace(/^https:/, 'webcal:'))}">S’abonner</a>
+          <button class="btn" data-act="copy" data-v="${esc(feedUrl(t.token))}">Copier le lien</button>
+          <button class="btn danger" data-act="cal-token-del" data-v="${esc(t.token)}">Révoquer</button></div>`).join('')
+      : '<button class="btn block" data-act="cal-token-new">Créer le lien d’abonnement</button>';
     if (S.ui.calErr) feed += `<div class="err pad">${esc(S.ui.calErr)}</div>`;
   }
-  const n = EV.list.filter(e => dayOf(e.starts_at) >= today()).length;
-  const status = DEMO ? `${n} événements d’exemple`
-    : EV.missing ? 'Base à mettre à jour : passe supabase/005_calendrier.sql.'
-    : EV.fetched ? `${n} événement${n > 1 ? 's' : ''} à venir · relu à ${FMT_TIME.format(new Date(EV.fetched))}`
-    : 'Aucun événement reçu pour l’instant.';
   return sec('Calendrier Apple', `<div class="muted small pad">Brain dans Calendrier : tes créneaux avec une heure apparaissent dans un calendrier « Brain », mis à jour toutes les heures. Touche « S’abonner » sur l’iPhone, ou colle le lien dans Calendrier > Fichier > Nouvel abonnement sur Mac.</div>
     ${feed}
-    <div class="muted small pad">Calendrier dans Brain : le raccourci « Agenda Apple » envoie tes prochains événements. Lance-le chaque matin par une automatisation (voir le guide).</div>
-    <div class="kv"><span>${esc(status)}</span>${DEMO ? '' : '<button class="btn" data-act="cal-refresh">Relire</button>'}</div>
-    <div class="kv"><span>Afficher dans la grille</span><button class="switch ${on ? 'on' : ''}" data-act="cal-toggle" role="switch" aria-checked="${on}" aria-label="Afficher les événements de Calendrier"></button></div>`);
+    <div class="muted small pad">Calendrier dans Brain : le raccourci « Agenda Apple » envoie tes prochains événements. Lance-le chaque matin par une automatisation (voir le README).</div>`);
 }
 
 export const appleActs = {
   'ag-event': el => openEvent(el.dataset.eid),
   'cal-toggle': () => { S.prefs.agApple = S.prefs.agApple === false; savePrefs(); },
-  'cal-refresh': async () => { await loadEvents(true); toast(EV.missing ? 'Base à mettre à jour' : 'Événements relus'); render(); },
+  'cal-refresh': async () => { await loadEvents(true); toast('Événements relus'); render(); },
   'cal-token-new': async () => {
-    const token = [...crypto.getRandomValues(new Uint8Array(24))].map(b => b.toString(16).padStart(2, '0')).join('');
-    const { error } = await sb.from('calendar_tokens').insert({ token });
+    const { error } = await sb.from('calendar_tokens').insert({ token: newToken() });
     if (error) { toast('Erreur : ' + error.message); return; }
     S.ui.calTokens = undefined; render(); toast('Lien créé');
   },

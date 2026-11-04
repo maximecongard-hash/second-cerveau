@@ -5,11 +5,13 @@ Usage (sur un Mac) : python3 raccourcis/build.py
 dans raccourcis/. Le jeton de capture n'est jamais dans les fichiers : l'iPhone le demande
 à l'installation (question d'import).
 """
-import os, plistlib, subprocess, uuid
+import os, plistlib, re, subprocess, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-URL = 'https://zqdvtbkjvfzkjqtaffbb.supabase.co'
-KEY = 'sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp'
+with open(os.path.join(HERE, '..', 'config.js'), encoding='utf8') as f:
+    _config = f.read()
+URL = re.search(r"url:\s*'([^']+)'", _config).group(1)
+KEY = re.search(r"key:\s*'([^']+)'", _config).group(1)
 OBJ = '￼'  # emplacement d'une variable dans un texte
 
 
@@ -152,7 +154,7 @@ capturer_photo = workflow(
 
 # ---------- Agenda Apple : envoie les prochains événements de Calendrier à Brain ----------
 # Une ligne par événement, séparées par ␞, champs séparés par une tabulation :
-# calendrier, début, fin, journée entière, titre, lieu (voir sync_events dans supabase/005_calendrier.sql)
+# calendrier, début, fin, journée entière, titre, lieu (voir sync_events dans supabase/schema.sql)
 tok, events, rep, rep_end, joined, sent = uid(), uid(), uid(), uid(), uid(), uid()
 DATE = "yyyy-MM-dd'T'HH:mm"
 agenda_apple = workflow(

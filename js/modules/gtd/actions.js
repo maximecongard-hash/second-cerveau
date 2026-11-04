@@ -47,9 +47,7 @@ export const acts = {
     patch(SH.editingId, { remind_at: remindPreset(it, el.dataset.v) });
     renderEditor();
   },
-  'end-notify': () => { S.prefs.endNotify = !S.prefs.endNotify;     refreshEndAt();
-    savePrefs();
-  },
+  'end-notify': () => { S.prefs.endNotify = !S.prefs.endNotify; refreshEndAt(); savePrefs(); },
   'ed-sec': el => {
     const secs = (S.ui.edSecs ??= { quand: true });
     secs[el.dataset.v] = !secs[el.dataset.v];
@@ -91,7 +89,7 @@ export const acts = {
   carry: () => {
     const t0 = today();
     ofKind('task').filter(t => t.status === 'active' && t.scheduled_date && t.scheduled_date < t0)
-      .forEach(t => { t.scheduled_date = t0; t.day_order = nextOrder(t0); t.focus = null; saveItem(t, { render: false }); });
+      .forEach(t => { patch(t.id, { scheduled_date: t0, day_order: nextOrder(t0), focus: null }, { render: false }); });
     queueRender();
   },
   plan: el => patch(el.dataset.id, { scheduled_date: S.ui.day, day_order: nextOrder(S.ui.day) }),
@@ -108,7 +106,7 @@ export const acts = {
     const t0 = today(), t1 = addDays(t0, 1);
     let o = nextOrder(t1);
     ofKind('task').filter(t => (t.status === 'active' || t.status === 'waiting') && t.scheduled_date && t.scheduled_date <= t0)
-      .forEach(t => { t.scheduled_date = t1; t.day_order = o++; t.focus = null; saveItem(t, { render: false }); });
+      .forEach(t => { patch(t.id, { scheduled_date: t1, day_order: o++, focus: null }, { render: false }); });
     queueRender();
     toast('Tout est reporté à demain');
   },
@@ -119,7 +117,7 @@ export const acts = {
   'pick-save': () => {
     const day = S.ui.day;
     let o = nextOrder(day);
-    for (const id of pickSel) { const t = S.items.get(id); t.scheduled_date = day; t.day_order = o++; saveItem(t, { render: false }); }
+    for (const id of pickSel) { patch(id, { scheduled_date: day, day_order: o++ }, { render: false }); }
     closeSheet();
   },
   'ctx-filter': el => { S.ui.ctx = el.dataset.v; render(); },
@@ -127,7 +125,12 @@ export const acts = {
   'proj-done': el => { patch(el.dataset.id, { status: 'done', completed_at: nowIso() }); toast('Projet terminé', () => patch(el.dataset.id, { status: 'active', completed_at: null })); },
   'review-check': el => { const k = el.dataset.v; S.ui.review.has(k) ? S.ui.review.delete(k) : S.ui.review.add(k); render(); },
   'review-done': () => { S.prefs.lastReview = today(); S.ui.review.clear(); savePrefs(); toast('Revue enregistrée'); location.hash = '#/today'; },
-  'ctx-del': el => { S.prefs.contexts = S.prefs.contexts.filter(c => c !== el.dataset.v); savePrefs(); },
+  'ctx-del': el => {
+    const before = S.prefs.contexts;
+    S.prefs.contexts = before.filter(c => c !== el.dataset.v);
+    savePrefs();
+    toast('Contexte retiré', () => { S.prefs.contexts = before; savePrefs(); });
+  },
   'cap-save': () => saveCapture()
 };
 

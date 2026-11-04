@@ -53,9 +53,9 @@ function sidebar(r, mod) {
     return `<a href="#/${m.home}" class="side-mod ${on ? 'on' : ''}">${m.icon}<span>${esc(m.label)}</span>${m === mod ? '' : badgeHtml(m.badge?.(), 'side-badge')}</a>${sub}`;
   }).join('');
   const core = CORE_LINKS.map(([k, l, ic]) => `<a href="#/${k}" class="side-mod ${r.name === k ? 'on' : ''}">${ic}<span>${l}</span></a>`).join('');
-  return `<aside class="side" aria-label="Thèmes">
+  return `<aside class="side" aria-label="Modules">
       <div class="side-head"><img src="${iconChoice().touch}" alt=""><b>${logo()}</b></div>
-      <div class="side-label">Thèmes</div>
+      <div class="side-label">Modules</div>
       <nav class="side-nav">${mods}</nav>
       <nav class="side-nav side-foot">${core}</nav>
     </aside>
@@ -76,7 +76,7 @@ export function render() {
   const logoImg = app.querySelector('.side-head img'); // gardée d'un rendu à l'autre : évite le clignotement
   app.innerHTML = `${sidebar(r, mod)}
     <div class="page ${tabs.length ? '' : 'no-tabs'}">
-      <header class="top"><button class="icon-btn side-btn" data-act="side-open" aria-label="Thèmes">${I.burger}</button><h1>${esc(v.title)}</h1><div class="top-actions">
+      <header class="top"><button class="icon-btn side-btn" data-act="side-open" aria-label="Modules">${I.burger}</button><h1>${esc(v.title)}</h1><div class="top-actions">
         <span class="sync ${syncClass()}" title="${esc(syncLabel())}"></span>
         <a class="icon-btn" href="#/search" aria-label="Rechercher">${I.search}</a>
         <button class="icon-btn" data-act="menu" aria-label="Menu">${I.menu}</button></div></header>
@@ -92,7 +92,7 @@ export function render() {
   if (focusId) { const el = document.getElementById(focusId); if (el) el.focus({ preventScroll: true }); }
 }
 
-// Tiroir des thèmes sur mobile (sur grand écran la barre est toujours visible)
+// Tiroir des modules sur mobile (sur grand écran la barre est toujours visible)
 export const openSide = () => document.body.classList.add('side-open');
 export const closeSide = () => document.body.classList.remove('side-open');
 
@@ -102,6 +102,10 @@ export const closeSide = () => document.body.classList.remove('side-open');
 // mode : 'editor' | 'menu' | 'link' | autre valeur choisie par un module
 // onSubmit : action lancée par Cmd/Ctrl + Entrée
 // linkFrom, linkBack : feuille « Lier à… » (élément d'origine, retour à son éditeur)
+// En-tête commun. Les éditeurs enregistrent au fil de la saisie : ils n'ont que « OK », à droite.
+// midHtml remplace le titre (sélecteur de type) ; cancel ajoute « Annuler » à gauche ; ok: null retire le bouton de droite.
+export const sheetHead = (title, { midHtml = '', cancel = false, ok = 'OK', okAct = 'close' } = {}) =>
+  `<div class="sheet-head">${cancel ? '<button class="link" data-act="close">Annuler</button>' : '<span></span>'}${midHtml || `<span class="sheet-kind">${esc(title)}</span>`}${ok ? `<button class="link strong" data-act="${okAct}">${ok}</button>` : '<span></span>'}</div>`;
 export const SH = { mode: null, editingId: null, draftId: null, onSubmit: null, linkFrom: null, linkBack: false };
 export const sheet = $('#sheet');
 const sheetWrap = $('#sheet-wrap');
@@ -132,7 +136,9 @@ export function renderEditor() {
   const m = it && kindOwner(it.kind);
   if (!m) { closeSheet(); return; }
   const st = sheet.scrollTop;
-  sheet.innerHTML = m.editor(it);
+  // Supprimer reste loin de « OK » : en bas de la feuille, jamais à portée d'un toucher rapide
+  const foot = m.keepKinds?.includes(it.kind) ? '' : `<div class="sheet-foot"><button class="btn danger block" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+  sheet.innerHTML = m.editor(it) + foot;
   // partage en lecture seule : champs et boutons de modification désactivés
   if (!canEdit(it)) sheet.querySelectorAll('input, textarea, select, .seg button, button.chip, [data-act="trash"], [data-act="kind"], form button').forEach(el => { el.disabled = true; });
   sheet.scrollTop = st;
@@ -159,8 +165,10 @@ export function openMenu() {
   const mod = activeModule();
   const item = (href, label, count = '') => `<a class="row" href="${href}" data-act="close-go"><div class="row-main"><div class="row-title">${label}</div></div>${count !== '' ? `<span class="muted">${count}</span>` : ''}<span class="chev">${I.right}</span></a>`;
   const own = mod?.menu?.() || [];
-  sheet.innerHTML = `<div class="sheet-head"><span></span><span class="sheet-kind">${esc(mod?.label || 'Menu')}</span><button class="link strong" data-act="close">Fermer</button></div>
-    <div class="list">${own.map(([h, l, c]) => item(h, l, c)).join('')}${CORE_LINKS.map(([k, l]) => item('#/' + k, l)).join('')}</div>`;
+  // la recherche a déjà son bouton dans la barre du haut
+  const core = CORE_LINKS.filter(([k]) => k !== 'search');
+  sheet.innerHTML = `${sheetHead(mod?.label || 'Menu', { ok: 'Fermer' })}
+    <div class="list">${own.map(([h, l, c]) => item(h, l, c)).join('')}${core.map(([k, l]) => item('#/' + k, l)).join('')}</div>`;
   showSheet();
 }
 

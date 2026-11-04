@@ -129,6 +129,8 @@ export function recDraftFor(it) {
   return base;
 }
 export const recRuleOf = d => (d.mode === 'nth' ? `nth:${d.n}:${d.wd}` : `monthday:${d.day}`);
+// Décale un instant de n jours en gardant l'heure locale, même à travers un changement d'heure
+const shiftDays = (iso, n) => { const d = new Date(iso); d.setDate(d.getDate() + n); return d.toISOString(); };
 export function spawnNext(t) {
   const base = t.scheduled_date || t.due_date || today();
   const next = nextFuture(base, t.recurrence);
@@ -136,7 +138,7 @@ export function spawnNext(t) {
   const copy = newItem({
     ...t, id: uuid(), status: 'active', completed_at: null, completed_by: null, spent_sec: 0, timer_started_at: null, end_at: null, day_order: null, focus: null, created_at: nowIso(),
     scheduled_date: shift(t.scheduled_date), due_date: shift(t.due_date),
-    remind_at: t.remind_at ? new Date(+new Date(t.remind_at) + daysBetween(base, next) * 864e5).toISOString() : null
+    remind_at: t.remind_at ? shiftDays(t.remind_at, daysBetween(base, next)) : null
   });
   if (!t.scheduled_date && !t.due_date) copy.scheduled_date = next;
   saveItem(copy);
@@ -212,7 +214,7 @@ export function moveInDay(id, dir) {
   const i = list.findIndex(t => t.id === id), j = i + dir;
   if (i < 0 || j < 0 || j >= list.length) return false;
   [list[i], list[j]] = [list[j], list[i]];
-  list.forEach((t, k) => { if (t.day_order !== k + 1) { t.day_order = k + 1; saveItem(t, { render: false }); } });
+  list.forEach((t, k) => { if (t.day_order !== k + 1) patch(t.id, { day_order: k + 1 }, { render: false }); });
   return true;
 }
 export function evening(id, v) {

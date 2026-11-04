@@ -79,7 +79,7 @@ views.today = () => {
   const inboxN = inboxItems().length;
   if (isToday && inboxN) html += `<a class="banner" href="#/clarify">${plural(inboxN, 'élément', 'éléments')} dans l'Inbox à trier</a>`;
   const lr = S.prefs.lastReview;
-  if (isToday && (!lr || daysBetween(lr, t0) >= 7)) html += `<a class="banner soft" href="#/review">Revue hebdo ${lr ? `(dernière ${fmtAgo(parseYmd(lr).toISOString())})` : 'jamais faite'}</a>`;
+  if (isToday && (!lr || daysBetween(lr, t0) >= 7)) html += `<a class="banner soft" href="#/review">${lr ? `Revue hebdo (dernière ${fmtAgo(parseYmd(lr).toISOString())})` : 'Première revue hebdo à faire'}</a>`;
   if (isToday && new Date().getHours() >= 17 && S.prefs.lastEvening !== t0) html += `<a class="banner evening" href="#/evening">${I.moon} Revue du soir · 5 min</a>`;
 
   const topDone = top.filter(t => t.status === 'done').length;
@@ -120,7 +120,7 @@ views.actions = () => {
   const chips = `<div class="chips scroll">${chip('Toutes', ctx === 'all', 'ctx-filter', 'all', ` <small>${all.length}</small>`)}${ctxs.map(c => chip(esc(c), ctx === c, 'ctx-filter', c, ` <small>${count(c)}</small>`)).join('')}${chip('Sans contexte', ctx === 'none', 'ctx-filter', 'none')}</div>`;
   const t0 = today();
   const rows = list.map(t => taskRow(t, { showSched: t.scheduled_date !== t0, extra: t.scheduled_date === t0 ? '<span class="today-tag">Auj.</span>' : `<button class="plan-btn" data-act="plan-today" data-id="${t.id}" aria-label="Prévoir aujourd'hui">${I.sun}</button>` })).join('');
-  return { title: 'Prochaines actions', html: chips + (rows ? `<div class="list">${rows}</div>` : empty('Aucune action ici', 'Trie ton Inbox ou ajoute une action avec +.')), fab: 'task' };
+  return { title: 'Actions', html: chips + (rows ? `<div class="list">${rows}</div>` : empty('Aucune action ici', 'Trie ton Inbox ou ajoute une action avec +.')), fab: 'task' };
 };
 
 views.projects = () => {

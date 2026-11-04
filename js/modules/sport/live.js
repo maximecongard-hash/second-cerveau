@@ -1,6 +1,6 @@
 import { esc, I, chip, today, addDays, nowIso, fmtDate, fmtDur } from '../../core/util.js';
 import { S, patch } from '../../core/store.js';
-import { SH, sheet, showSheet, closeSheet, render, renderEditor, route, toast } from '../../core/ui.js';
+import { SH, sheet, showSheet, closeSheet, render, renderEditor, route, toast, sheetHead } from '../../core/ui.js';
 import { restFor } from './exercises.js';
 import {
   usesExercises, distIn, parseDist, distUnit, estimate, human, clock, parseClock, fmtKm, fmtTarget, BLOCK_TYPES, setsOf, findEx, mutate, clone, lastPerf, perfText, fmtW, isEndurance, icon
@@ -180,7 +180,7 @@ export function renderFinish() {
   const f = S.ui.spFin, it = S.items.get(f?.id);
   if (!it) return;
   const scale = (k, from, to, labels) => `<div class="chips wrap">${Array.from({ length: to - from + 1 }, (_, n) => from + n).map(v => `<button type="button" class="chip ${f[k] === v ? 'on' : ''}" data-act="sp-fin-set" data-k="${k}" data-v="${v}">${labels?.[v] ?? v}</button>`).join('')}</div>`;
-  sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">Séance terminée</span><span></span></div>
+  sheet.innerHTML = `${sheetHead('Séance terminée', { cancel: true, ok: null })}
     <form data-form="sp-finish-save"><div class="title-static">${esc(it.title)}</div>
     <div class="fields">
       <div class="f-row"><label for="fin-dur">Durée</label><div class="f-val"><input id="fin-dur" inputmode="numeric" value="${f.dur ? clock(f.dur) : ''}" placeholder="mm:ss"></div></div>

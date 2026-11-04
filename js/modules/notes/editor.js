@@ -1,7 +1,7 @@
 import { esc, I, fRow, seg, sel, md, domain, nowIso } from '../../core/util.js';
 import { S, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '../../core/store.js';
 import { kindOwner } from '../../core/modules.js';
-import { SH, openEditor } from '../../core/ui.js';
+import { SH, openEditor, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { shareBlock } from '../../core/share.js';
 
@@ -16,9 +16,7 @@ const linkCard = url => `<a class="link-card" href="${esc(url)}" target="_blank"
 
 export function editorHTML(it) {
   const isBm = it.kind === 'bookmark';
-  const head = `<div class="sheet-head"><button class="link strong" data-act="close">OK</button>
-    <div class="seg small">${[['note', 'Note'], ['bookmark', 'Signet']].map(([v, l]) => `<button class="${it.kind === v ? 'on' : ''}" data-act="note-kind" data-v="${v}">${l}</button>`).join('')}</div>
-    <button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+  const head = sheetHead('', { midHtml: `<div class="seg small">${[['note', 'Note'], ['bookmark', 'Signet']].map(([v, l]) => `<button class="${it.kind === v ? 'on' : ''}" data-act="note-kind" data-v="${v}">${l}</button>`).join('')}</div>` });
   const title = `<input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="${isBm ? 'Titre (facultatif)' : 'Titre de la note'}" autocomplete="off">`;
   const urlF = fRow('Lien', `<input type="url" data-f="url" id="f-url" value="${esc(it.url || '')}" placeholder="https://" autocomplete="off">`);
   const common = `${fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}

@@ -1,6 +1,6 @@
 import { esc, fRow, sel, today, addDays, fmtDate, plural } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
-import { SH, renderEditor, toast, openEditor } from '../../core/ui.js';
+import { SH, renderEditor, toast, openEditor, sheetHead } from '../../core/ui.js';
 import { templates, freshMeta, monday, estimate, workouts, doneDay } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -29,7 +29,7 @@ const generated = id => workouts().filter(w => w.parent_id === id);
 export function programEditor(it) {
   const tpls = templates(), plan = planOf(it);
   const m = it.meta || {};
-  const head = `<div class="sheet-head"><button class="link strong" data-act="close">OK</button><span class="sheet-kind">Semaine type</span><button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+  const head = sheetHead('Semaine type');
   const rows = plan.map((p, i) => `<div class="sp-plan"><select data-sprog="wd" data-i="${i}" aria-label="Jour">${DAYS.map(([v, l]) => `<option value="${v}" ${+p.wd === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <select data-sprog="tpl" data-i="${i}" aria-label="Modèle">${tpls.map(t => `<option value="${t.id}" ${p.tpl === t.id ? 'selected' : ''}>${esc(t.title)}</option>`).join('')}</select>
       <input type="time" data-sprog="time" data-i="${i}" value="${p.time || ''}" aria-label="Heure">

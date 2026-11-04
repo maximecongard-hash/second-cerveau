@@ -1,5 +1,5 @@
 import { TEXT_FIELDS } from './state.js';
-import { S, patch } from './store.js';
+import { S, patch, persistNow } from './store.js';
 import { sync, setSyncState } from './sync.js';
 import { MODULES, ACTS, FORMS } from './modules.js';
 import { app, render, flushPendingRender, SH, closeSheet, openEditor, renderEditor, setField, openMenu, openSide, closeSide, runUndo, activeModule, toast } from './ui.js';
@@ -79,7 +79,14 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && SH.onSubmit) SH.onSubmit();
 });
 app.addEventListener('focusout', flushPendingRender);
-window.addEventListener('hashchange', () => { if (openFromHash()) return; closeSide(); if (SH.mode) closeSheet(); else render(); });
+window.addEventListener('hashchange', () => { if (openFromHash()) return; openSettingsGroup(); closeSide(); if (SH.mode) closeSheet(); else render(); });
+// #/settings/<groupe> ouvre directement ce groupe de Réglages
+export function openSettingsGroup() {
+  const m = location.hash.match(/^#\/settings\/([\w-]+)/);
+  if (!m) return;
+  S.ui.fold = m[1];
+  setTimeout(() => document.querySelector('.fold[open]')?.scrollIntoView({ block: 'start' }), 100); // une fois redessiné
+}
 // Lien d'une notification : #/open/<id> ouvre l'élément par-dessus l'écran d'accueil
 export function openFromHash() {
   const m = location.hash.match(/^#\/open\/([\w-]+)/);
@@ -95,9 +102,10 @@ navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.open) lo
 window.addEventListener('online', () => { setSyncState(); sync(); });
 window.addEventListener('offline', setSyncState);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    MODULES.forEach(m => m.onResume?.());
-    sync();
-  }
+  if (document.visibilityState === 'visible') MODULES.forEach(m => m.onResume?.());
+  // au passage en arrière-plan, iOS peut couper l'app à tout moment : on écrit tout de suite
+  else persistNow();
+  sync();
 });
+window.addEventListener('pagehide', persistNow);
 setInterval(() => { if (document.visibilityState === 'visible') sync(); }, 60000);

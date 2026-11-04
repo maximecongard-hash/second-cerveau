@@ -6,7 +6,7 @@ Le README s'adresse à l'utilisateur final ; ce fichier s'adresse à l'agent.
 ## Le projet en bref
 
 PWA personnelle de type « second cerveau », pensée d'abord pour l'iPhone installé en plein écran.
-L'app est organisée en **modules** (thèmes) affichés dans une barre latérale :
+L'app est organisée en **modules** affichés dans une barre latérale :
 
 - **Organisation** (`gtd`) : capture rapide (app, raccourcis iOS, partage), tri de l'Inbox, prochaines actions
   par contexte, projets, planification de la journée (Top 3, agenda), revues du soir et hebdo.
@@ -14,7 +14,7 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
   avec une heure et place les tâches via `setField()` du cœur (routé vers le module propriétaire).
   `dnd.js` : glisser-déposer et redimensionnement des créneaux (pointer events, attributs `data-drag`, `.ag-rs`).
   `apple.js` : événements de Calendrier (table `events`, lecture seule, cache localStorage à part des éléments)
-  et réglages du lien d'abonnement ICS.
+  et lien d'abonnement ICS (groupe Réglages > iPhone et Calendrier, hook `accessSettings`).
 - **Notes** (`notes`) : notes Markdown, signets (`bookmark`, statut `active` = à lire, `done` = lu), épinglés.
   Reliés aux tâches et projets par les liens du cœur.
 - **Sport** (`sport`, désactivé par défaut) : séances en blocs (course, vélo, natation, rando : presets et cibles propres à chaque sport) et en exercices
@@ -28,7 +28,7 @@ L'app est organisée en **modules** (thèmes) affichés dans une barre latérale
 
 Autres repères :
 
-- Plusieurs comptes (0.11), inscriptions désactivées côté Supabase : l'administrateur (`profiles.is_admin`) crée les comptes via l'Edge Function `add-user`. Chaque compte a ses données ; on se rejoint par le partage de projets / tâches / notes.
+- Plusieurs comptes (0.11), inscriptions désactivées côté Supabase : l'administrateur (`profiles.is_admin`, le premier compte créé) ajoute les comptes via la fonction `brain`, route `add-user`. Chaque compte a ses données ; on se rejoint par le partage de projets / tâches / notes.
 - Données synchronisées avec Supabase, l'app fonctionne hors ligne (localStorage + service worker).
 - Interface et textes **en français**, tutoiement dans le README, ton calme et sans culpabilisation dans l'app.
 - Version courante : `VERSION` dans `js/core/config.js`.
@@ -58,8 +58,9 @@ Puis ouvrir :
 
 Le service worker ne s'enregistre qu'en HTTPS : en local, pas de cache à vider.
 
-Il n'y a pas de tests automatisés. Vérifier à la main dans le navigateur (mode démo), en largeur mobile (~390 px)
-et en mode sombre, puis regarder la console (une erreur d'import casse toute l'app).
+Avant un commit : `python3 scripts/check.py` (`SHELL`, imports et noms exportés, syntaxe, version, numéro de schéma).
+Il n'y a pas de tests automatisés de l'interface : vérifier à la main dans le navigateur (mode démo), en largeur
+mobile (~390 px) et en mode sombre, puis regarder la console (une erreur d'import casse toute l'app).
 
 ## Fichiers
 
@@ -71,24 +72,23 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 | `js/main.js` | point d'entrée : importe le cœur, puis les modules (ordre = ordre par défaut de la barre), puis `init()` |
 | `js/core/` | cœur commun, voir ci-dessous |
 | `js/modules/<id>/` | un dossier par module (`gtd`, `agenda`, `notes`, `sport`, `courses`) |
-| `sw.js` | cache hors ligne, stratégie stale-while-revalidate, liste `SHELL` de tous les fichiers |
+| `sw.js` | cache de la version : tous les fichiers de l'app viennent de là (jamais de mélange de versions), mise à jour d'un bloc à l'installation d'un nouveau `sw.js`. Liste `SHELL` de tous les fichiers |
 | `manifest.webmanifest`, `manifest-papier.webmanifest`, `icons/` | installation sur l'écran d'accueil ; deux icônes au choix (Encre par défaut, Papier), sources SVG dans `icons/src/`, choix appliqué par `applyIcon()` de `util.js` |
-| `supabase/schema.sql` | schéma complet, idempotent |
-| `supabase/00X_*.sql` | migrations incrémentales, idempotentes |
-| `supabase/functions/add-user/index.ts` | Edge Function de création de compte (réservée à l'administrateur, « Verify JWT » **activé**) |
-| `supabase/functions/calendrier/index.ts` | Edge Function du flux ICS (abonnement Calendrier), déployée à la main par l'utilisateur, « Verify JWT » désactivé ; `buildIcs` testable avec node |
+| `supabase/schema.sql` | toute la base, idempotent : seul fichier SQL, à coller pour installer comme pour mettre à jour |
+| `supabase/functions/brain/index.ts` | fonction unique, déployée à la main par l'utilisateur, « Verify JWT » désactivé. Routes `ping`, `calendrier?token=`, `reminders` (secret du cron, ou essai connecté), `add-user` (vérifie lui-même l'administrateur). URL et clés lues dans l'environnement |
+| `scripts/check.py` | vérifications sans dépendance, à lancer avant un commit |
 
 ### Cœur (`js/core/`)
 
 | Fichier | Rôle |
 |---|---|
-| `config.js` | `VERSION`, `CFG`, `DEMO`, client `sb`, clé localStorage |
-| `state.js` | état partagé `S`, `DEFAULT_PREFS`, `FIELDS` / `TEXT_FIELDS` / `NULLABLE`. Module feuille : n'importe rien |
+| `config.js` | `VERSION`, `SCHEMA_VERSION`, `CFG`, `DEMO`, client `sb` (délai de 30 s sur `/rest/v1/`), clé localStorage |
+| `state.js` | état partagé `S`, `DEFAULT_PREFS`, `ITEM_DEFAULTS` (colonnes et valeurs par défaut, d'où découlent `FIELDS`, `newItem()`, `toRow()`), `TEXT_FIELDS` / `NULLABLE`. Module feuille : n'importe rien |
 | `store.js` | persistance locale, `newItem()`, `saveItem()`, `patch()`, sélecteurs (`ofKind`…) |
-| `sync.js` | synchronisation Supabase et pastille d'état |
+| `sync.js` | synchronisation Supabase, pastille d'état, `checkInstall()` (`brain_status()`) |
 | `modules.js` | registre : `registerModule()`, `VIEWS`, `ACTS`, `FORMS`, ordre et activation des modules |
-| `ui.js` | routage, rendu, barre latérale, feuille modale (`SH`, `openEditor`…), toast + undo |
-| `views.js` | vues communes : recherche, réglages, modules, connexion |
+| `ui.js` | routage, rendu, barre latérale, feuille modale (`SH`, `sheetHead()`, `openEditor`…), toast + undo |
+| `views.js` | vues communes : recherche, réglages (un groupe ouvert à la fois, `S.ui.fold`, `#/settings/<groupe>`), connexion |
 | `events.js` | écouteurs globaux et actions communes |
 | `util.js` | dates, formats, `esc()`, `md()`, icônes `I`, petits gabarits (`sec`, `empty`) |
 | `images.js` | redimensionnement, upload et URL signées des photos |
@@ -102,25 +102,26 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 - **Modules** : chaque module appelle `registerModule({...})` dans son `index.js`. La liste complète des propriétés
   (`id`, `label`, `home`, `tabs`, `views`, `acts`, `forms`, `kinds`, `editor`, `prefs`, `ui`, `afterSync`, `seedDemo`…)
   est documentée en tête de `js/core/modules.js`. Modèle minimal : `js/modules/courses/index.js`. Hooks qui laissent un module alimenter
-  les vues du cœur sans import croisé : `schedulable` (placement dans l'Agenda), `endNotify` (`end_at`), `createAt`, `todayRows`, `reviewStep`, `eveningHtml`
+  les vues du cœur sans import croisé : `schedulable` (placement dans l'Agenda), `endNotify` (`end_at`), `createAt`, `todayRows`, `reviewStep`, `eveningHtml`, `notifSettings`, `accessSettings`
   (appelés par `fromModules()` / `isSchedulable()` / `notifiesEnd()` de `modules.js`).
 - **Imports** : le cœur ne doit jamais importer un module. Les modules importent le cœur, jamais un autre module.
   `state.js` reste sans import pour éviter les cycles.
-- **État global unique `S`** : `items` (Map id → item), `prefs`, `dirty` (ids à envoyer), `cursor` de synchro, `ui`.
+- **État global unique `S`** : `items` (Map id → item), `prefs`, `dirty` (Map id → champs à envoyer, `null` = ligne entière), `stuck` (lignes refusées par la base), `cursor` de synchro, `ui`.
   Un module ajoute ses préférences et son état d'affichage via `prefs` / `ui` dans `registerModule`, pas en modifiant `S` au chargement.
 - **Une seule table `items`** pour tout : `kind` (`inbox | task | project | area` pour le GTD, `note | bookmark` pour Notes ;
-  depuis la migration 004 la base accepte tout type en minuscules, un nouveau module n'a pas besoin de migration pour ses kinds),
+  la base accepte tout type en minuscules, un nouveau module n'a pas besoin de migration pour ses kinds),
   `status` ∈ `active | waiting | someday | done | trashed | clarify`. La hiérarchie passe par `parent_id`
   (tâche → projet → domaine). La suppression est logique (`status: 'trashed'`). Chaque `kind` appartient à un module
   (`kinds`, `kindOwner()`, libellé via `kindLabel`).
-- **Partage** (0.11) : table `shares` (élément, propriétaire, invité, droit `edit` | `view`), créée via la fonction `share_item(item, email, role)` qui « touche » l'élément et ses enfants pour que l'invité les reçoive (le curseur de synchro est `updated_at`). Un projet partagé couvre ses tâches (`parent_id`). RLS de `items` : `row_role()` ; `user_id` ne change jamais (trigger), un invité qui modifie renvoie le `user_id` d'origine (`toRow`). Côté client : `live()` / `ofKind()` ne renvoient que **mes** éléments (planification personnelle), `liveAll()` / `ofKindAll()` y ajoutent les éléments reçus (page projet, « Partagés avec moi »). `roleOf()` / `canEdit()` de `store.js` bloquent l'écriture en lecture seule (toast) et l'éditeur désactive ses champs. `sync.js` charge `shares` et `profiles` (sans erreur si la migration 007 manque) et retire de l'appareil ce qui n'est plus accessible. Un invité ne peut pas planifier (date, Top 3) un élément qui n'est pas à lui dans ses listes perso.
+- **Partage** (0.11) : table `shares` (élément, propriétaire, invité, droit `edit` | `view`), créée via la fonction `share_item(item, email, role)` qui « touche » l'élément et ses enfants pour que l'invité les reçoive (le curseur de synchro est `updated_at`). Un projet partagé couvre ses tâches (`parent_id`). RLS de `items` : `row_role()` ; `user_id` ne change jamais (trigger), un invité qui modifie renvoie le `user_id` d'origine (`toRow`). Côté client : `live()` / `ofKind()` ne renvoient que **mes** éléments (planification personnelle), `liveAll()` / `ofKindAll()` y ajoutent les éléments reçus (page projet, « Partagés avec moi »). `roleOf()` / `canEdit()` de `store.js` bloquent l'écriture en lecture seule (toast) et l'éditeur désactive ses champs. `sync.js` charge `shares` et `profiles` et retire de l'appareil ce qui n'est plus accessible. Un invité ne peut pas planifier (date, Top 3) un élément qui n'est pas à lui dans ses listes perso.
 - **Liens entre éléments** (0.5) : colonne `links uuid[]`, stockée d'un seul côté et lue dans les deux sens.
   Toujours passer par `linkedIds()`, `linked()`, `link()`, `unlink()` de `store.js`. `mentionsOf()` donne les
   éléments qui citent `[[titre]]`, `findByTitle()` résout un wikilien. L'interface commune (bloc « Liés »,
   section de page, feuille « Lier à… ») est dans `core/links.js` : c'est par là qu'un module montre les éléments
   d'un autre module, sans l'importer.
-- **Écrire une donnée** : toujours via `newItem()`, `saveItem()` ou `patch()` de `store.js`. Ces fonctions mettent
-  `updated_at`, marquent l'item `dirty`, persistent en localStorage et planifient la synchro. Ne jamais modifier `S.items` à la main.
+- **Écrire une donnée** : toujours via `newItem()` + `saveItem()` pour un élément neuf, `patch(id, champs)` pour un élément existant.
+  `patch` note les champs modifiés : seuls ceux-là écrasent le serveur. `saveItem(it)` sur un élément existant sans `{ fields }` renvoie la ligne
+  entière et peut écraser un autre appareil. Ne jamais modifier `S.items` à la main.
 - **Routage** : par hash `#/vue/arg`. Une vue est une fonction de `views` qui renvoie `{ title, html }`.
   `route()` retombe sur la vue d'accueil du premier module actif si la vue est inconnue ou son module désactivé.
   Rendu groupé par `queueRender()`.
@@ -129,9 +130,12 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
   du module, pas d'écouteur par élément.
 - **Échappement** : tout texte utilisateur inséré dans du HTML passe par `esc()`. Le Markdown passe par `md()`.
 - **Undo** : les actions destructives ou de tri affichent `toast(message, undoFn)`.
-- **Synchro** (`sync.js`) : 1) upsert des items dirty par lots de 200, 2) prefs, 3) pull des lignes dont `updated_at`
-  dépasse le curseur (10 s de recouvrement), sans écraser un item encore dirty, 4) `afterSync()` de chaque module.
-  `updated_at` est fixé par un trigger serveur et sert de curseur : ne pas le contourner.
+- **Feuilles** : en-tête par `sheetHead()`. Les éditeurs enregistrent au fil de la saisie, ils n'ont que « OK » à droite ; « Supprimer » est ajouté en bas par `renderEditor()` (`keepKinds` pour l'éviter).
+- **Démarrage** (`boot.js`) : le cache s'affiche d'abord (`S.uid`, `S.email`), la session se vérifie ensuite. Écran de connexion seulement si la session est réellement invalide, jamais sur une erreur réseau.
+- **Synchro** (`sync.js`) : rien ne part sans session valide (sinon la base répondrait « rien » à une requête sans compte, ce qui ressemblerait à des suppressions).
+  1) envoi des items dirty : lignes partielles relues sur le serveur et fusionnées avec mes champs, puis upsert par lots de 200 ; une ligne refusée va dans `S.stuck`, le reste passe. 2) prefs fusionnées clé par clé contre `S.prefsBase` ; modifier les prefs passe par `savePrefs()` ou `touchPrefs()`.
+  3) pull des lignes dont `updated_at` dépasse le curseur (10 s de recouvrement), sans écraser un item encore dirty ; relecture complète après 25 jours d'absence pour retirer ce que la purge a effacé. 4) `afterSync()` de chaque module.
+  Une erreur réseau arrête le cycle sans rien perdre. `updated_at` est fixé par un trigger serveur et sert de curseur : ne pas le contourner.
 - **Dates** : chaînes `YYYY-MM-DD` locales via `ymd()`, `today()`, `parseYmd()`, `addDays()` de `util.js`.
   Pas de `toISOString()` pour une date du jour (décalage de fuseau). Formats d'affichage via les `Intl.DateTimeFormat` `fr-FR` existants.
 
@@ -140,7 +144,7 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 1. Créer `js/modules/<id>/index.js` avec `registerModule({...})`, découpé comme `gtd` si besoin
    (`model.js`, `views.js`, `rows.js`, `sheets.js`, `actions.js`).
 2. L'importer dans `js/main.js` (sa position fixe l'ordre par défaut dans la barre).
-3. Ajouter **chaque** nouveau fichier à `SHELL` dans `sw.js` et incrémenter `CACHE`.
+3. Ajouter **chaque** nouveau fichier à `SHELL` dans `sw.js` et changer `CACHE`.
 4. Fournir `seedDemo()` pour que le mode démo montre le module rempli.
 5. Si le module stocke de nouveaux champs, suivre la section suivante.
 
@@ -148,32 +152,30 @@ et en mode sombre, puis regarder la console (une erreur d'import casse toute l'a
 
 Une nouvelle colonne demande **toutes** ces étapes :
 
-1. Nouveau fichier `supabase/00N_nom.sql` idempotent (`add column if not exists`, `drop constraint if exists`…),
-   terminé par `notify pgrst, 'reload schema';`.
-2. Reporter le changement dans `supabase/schema.sql` pour qu'une installation neuve soit à jour.
-3. Dans `js/core/state.js` : ajouter le champ à `FIELDS`, et à `TEXT_FIELDS` / `NULLABLE` si besoin.
-   Dans `js/core/store.js` : valeur par défaut dans `newItem()`.
-4. Mettre à jour le message d'erreur de schéma dans `js/core/sync.js` pour qu'il pointe vers la nouvelle migration.
-5. Documenter la migration à lancer dans le README.
+1. Dans `supabase/schema.sql`, le seul fichier SQL : ajouter à `create table` **et** un `add column if not exists`,
+   pour monter depuis n'importe quelle version. Tout y reste idempotent : il doit pouvoir être relancé sans risque.
+2. Augmenter le numéro dans `brain_status()` de `schema.sql` et `SCHEMA_VERSION` dans `js/core/config.js` : l'app signale alors le retard elle-même.
+3. Dans `js/core/state.js` : ajouter le champ à `ITEM_DEFAULTS`, et à `TEXT_FIELDS` / `NULLABLE` si besoin.
 
-L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'utilisateur quoi coller dans le SQL Editor.
+L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'utilisateur de recoller `schema.sql` dans le SQL Editor.
 
 ## Publier une nouvelle version
 
-- Incrémenter `VERSION` dans `js/core/config.js`.
-- **Incrémenter `CACHE` dans `sw.js`** (`sc-v3` → `sc-v4`…), sinon les iPhone gardent l'ancienne version.
-- Vérifier que `SHELL` liste tous les fichiers de `js/` (un fichier oublié manque hors ligne et casse l'import).
+L'app se sert depuis le cache de sa version : **sans nouvelle version, personne ne reçoit les changements.**
+
+- Changer `VERSION` dans `js/core/config.js` et `CACHE` dans `sw.js` (`sc-0.19.0` → `sc-0.19.1`…). Le numéro reste écrit dans `sw.js` : c'est la modification de ce fichier qui déclenche la mise à jour sur iOS.
+- Lancer `python3 scripts/check.py` : il vérifie que les deux concordent et que `SHELL` liste tous les fichiers de `js/`.
 
 ## Sécurité
 
 - `config.js` ne contient que la clé **publishable**. Ne jamais y mettre, ni committer, une clé `service_role` / secret.
-- Toute nouvelle table : `enable row level security` + politique `user_id = auth.uid()` (les éléments partagés passent par `row_role()`, voir Partage). `profiles` ne laisse modifier que `name` (grant par colonne) ; `is_admin` ne se change que dans le SQL Editor. La clé `service_role` n'existe que dans l'Edge Function `add-user`, jamais dans l'app.
+- Toute nouvelle table : `enable row level security` + politique `user_id = auth.uid()` (les éléments partagés passent par `row_role()`, voir Partage). `profiles` ne laisse modifier que `name` (grant par colonne) ; `is_admin` ne se change que dans le SQL Editor. La clé `service_role` n'existe que dans la fonction `brain`, jamais dans l'app.
 - Les raccourcis iOS passent par la fonction `capture()` (security definer, clé d'accès dans `capture_tokens`, comptée par `use_token()`) et ne peuvent
-  qu'ajouter dans l'Inbox. Seules autres portes `anon`, toutes derrière un jeton : `sync_events()` (jeton de capture,
-  remplace la copie des événements de Calendrier dans `events`) et `calendar_feed()` (jeton de `calendar_tokens`,
+  qu'ajouter dans l'Inbox. Seules autres portes `anon`, toutes derrière un secret : `sync_events()` (clé d'accès,
+  remplace la copie des événements de Calendrier dans `events`), `widget_today()` (clé d'accès, résumé du jour) et `calendar_feed()` (jeton de `calendar_tokens`,
   lecture des créneaux pour le flux ICS). Ne pas élargir ce que l'accès `anon` peut faire au-delà.
 - Le bucket `captures` est privé ; les images s'affichent via URL signée (`js/core/images.js`).
-- Ne jamais afficher ni recopier un jeton de capture ou de calendrier réel dans le code, les logs ou les commits.
+- Ne jamais afficher ni recopier une clé d'accès ou un lien de calendrier réel dans le code, les logs ou les commits.
 
 ## Style de code
 

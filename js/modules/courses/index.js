@@ -1,5 +1,5 @@
-import { $, I } from '../../core/util.js';
-import { S, newItem, saveItem, patch, ofKindAll } from '../../core/store.js';
+import { $, I, esc, sec } from '../../core/util.js';
+import { S, newItem, saveItem, patch, ofKindAll, savePrefs } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
 import { SH, render, renderEditor, toast } from '../../core/ui.js';
 import { KINDS, views, recipesList, recipeRow, shopRow } from './views.js';
@@ -11,7 +11,7 @@ import { STARTERS } from './starters.js';
 import { createFoyer, inFoyer } from './foyer.js';
 
 // ---------------------------------------------------------------------------
-// Module « Courses » : banque de recettes (0.17). Panier, tri et liste partagée suivent.
+// Module « Courses » : banque de recettes, panier, liste de courses, foyer partagé.
 // ---------------------------------------------------------------------------
 const acts = {
   ...panierActs,
@@ -26,6 +26,12 @@ const acts = {
   'rc-tag': el => toggleIn(SH.editingId, 'tags', el.dataset.v),
   'rc-season': el => toggleIn(SH.editingId, 'seasons', el.dataset.v),
   'rc-ing-del': el => delIngredient(SH.editingId, el.dataset.id),
+  'rc-have-del': el => {
+    const before = S.prefs.rcHave;
+    S.prefs.rcHave = before.filter(x => x !== el.dataset.v);
+    savePrefs();
+    toast('Retiré du placard', () => { S.prefs.rcHave = before; savePrefs(); });
+  },
   'fy-create': () => { createFoyer(); render(); toast('Foyer créé'); },
   // liste de courses
   'sh-check': el => {
@@ -58,16 +64,12 @@ const forms = {
   }
 };
 
-// Recettes de départ : ajoute celles dont le titre n'existe pas encore
-function addStarters() {
-  const have = new Set(ofKindAll('recipe').map(r => r.title.toLowerCase()));
-  let n = 0;
-  for (const [title, min, tags, seasons, ings, body] of STARTERS) {
-    if (have.has(title.toLowerCase())) continue;
-    saveItem(newItem({ kind: 'recipe', ...inFoyer(), title, duration_min: min, tags, body, meta: { servings: 4, seasons, ingredients: ings.map(parseIngredient) } }), { render: false });
-    n++;
-  }
-  return n;
+function settings() {
+  const have = S.prefs.rcHave || [];
+  return sec('Foyer', `<div class="muted small pad">Recettes et liste de courses, à partager avec les personnes de ton choix.</div>
+      <div class="btn-row"><a class="btn" href="#/foyer">Foyer et partage</a></div>`) +
+    sec('Placard', `<div class="muted small pad">Produits marqués « Déjà là » dans le panier : ils y seront pré-cochés la prochaine fois.</div>
+      ${have.length ? `<div class="chips wrap">${have.map(x => `<button type="button" class="chip" data-act="rc-have-del" data-v="${esc(x)}">${esc(x)} ×</button>`).join('')}</div>` : '<div class="muted pad">Rien pour l’instant.</div>'}`);
 }
 
 function onInput(t) {
@@ -80,7 +82,9 @@ const fab = () => createAndEdit(S.ui.rcFilter.startsWith('tag:') ? { tags: [S.ui
 
 // Démo : la banque de départ (quelques favoris) et une liste en cours
 function seedDemo() {
-  addStarters();
+  for (const [title, min, tags, seasons, ings, body] of STARTERS) {
+    saveItem(newItem({ kind: 'recipe', ...inFoyer(), title, duration_min: min, tags, body, meta: { servings: 4, seasons, ingredients: ings.map(parseIngredient) } }), { render: false });
+  }
   for (const r of ofKindAll('recipe')) if (['Lasagnes maison', 'Poulet curry coco', 'Chili sin carne'].includes(r.title)) patch(r.id, { pinned: true }, { render: false });
   for (const t of ['2 l de lait', '6 œufs', '1 kg de pommes de terre', 'pain', '400 g de bœuf haché', 'papier toilette']) addProduct(t);
 }
@@ -89,10 +93,10 @@ registerModule({
   id: 'courses',
   label: 'Courses',
   icon: I.cart,
-  description: 'Recettes, panier à trier et liste de courses partagée avec ton foyer.',
+  description: 'Banque de recettes, panier de la semaine et liste de courses, à partager avec ton foyer.',
   defaultOn: false,
   home: 'recettes',
-  tabs: [['recettes', 'Recettes', I.heart], ['courses', 'Listes', I.cart]],
+  tabs: [['recettes', 'Recettes', I.heart], ['courses', 'Liste', I.cart]],
   kinds: KINDS,
   kindLabel: { recipe: 'Recette', shop_item: 'Produit', foyer: 'Foyer' },
   tabOf: { foyer: 'courses', panier: 'recettes' },
@@ -104,6 +108,9 @@ registerModule({
   setField,
   row: it => (it.kind === 'shop_item' ? shopRow(it) : recipeRow(it)),
   searchable: it => it.kind !== 'foyer',
+  keepKinds: ['foyer'],
+  settings,
+  settingsMeta: 'Foyer · placard',
   seedDemo,
   onInput,
   onChange: editorChange
