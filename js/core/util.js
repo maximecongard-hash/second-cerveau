@@ -4,6 +4,9 @@
 export const $ = (s, r = document) => r.querySelector(s);
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const uuid = () => crypto.randomUUID();
+// Égalité de valeurs JSON, sans tenir compte de l'ordre des clés (jsonb les réordonne)
+const canon = v => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, canon(v[k])])) : v);
+export const same = (a, b) => JSON.stringify(canon(a ?? null)) === JSON.stringify(canon(b ?? null));
 export const pad = n => String(n).padStart(2, '0');
 export const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 export const today = () => ymd(new Date());

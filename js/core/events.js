@@ -1,5 +1,5 @@
 import { TEXT_FIELDS } from './state.js';
-import { S, patch } from './store.js';
+import { S, patch, persistNow } from './store.js';
 import { sync, setSyncState } from './sync.js';
 import { MODULES, ACTS, FORMS } from './modules.js';
 import { app, render, flushPendingRender, SH, closeSheet, openEditor, renderEditor, setField, openMenu, openSide, closeSide, runUndo, activeModule, toast } from './ui.js';
@@ -95,9 +95,10 @@ navigator.serviceWorker?.addEventListener('message', e => { if (e.data?.open) lo
 window.addEventListener('online', () => { setSyncState(); sync(); });
 window.addEventListener('offline', setSyncState);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    MODULES.forEach(m => m.onResume?.());
-    sync();
-  }
+  if (document.visibilityState === 'visible') MODULES.forEach(m => m.onResume?.());
+  // au passage en arrière-plan, iOS peut couper l'app à tout moment : on écrit tout de suite
+  else persistNow();
+  sync();
 });
+window.addEventListener('pagehide', persistNow);
 setInterval(() => { if (document.visibilityState === 'visible') sync(); }, 60000);

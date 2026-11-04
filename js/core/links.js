@@ -1,5 +1,5 @@
 import { $, esc, empty, sec } from './util.js';
-import { S, newItem, saveItem, live, linked, linkedIds, link, unlink, mentionsOf, findByTitle } from './store.js';
+import { S, newItem, saveItem, patch, live, linked, linkedIds, link, unlink, mentionsOf, findByTitle } from './store.js';
 import { ACTS, kindOwner } from './modules.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, renderEditor, toast } from './ui.js';
 
@@ -87,8 +87,7 @@ Object.assign(ACTS, {
   pin: el => {
     const it = S.items.get(el.dataset.id);
     if (!it) return;
-    it.pinned = !it.pinned;
-    saveItem(it);
+    patch(it.id, { pinned: !it.pinned });
     if (SH.mode === 'editor') renderEditor();
   }
 });

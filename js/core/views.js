@@ -158,11 +158,14 @@ Object.assign(ACTS, {
     saveModules(list);
   },
   fold: el => { S.ui.folds[el.dataset.v] = !S.ui.folds[el.dataset.v]; render(); },
-  'sync-now': () => { S.lastError = null; sync(); },
+  'sync-now': () => { S.lastError = null; S.stuck.clear(); sync(); },
   logout: async () => {
     if ((S.dirty.size || S.prefsDirty) && !confirm('Des modifications ne sont pas encore synchronisées et seront perdues. Se déconnecter quand même ?')) return;
-    await sb.auth.signOut();
-    resetLocal(); S.uid = null; persistNow();
+    // cet appareil seulement : les autres restent connectés
+    const { error } = await sb.auth.signOut({ scope: 'local' });
+    if (error) { toast('Déconnexion impossible hors ligne : réessaie avec du réseau'); return; }
+    resetLocal(); S.uid = null; S.email = null; persistNow();
+    location.reload(); // repart d'un état d'affichage vierge
   },
   copy: async el => { try { await navigator.clipboard.writeText(el.dataset.v); toast('Copié'); } catch { toast('Copie impossible'); } },
   'token-new': async () => {

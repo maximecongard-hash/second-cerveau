@@ -16,11 +16,20 @@ export function persist() {
 }
 export function persistNow() {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      uid: S.uid, items: [...S.items.values()], shares: S.shares, people: S.people, prefs: S.prefs, dirty: [...S.dirty],
-      prefsDirty: S.prefsDirty, cursor: S.cursor, lastSync: S.lastSync
-    }));
-  } catch (e) { console.warn('persist', e); }
+    const json = JSON.stringify({
+      uid: S.uid, email: S.email, items: [...S.items.values()], shares: S.shares, people: S.people, prefs: S.prefs,
+      dirty: [...S.dirty].map(([id, f]) => [id, f ? [...f] : null]),
+      prefsDirty: S.prefsDirty, prefsBase: S.prefsBase, cursor: S.cursor, lastSync: S.lastSync
+    });
+    localStorage.setItem(LS_KEY, json);
+    S.ui.storeChars = json.length;
+    S.ui.storageFull = false;
+  } catch (e) {
+    // l'écriture a échoué : l'ancienne copie reste en place, les derniers changements ne survivraient pas à une fermeture
+    console.warn('persist', e);
+    if (!S.ui.storageFull) toast('Stockage du téléphone plein : tes derniers changements ne sont pas gardés hors ligne');
+    S.ui.storageFull = true;
+  }
 }
 export function restore() {
   S.prefs = { ...DEFAULT_PREFS };
@@ -28,19 +37,22 @@ export function restore() {
     const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
     if (!d) return;
     S.uid = d.uid || null;
+    S.email = d.email || null;
     S.items = new Map((d.items || []).map(i => [i.id, i]));
     S.shares = d.shares || [];
     S.people = d.people || {};
     S.prefs = { ...DEFAULT_PREFS, ...(d.prefs || {}) };
-    S.dirty = new Set(d.dirty || []);
+    // ancien format : simple liste d'id, à envoyer en entier
+    S.dirty = new Map((d.dirty || []).map(x => (Array.isArray(x) ? [x[0], x[1] ? new Set(x[1]) : null] : [x, null])));
     S.prefsDirty = !!d.prefsDirty;
+    S.prefsBase = d.prefsBase || null;
     S.cursor = d.cursor || null;
     S.lastSync = d.lastSync || null;
   } catch (e) { console.warn('restore', e); }
 }
 export function resetLocal() {
-  S.items = new Map(); S.shares = []; S.people = {}; S.dirty = new Set(); S.prefs = { ...DEFAULT_PREFS };
-  S.prefsDirty = false; S.cursor = null; S.lastSync = null;
+  S.items = new Map(); S.shares = []; S.people = {}; S.dirty = new Map(); S.stuck = new Map(); S.prefs = { ...DEFAULT_PREFS };
+  S.prefsDirty = false; S.prefsBase = null; S.cursor = null; S.lastSync = null;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,15 +111,28 @@ function demoLog(it, known) {
   }
 }
 
-export function saveItem(it, { render = true } = {}) {
+// Note ce qu'il faut envoyer : seuls les champs modifiés, pour ne pas écraser ce qu'un autre appareil a changé ailleurs.
+// Sans liste (élément neuf, ou appel sans précision), la ligne entière part.
+function markDirty(id, fields) {
+  const cur = S.dirty.get(id);
+  if (!fields || cur === null) S.dirty.set(id, null);
+  else S.dirty.set(id, new Set([...(cur || []), ...fields]));
+}
+// fields : noms des champs que l'appelant vient de modifier sur `it`
+export function saveItem(it, { render = true, fields = null } = {}) {
   const known = S.items.get(it.id);
   const parent = it.parent_id && S.items.get(it.parent_id);
   if (known ? !canEdit(known) : parent && !canEdit(parent)) { denied(); return it; }
-  if (isMine(it)) it.end_at = endAt(it);
+  if (isMine(it)) {
+    const end = endAt(it);
+    if (fields && !sameInstant(it.end_at, end)) fields = [...fields, 'end_at'];
+    it.end_at = end;
+  }
   demoLog(it, known);
   it.updated_at = nowIso();
   S.items.set(it.id, it);
-  S.dirty.add(it.id);
+  markDirty(it.id, known ? fields : null);
+  S.stuck.delete(it.id); // une nouvelle modification retente l'envoi
   persist();
   scheduleSync();
   if (render) queueRender();
@@ -118,10 +143,15 @@ export function patch(id, p, opts) {
   if (!it) return null;
   if (!canEdit(it)) { denied(); return it; }
   Object.assign(it, p);
-  return saveItem(it, opts);
+  return saveItem(it, { ...opts, fields: Object.keys(p) });
+}
+// Préférences modifiées : à envoyer, sans rien redessiner (les modules l'appellent pendant la synchro)
+export function touchPrefs() {
+  S.prefsDirty = true;
+  S.prefsGen++;
 }
 export function savePrefs() {
-  S.prefsDirty = true;
+  touchPrefs();
   persist();
   scheduleSync();
   queueRender();

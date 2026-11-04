@@ -1,5 +1,5 @@
 import { esc, I, sec, today, addDays } from '../../core/util.js';
-import { S, newItem, saveItem, ofKind } from '../../core/store.js';
+import { S, newItem, saveItem, ofKind, touchPrefs } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
 import { queueRender, route } from '../../core/ui.js';
 import { refreshEndAt, fmtClock, spentSec, DEFAULT_AREAS, inboxItems, areas, migrateAreas, somedayItems } from './model.js';
@@ -27,13 +27,13 @@ function afterSync() {
     if (!areas().length) DEFAULT_AREAS.forEach(t => saveItem(newItem({ kind: 'area', title: t }), { render: false }));
     S.prefs.seeded = true;
     S.prefs.areasV2 = true;
-    S.prefsDirty = true;
+    touchPrefs();
     changed = true;
   }
   if (!S.prefs.areasV2) {
     migrateAreas();
     S.prefs.areasV2 = true;
-    S.prefsDirty = true;
+    touchPrefs();
     changed = true;
   }
   // fin de créneau : l'instant de fin suit la date, l'heure, la durée et le réglage

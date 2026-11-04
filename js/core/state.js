@@ -12,12 +12,17 @@ export const NULLABLE = new Set(['parent_id', 'due_date', 'scheduled_date', 'sch
 export const S = {
   user: null,
   uid: null,
+  email: null,
   items: new Map(),
   shares: [], // partages visibles (donnés ou reçus), table shares
   people: {}, // comptes connus : id -> { id, email, name, is_admin }
   prefs: { ...DEFAULT_PREFS },
-  dirty: new Set(),
+  dirty: new Map(), // id -> champs à envoyer (Set), ou null pour la ligne entière
+  stuck: new Map(), // id -> raison : lignes refusées par la base, gardées de côté (réessayées à chaque lancement)
   prefsDirty: false,
+  prefsBase: null, // dernières préférences lues sur le serveur : base de la fusion clé par clé
+  prefsGen: 0, // augmente à chaque changement : repère ce qui change pendant un envoi
+  netDown: false, // serveur injoignable au dernier essai
   cursor: null,
   syncing: false,
   lastSync: null,

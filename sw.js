@@ -1,7 +1,7 @@
-// Cache de l'app pour qu'elle s'ouvre hors ligne.
-// Changer CACHE à chaque nouvelle version pour forcer la mise à jour,
-// et ajouter ici tout nouveau fichier de js/ (sinon il manque hors ligne).
-const CACHE = 'sc-v37';
+// Cache de l'app pour qu'elle s'ouvre hors ligne et d'un seul bloc.
+// À chaque nouvelle version : python3 scripts/release.py X.Y.Z (change CACHE ici et VERSION dans js/core/config.js).
+// Tout nouveau fichier de js/ s'ajoute à SHELL (vérifié par scripts/check.py).
+const CACHE = 'sc-0.19.0';
 const SHELL = [
   './',
   'index.html',
@@ -75,10 +75,10 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fichiers de l'app (même domaine) : réseau d'abord pour toujours avoir la dernière version,
-// cache si hors ligne ou si le réseau met plus de 3 s.
-// Bibliothèques et polices (versions figées) : cache d'abord.
-// Les appels à Supabase (autre domaine) ne passent jamais par le cache.
+// Tout vient du cache de la version : jamais de mélange d'anciens et de nouveaux modules, jamais d'attente du réseau.
+// La mise à jour arrive d'un bloc, quand le navigateur installe un nouveau sw.js.
+// Le reste du même domaine (icônes, autres pages) et les polices sont mis en cache au premier passage.
+// Les appels à Supabase (autre domaine) et les fichiers ouverts à part (raccourcis) ne passent jamais par ici.
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -86,21 +86,21 @@ self.addEventListener('fetch', e => {
   const own = url.origin === location.origin;
   const vendor = url.hostname === 'cdn.jsdelivr.net' || /^fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (!own && !vendor) return;
-  const key = req.mode === 'navigate' ? 'index.html' : req;
+  const navigate = req.mode === 'navigate';
+  if (navigate && !/\/(index\.html)?$/.test(url.pathname)) return;
+  const key = navigate ? 'index.html' : req;
   e.respondWith(
     caches.open(CACHE).then(async cache => {
-      const cached = await cache.match(key, { ignoreSearch: req.mode === 'navigate' });
-      if (vendor && cached) return cached;
-      const network = fetch(own ? new Request(req, { cache: 'no-cache' }) : req)
-        .then(res => { if (res.ok || res.type === 'opaque') cache.put(key, res.clone()); return res; });
-      if (!cached) return network;
-      const late = new Promise(r => setTimeout(() => r(cached), 3000));
-      return Promise.race([network.catch(() => cached), late]);
+      const cached = await cache.match(key, { ignoreSearch: own });
+      if (cached) return cached;
+      const res = await fetch(req);
+      if (res.ok || res.type === 'opaque') cache.put(key, res.clone());
+      return res;
     })
   );
 });
 
-// Notifications de Brain (envoyées par la fonction Supabase send-reminders)
+// Notifications de Brain (envoyées par la fonction Supabase brain)
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data?.text() }; }
