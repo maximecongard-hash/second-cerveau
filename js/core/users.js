@@ -7,7 +7,7 @@ import { sync } from './sync.js';
 
 // ---------------------------------------------------------------------------
 // Comptes : nom et mot de passe de chacun, ajout d'utilisateurs par l'administrateur.
-// L'ajout passe par l'Edge Function add-user (clé de service côté serveur, jamais dans l'app).
+// L'ajout passe par l'Edge Function brain, route add-user (clé de service côté serveur, jamais dans l'app).
 // ---------------------------------------------------------------------------
 export const me = () => S.people[S.user?.id] || null;
 export const isAdmin = () => !DEMO && !!me()?.is_admin;
@@ -72,11 +72,11 @@ Object.assign(FORMS, {
     const password = tempPassword();
     btn.disabled = true;
     S.ui.userErr = null;
-    const { error } = await sb.functions.invoke('add-user', { body: { email, name, password } });
+    const { error } = await sb.functions.invoke('brain/add-user', { body: { email, name, password } });
     if (error) {
       let msg = error.message;
       try { const b = await error.context.json(); msg = b.error || b.message || msg; } catch { /* corps illisible */ }
-      S.ui.userErr = /not.?found|Failed to send/i.test(msg) ? 'Fonction add-user introuvable : déploie-la dans Supabase (voir le README).' : msg;
+      S.ui.userErr = /not.?found|Failed to send/i.test(msg) ? 'Fonction brain introuvable : déploie-la dans Supabase (voir le README).' : msg;
       render();
       return;
     }

@@ -92,7 +92,7 @@ export function openEvent(id) {
 // ---------------------------------------------------------------------------
 // Réglages > Agenda > Calendrier Apple
 // ---------------------------------------------------------------------------
-const feedUrl = t => `${CFG.url}/functions/v1/calendrier?token=${t}`;
+const feedUrl = t => `${CFG.url}/functions/v1/brain/calendrier?token=${t}`;
 
 async function loadCalTokens() {
   const { data, error } = await sb.from('calendar_tokens').select('token, created_at').order('created_at');
