@@ -79,7 +79,14 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && SH.onSubmit) SH.onSubmit();
 });
 app.addEventListener('focusout', flushPendingRender);
-window.addEventListener('hashchange', () => { if (openFromHash()) return; closeSide(); if (SH.mode) closeSheet(); else render(); });
+window.addEventListener('hashchange', () => { if (openFromHash()) return; openSettingsGroup(); closeSide(); if (SH.mode) closeSheet(); else render(); });
+// #/settings/<groupe> ouvre directement ce groupe de Réglages
+export function openSettingsGroup() {
+  const m = location.hash.match(/^#\/settings\/([\w-]+)/);
+  if (!m) return;
+  S.ui.fold = m[1];
+  setTimeout(() => document.querySelector('.fold[open]')?.scrollIntoView({ block: 'start' }), 100); // une fois redessiné
+}
 // Lien d'une notification : #/open/<id> ouvre l'élément par-dessus l'écran d'accueil
 export function openFromHash() {
   const m = location.hash.match(/^#\/open\/([\w-]+)/);

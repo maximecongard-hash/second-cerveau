@@ -1,5 +1,5 @@
 import { DEMO, sb, CFG, SCHEMA_VERSION } from './config.js';
-import { nowIso, same } from './util.js';
+import { nowIso, same, FMT_TIME } from './util.js';
 import { S, FIELDS, DEFAULT_PREFS, persist, isMine, patch, canEdit } from './store.js';
 import { MODULES } from './modules.js';
 import { queueRender, toast } from './ui.js';
@@ -241,6 +241,7 @@ export async function sync() {
   S.syncing = true;
   setSyncState();
   let changed = false;
+  const stuckBefore = S.stuck.size;
   try {
     // Sans session valide, les requêtes partiraient sans compte : la base répondrait « rien » et refuserait tout,
     // ce qui ressemblerait à des suppressions. On n'échange rien tant que la session n'est pas confirmée.
@@ -269,24 +270,27 @@ export async function sync() {
     S.syncing = false;
     persist();
     setSyncState();
-    if (changed) queueRender(true);
+    if (changed || S.stuck.size !== stuckBefore) queueRender(true);
     if (hasPending() && !S.lastError && !S.netDown) scheduleSync(300);
   }
 }
 export function syncClass() {
   if (DEMO) return 'demo';
   if (!navigator.onLine || S.netDown) return 'off';
-  if (S.lastError || S.stuck.size || S.ui.storageFull) return 'err';
+  if (S.lastError || S.stuck.size || S.ui.storageFull || schemaBehind()) return 'err';
   if (S.syncing || hasPending()) return 'busy';
   return 'ok';
 }
 export function syncLabel() {
   const err = () => (S.lastError ? 'Erreur de synchro : ' + S.lastError
+    : schemaBehind() ? SCHEMA_MSG
     : S.stuck.size ? `${S.stuck.size} élément${S.stuck.size > 1 ? 's' : ''} non envoyé${S.stuck.size > 1 ? 's' : ''} : voir Réglages > Données`
     : 'Stockage du téléphone plein : voir Réglages > Données');
   return { demo: () => 'Mode démo (local)', off: () => (navigator.onLine ? 'Serveur injoignable' : 'Hors ligne') + ' : modifications gardées sur le téléphone', err,
     busy: () => 'Synchronisation…', ok: () => 'Synchronisé' }[syncClass()]();
 }
+export const syncLine = () => syncLabel() + (S.lastSync ? ` · dernière synchro ${FMT_TIME.format(new Date(S.lastSync))}` : '');
 export function setSyncState() {
   document.querySelectorAll('.sync').forEach(el => { el.className = 'sync ' + syncClass(); el.title = syncLabel(); });
+  document.querySelectorAll('.sync-line').forEach(el => { el.textContent = syncLine(); });
 }

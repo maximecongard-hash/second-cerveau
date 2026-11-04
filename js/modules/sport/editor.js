@@ -1,6 +1,6 @@
 import { esc, I, fRow, seg, sel, chip, today, addDays, nowIso, fmtDate, fmtDur } from '../../core/util.js';
 import { S, patch, ofKind, byTitle, newItem, saveItem } from '../../core/store.js';
-import { SH, render, renderEditor, toast, closeSheet, openEditor } from '../../core/ui.js';
+import { SH, render, renderEditor, toast, closeSheet, openEditor, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { pushHint } from '../../core/push.js';
 import { library, restFor, GROUPS_BY } from './exercises.js';
@@ -100,7 +100,7 @@ const durOptions = cur => [['', '—'], ...[...new Set([...DURS, ...(cur ? [cur]
 export function editorHTML(it) {
   const tpl = it.kind === 'workout_tpl', done = it.status === 'done';
   const m = it.meta || (it.meta = defaultMeta());
-  const head = `<div class="sheet-head"><button class="link strong" data-act="close">OK</button><span class="sheet-kind">${tpl ? 'Modèle' : 'Séance'}</span><button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+  const head = sheetHead(tpl ? 'Modèle' : 'Séance');
   const types = `<div class="chips scroll">${Object.entries(SPORTS).map(([k, s]) => chip(s.label, m.sport === k, 'sp-sport', k)).join('')}</div>`;
   const e = estimate(it);
   const sum = `<div class="ed-sum">

@@ -1,7 +1,7 @@
 import { $, esc, I, chip, fRow, seg, sel, plural, today, fmtDate, fmtDur, domain, nowIso, empty } from '../../core/util.js';
 import { S, meId, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '../../core/store.js';
 import { uploadImage } from '../../core/images.js';
-import { SH, sheet, showSheet, closeSheet, openEditor, toast } from '../../core/ui.js';
+import { SH, sheet, showSheet, closeSheet, openEditor, toast, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { shareBlock } from '../../core/share.js';
 import { kindOwner } from '../../core/modules.js';
@@ -28,7 +28,7 @@ function editorHead(it) {
   const kinds = [['task', 'Tâche'], ['project', 'Projet'], ...(kindOwner('note') ? [['note', 'Note']] : [])];
   const mid = it.kind === 'area' ? '<span class="sheet-kind">Domaine</span>'
     : `<div class="seg small">${kinds.map(([v, l]) => `<button class="${it.kind === v ? 'on' : ''}" data-act="kind" data-v="${v}">${l}</button>`).join('')}</div>`;
-  return `<div class="sheet-head"><button class="link strong" data-act="close">OK</button>${mid}<button class="link danger" data-act="trash" data-id="${it.id}">Supprimer</button></div>`;
+  return sheetHead('', { midHtml: mid });
 }
 export function editorHTML(it) {
   const head = editorHead(it);
@@ -174,7 +174,7 @@ export function openCapture(preset = {}) {
   SH.mode = 'capture';
   SH.onSubmit = saveCapture;
   capPreset = preset;
-  sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">${esc(preset.label || 'Capturer')}</span><button class="link strong" data-act="cap-save">Ajouter</button></div>
+  sheet.innerHTML = `${sheetHead(preset.label || 'Capturer', { cancel: true, ok: 'Ajouter', okAct: 'cap-save' })}
     <textarea id="cap-text" class="cap-text" rows="5" placeholder="${preset.kind === 'task' ? 'Tâche… (1re ligne = titre)' : 'Idée, tâche, note… (1re ligne = titre)'}"></textarea>
     <div class="cap-tools"><label class="btn">${I.camera} Photo<input type="file" accept="image/*" id="cap-file" hidden></label><span id="cap-file-name" class="muted small"></span></div>`;
   showSheet();
@@ -210,7 +210,7 @@ export function openPicker() {
 export function renderPicker() {
   const day = S.ui.day;
   const list = nextActions().filter(t => t.scheduled_date !== day).sort(sortTasks);
-  sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">Pour ${fmtDate(day).toLowerCase()}</span><button class="link strong" data-act="pick-save">Ajouter${pickSel.size ? ` (${pickSel.size})` : ''}</button></div>
+  sheet.innerHTML = `${sheetHead('Pour ' + fmtDate(day).toLowerCase(), { cancel: true, ok: 'Ajouter' + (pickSel.size ? ` (${pickSel.size})` : ''), okAct: 'pick-save' })}
     ${list.length ? `<div class="list">${list.map(t => `<div class="row pick ${pickSel.has(t.id) ? 'on' : ''}" data-act="pick" data-id="${t.id}">
       <span class="check ${pickSel.has(t.id) ? 'on' : ''}"></span>
       <div class="row-main"><div class="row-title">${esc(t.title)}</div><div class="row-meta">${t.parent_id && S.items.get(t.parent_id) ? `<span class="m-proj">${esc(S.items.get(t.parent_id).title)}</span>` : ''}${t.contexts.map(c => `<span class="m-ctx">${esc(c)}</span>`).join('')}${t.duration_min ? `<span>${fmtDur(t.duration_min)}</span>` : ''}${t.scheduled_date ? `<span>Prévu ${fmtDate(t.scheduled_date).toLowerCase()}</span>` : ''}${t.due_date ? `<span class="m-due">Échéance ${fmtDate(t.due_date).toLowerCase()}</span>` : ''}</div></div>

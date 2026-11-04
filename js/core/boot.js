@@ -5,7 +5,7 @@ import { sync } from './sync.js';
 import { MODULES } from './modules.js';
 import { app, render, queueRender, SH } from './ui.js';
 import { clearShown } from './push.js';
-import { openFromHash } from './events.js';
+import { openFromHash, openSettingsGroup } from './events.js';
 
 // ---------------------------------------------------------------------------
 // Démarrage (appelé une fois tous les modules enregistrés)
@@ -13,6 +13,7 @@ import { openFromHash } from './events.js';
 export async function init() {
   applyIcon();
   restore();
+  openSettingsGroup();
   registerSW();
   clearShown();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clearShown(); });

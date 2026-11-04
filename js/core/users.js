@@ -21,8 +21,8 @@ function tempPassword() {
 // Contenu du groupe « Compte » (sous l'email et la synchro)
 export function accountForms() {
   if (DEMO) return '';
-  return `<form class="inline-add" data-form="profile-name"><input id="profile-name" value="${esc(me()?.name || '')}" placeholder="Ton pseudo, affiché dans la liste de partage" autocomplete="name"></form>
-    <form class="inline-add" data-form="password-change"><input id="new-pass" type="password" minlength="8" placeholder="Nouveau mot de passe (8 caractères minimum)" autocomplete="new-password"></form>`;
+  return `<form class="inline-add with-btn" data-form="profile-name"><input id="profile-name" value="${esc(me()?.name || '')}" placeholder="Ton pseudo, vu par ceux avec qui tu partages" autocomplete="name"><button class="btn" type="submit">Enregistrer</button></form>
+    <form class="inline-add with-btn" data-form="password-change"><input id="new-pass" type="password" minlength="8" placeholder="Nouveau mot de passe (8 caractères)" autocomplete="new-password"><button class="btn" type="submit">Changer</button></form>`;
 }
 
 // Contenu du groupe « Utilisateurs » (administrateur seulement)

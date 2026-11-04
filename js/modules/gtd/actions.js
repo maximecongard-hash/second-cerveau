@@ -125,7 +125,12 @@ export const acts = {
   'proj-done': el => { patch(el.dataset.id, { status: 'done', completed_at: nowIso() }); toast('Projet terminé', () => patch(el.dataset.id, { status: 'active', completed_at: null })); },
   'review-check': el => { const k = el.dataset.v; S.ui.review.has(k) ? S.ui.review.delete(k) : S.ui.review.add(k); render(); },
   'review-done': () => { S.prefs.lastReview = today(); S.ui.review.clear(); savePrefs(); toast('Revue enregistrée'); location.hash = '#/today'; },
-  'ctx-del': el => { S.prefs.contexts = S.prefs.contexts.filter(c => c !== el.dataset.v); savePrefs(); },
+  'ctx-del': el => {
+    const before = S.prefs.contexts;
+    S.prefs.contexts = before.filter(c => c !== el.dataset.v);
+    savePrefs();
+    toast('Contexte retiré', () => { S.prefs.contexts = before; savePrefs(); });
+  },
   'cap-save': () => saveCapture()
 };
 

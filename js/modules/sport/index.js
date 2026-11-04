@@ -1,7 +1,7 @@
-import { esc, I, sec, today, addDays, plural, fmtDate, fmtDur } from '../../core/util.js';
+import { esc, I, sec, today, addDays, plural, fmtDate, fmtDur, switchBtn } from '../../core/util.js';
 import { S, newItem, saveItem, patch, savePrefs } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
-import { SH, sheet, showSheet, closeSheet, render, toast, openEditor } from '../../core/ui.js';
+import { SH, sheet, showSheet, closeSheet, render, toast, openEditor, sheetHead } from '../../core/ui.js';
 import { DEFAULT_EXERCISES, GROUPS, TIMED_GROUPS, library, restFor } from './exercises.js';
 import {
   SPORTS, PRESETS, createWorkout, freshMeta, monday, onDay, templates, newExercise, defaultMeta, doneDay, label
@@ -52,8 +52,10 @@ const acts = {
   'sp-filter': el => { S.ui.spFilter = el.dataset.v; render(); },
   'sp-sound': () => { S.prefs.sportSound = S.prefs.sportSound === false; savePrefs(); },
   'sp-lib-del': el => {
+    const before = S.prefs.sportExercises;
     S.prefs.sportExercises = library().filter((_, i) => i !== +el.dataset.i);
     savePrefs();
+    toast('Exercice retiré', () => { S.prefs.sportExercises = before; savePrefs(); });
   },
   'sp-lib-reset': () => { S.prefs.sportExercises = null; savePrefs(); }
 };
@@ -61,7 +63,7 @@ const acts = {
 function renderPlan() {
   const p = S.ui.spPlan, t = S.items.get(p?.tpl);
   if (!t) return;
-  sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">Planifier</span><span></span></div>
+  sheet.innerHTML = `${sheetHead('Planifier', { cancel: true, ok: null })}
     <form data-form="sp-plan-save"><div class="title-static">${esc(t.title)}</div>
     <div class="fields"><div class="f-row"><label for="pl-day">Jour</label><div class="f-val"><input type="date" id="pl-day" value="${p.day}"></div></div>
     <div class="f-row"><label for="pl-time">Heure</label><div class="f-val"><input type="time" id="pl-time" value="${p.time}"></div></div></div>
@@ -104,7 +106,7 @@ function settings() {
   return sec('Objectifs', `<div class="fields">
       <div class="f-row"><label>Séances par semaine</label><div class="f-val"><select data-sppref="sportGoal">${[1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(S.prefs.sportGoal || 3) === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div></div>
       <div class="f-row"><label>Repos entre séries</label><div class="f-val"><select data-sppref="sportRest">${[45, 60, 75, 90, 120, 150, 180].map(n => `<option value="${n}" ${(S.prefs.sportRest || 90) === n ? 'selected' : ''}>${n} s</option>`).join('')}</select></div></div>
-      <div class="f-row"><label>Son du minuteur</label><div class="f-val"><button class="switch ${S.prefs.sportSound !== false ? 'on' : ''}" data-act="sp-sound" aria-pressed="${S.prefs.sportSound !== false}" aria-label="Son du minuteur"></button></div></div>
+      <div class="f-row"><label>Son du minuteur</label><div class="f-val">${switchBtn(S.prefs.sportSound !== false, 'sp-sound', 'Son du minuteur')}</div></div>
     </div>`) +
     sec('Exercices', `<div class="muted small pad">Proposés quand tu ajoutes un exercice. Le repos par défaut suit l’exercice.</div>
       <div class="chips wrap">${lib.map((e, i) => `<button type="button" class="chip" data-act="sp-lib-del" data-i="${i}" title="${esc(e.group)} · repos ${e.rest} s">${esc(e.name)} ×</button>`).join('')}</div>

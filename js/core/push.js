@@ -102,5 +102,5 @@ export function pushHint() {
   if (DEMO || !supported()) return '';
   if (S.ui.pushSub === undefined) { S.ui.pushSub = null; checkSub(); }
   if (S.ui.pushSub === null || pushOn()) return '';
-  return '<div class="muted small">Notifications désactivées sur cet appareil : <a href="#/settings" data-act="close-go">les activer</a>.</div>';
+  return '<div class="muted small">Notifications désactivées sur cet appareil : <a href="#/settings/notif" data-act="close-go">les activer</a>.</div>';
 }

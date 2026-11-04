@@ -22,7 +22,6 @@ export function persistNow() {
       prefsDirty: S.prefsDirty, prefsBase: S.prefsBase, cursor: S.cursor, lastSync: S.lastSync
     });
     localStorage.setItem(LS_KEY, json);
-    S.ui.storeChars = json.length;
     S.ui.storageFull = false;
   } catch (e) {
     // l'écriture a échoué : l'ancienne copie reste en place, les derniers changements ne survivraient pas à une fermeture

@@ -1,6 +1,6 @@
 import { esc, I, sec, empty, chip, today, addDays, parseYmd, fmtDate, fmtDur, cap, plural, FMT_DAY } from '../../core/util.js';
 import { S } from '../../core/store.js';
-import { SH, sheet, showSheet } from '../../core/ui.js';
+import { SH, sheet, showSheet, sheetHead } from '../../core/ui.js';
 import { SPORTS, icon, label, summary, estimate, onDay, unplaced, missed, templates, programs, doneList, doneDay, monday, sortWhen, human } from './model.js';
 import { weekAgg, progressHTML } from './stats.js';
 
@@ -39,7 +39,7 @@ export function openNew(preset = {}) {
 export function renderNew() {
   const p = S.ui.spNew || {}, tpls = templates();
   const when = p.day ? `${cap(fmtDate(p.day).toLowerCase())}${p.time ? ' ' + p.time : ''}` : 'Sans date';
-  sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">Nouvelle séance</span><span></span></div>
+  sheet.innerHTML = `${sheetHead('Nouvelle séance', { cancel: true, ok: null })}
     <div class="muted small pad">${esc(when)}</div>
     ${sec('Type', `<div class="chips wrap">${Object.entries(SPORTS).map(([k, s]) => `<button type="button" class="chip" data-act="sp-create" data-sport="${k}">${s.label}</button>`).join('')}</div>`)}
     ${sec('Partir d’un modèle', tpls.length ? `<div class="list">${tpls.map(t => `<button type="button" class="row link-pick" data-act="sp-create" data-tpl="${t.id}"><div class="row-icon">${icon(t)}</div><div class="row-main"><div class="row-title">${esc(t.title)}</div><div class="row-meta"><span>${esc(label(t))}</span>${summary(t) ? `<span>${esc(summary(t))}</span>` : ''}</div></div></button>`).join('')}</div>` : '<div class="muted small pad">Aucun modèle. Enregistre une séance comme modèle depuis son éditeur.</div>')}`;

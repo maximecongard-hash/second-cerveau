@@ -1,11 +1,11 @@
 import { esc, I, sec, today, addDays, pad, fmtDate, fmtDur, empty } from '../../core/util.js';
 import { S, live, newItem, saveItem, patch, savePrefs } from '../../core/store.js';
 import { registerModule, kindOwner, isSchedulable, enabledModules } from '../../core/modules.js';
-import { SH, sheet, showSheet, closeSheet, setField, route, render, queueRender, toast } from '../../core/ui.js';
+import { SH, sheet, showSheet, closeSheet, setField, route, render, queueRender, toast, sheetHead } from '../../core/ui.js';
 import { DEMO } from '../../core/config.js';
 import { views, untimedOn, weekSpan } from './views.js';
 import './dnd.js';
-import { appleActs, appleSettings, loadEvents, seedDemoEvents } from './apple.js';
+import { appleActs, appleSettings, calendarAccess, loadEvents, seedDemoEvents } from './apple.js';
 
 // ---------------------------------------------------------------------------
 // Module « Agenda » : la journée et la semaine en grille horaire.
@@ -38,7 +38,7 @@ function renderSlot() {
   // Éléments des autres modules plaçables sans date (séances à caler) et leurs boutons de création
   const others = live().filter(i => i.kind !== 'task' && isSchedulable(i) && i.status === 'active' && !i.scheduled_date).slice(0, 40);
   const makers = enabledModules().filter(m => m.createAt && m.kinds).map(m => `<button type="button" class="chip" data-act="ag-new-kind" data-v="${m.kinds[0]}">+ ${esc(m.kindLabel?.[m.kinds[0]] || m.label)}</button>`).join('');
-  sheet.innerHTML = `<div class="sheet-head"><button class="link" data-act="close">Annuler</button><span class="sheet-kind">${esc(fmtDate(day))}</span><span></span></div>
+  sheet.innerHTML = `${sheetHead(fmtDate(day), { cancel: true, ok: null })}
     <div class="ag-slot-time"><label for="ag-time">Heure</label><input type="time" id="ag-time" value="${t}" step="300"></div>
     ${kindOwner('task') ? `<form class="inline-add" data-form="ag-new"><input id="ag-new" placeholder="+ Nouvelle tâche à cette heure" enterkeyhint="done" autocomplete="off"></form>` : ''}
     ${makers ? `<div class="chips wrap pad">${makers}</div>` : ''}
@@ -135,7 +135,8 @@ registerModule({
   prefs: { agStart: 7, agEnd: 22, agApple: true },
   ui: { agDay: today() },
   settings,
-  settingsMeta: 'Heures · Calendrier Apple',
+  settingsMeta: 'Heures · événements',
+  accessSettings: calendarAccess,
   seedDemo,
   onChange,
   // après chaque synchro : relit les événements de Calendrier (au plus toutes les 5 minutes)

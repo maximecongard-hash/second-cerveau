@@ -1,11 +1,11 @@
 import { S, DEFAULT_PREFS } from './state.js';
 
 // ---------------------------------------------------------------------------
-// Registre des modules (thèmes de la barre latérale)
+// Registre des modules de la barre latérale
 //
 // Un module est un objet :
 //   id, label, icon, description   identité affichée dans la barre et les réglages
-//   defaultOn, preview             activé par défaut ? encore en aperçu ?
+//   defaultOn                      activé par défaut ?
 //   home                           vue ouverte quand on choisit le module
 //   tabs                           [[vue, libellé, icône, badge?()]] onglets du module
 //   tabOf                          { vue: onglet } pour les sous-vues
@@ -18,6 +18,9 @@ import { S, DEFAULT_PREFS } from './state.js';
 //   prefs, ui                      valeurs par défaut ajoutées à S.prefs et S.ui
 //   badge(), menu(), settings()    pastille, entrées du menu ⋯, contenu du groupe du module dans les réglages
 //   settingsMeta                   résumé affiché sous le titre de ce groupe replié
+//   notifSettings()                HTML ajouté à Réglages > Notifications
+//   accessSettings()               HTML ajouté à Réglages > iPhone et Calendrier
+//   keepKinds                      kinds dont l'éditeur n'a pas de bouton Supprimer (['foyer'])
 //   afterSync(), seedDemo()        initialisations (renvoie true si quelque chose a changé)
 //   onInput(el), onChange(el)      saisies propres au module (renvoie true si traité)
 //   onResume()                     retour au premier plan
