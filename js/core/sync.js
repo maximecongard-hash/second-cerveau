@@ -1,6 +1,7 @@
 import { DEMO, sb, CFG, SCHEMA_VERSION } from './config.js';
 import { nowIso, same, FMT_TIME } from './util.js';
 import { S, FIELDS, DEFAULT_PREFS, persist, isMine, patch, canEdit } from './store.js';
+import { ITEM_DEFAULTS } from './state.js';
 import { MODULES } from './modules.js';
 import { queueRender, toast } from './ui.js';
 
@@ -22,17 +23,9 @@ export function scheduleSync(delay = 800) {
   setSyncState();
 }
 function toRow(it) {
-  const r = {};
-  for (const f of FIELDS) r[f] = it[f] ?? null;
-  r.user_id = it.user_id || S.user.id; // un invité garde le propriétaire d'origine
-  r.contexts = it.contexts || [];
-  r.tags = it.tags || [];
-  r.links = it.links || [];
-  r.pinned = !!it.pinned;
-  r.spent_sec = it.spent_sec || 0; // colonne not null : un élément ancien du cache n'a pas ce champ
-  r.title = it.title || '';
-  r.body = it.body || '';
-  r.source = it.source || 'app';
+  // un invité garde le propriétaire d'origine ; un élément ancien du cache peut ne pas avoir tous les champs
+  const r = { id: it.id, user_id: it.user_id || S.user.id, created_at: it.created_at ?? null };
+  for (const [f, d] of Object.entries(ITEM_DEFAULTS)) r[f] = it[f] ?? d;
   return r;
 }
 function fromRow(r) {

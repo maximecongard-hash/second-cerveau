@@ -3,11 +3,10 @@ import { S, meId, NULLABLE, newItem, saveItem, patch, ofKind, byTitle } from '..
 import { uploadImage } from '../../core/images.js';
 import { SH, sheet, showSheet, closeSheet, openEditor, toast, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
-import { shareBlock } from '../../core/share.js';
+import { shareBlock, firstName } from '../../core/share.js';
 import { kindOwner } from '../../core/modules.js';
 import { spentSec, fmtClock, areas, nextActions, nextOrder, sortTasks, spawnNext, recOptions, recText, slotEnd, recDraftFor, WEEK_DAYS, NTH, toLocalInput, fromLocalInput } from './model.js';
 import { loadEvents, historyHTML } from './history.js';
-import { firstName } from '../../core/share.js';
 import { pushHint } from '../../core/push.js';
 
 // ---------------------------------------------------------------------------

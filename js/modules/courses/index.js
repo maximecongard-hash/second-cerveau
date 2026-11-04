@@ -72,18 +72,6 @@ function settings() {
       ${have.length ? `<div class="chips wrap">${have.map(x => `<button type="button" class="chip" data-act="rc-have-del" data-v="${esc(x)}">${esc(x)} ×</button>`).join('')}</div>` : '<div class="muted pad">Rien pour l’instant.</div>'}`);
 }
 
-// Recettes de départ : ajoute celles dont le titre n'existe pas encore
-function addStarters() {
-  const have = new Set(ofKindAll('recipe').map(r => r.title.toLowerCase()));
-  let n = 0;
-  for (const [title, min, tags, seasons, ings, body] of STARTERS) {
-    if (have.has(title.toLowerCase())) continue;
-    saveItem(newItem({ kind: 'recipe', ...inFoyer(), title, duration_min: min, tags, body, meta: { servings: 4, seasons, ingredients: ings.map(parseIngredient) } }), { render: false });
-    n++;
-  }
-  return n;
-}
-
 function onInput(t) {
   if (t.dataset.live !== 'recipes') return false;
   S.ui.rcQuery = t.value;
@@ -94,7 +82,9 @@ const fab = () => createAndEdit(S.ui.rcFilter.startsWith('tag:') ? { tags: [S.ui
 
 // Démo : la banque de départ (quelques favoris) et une liste en cours
 function seedDemo() {
-  addStarters();
+  for (const [title, min, tags, seasons, ings, body] of STARTERS) {
+    saveItem(newItem({ kind: 'recipe', ...inFoyer(), title, duration_min: min, tags, body, meta: { servings: 4, seasons, ingredients: ings.map(parseIngredient) } }), { render: false });
+  }
   for (const r of ofKindAll('recipe')) if (['Lasagnes maison', 'Poulet curry coco', 'Chili sin carne'].includes(r.title)) patch(r.id, { pinned: true }, { render: false });
   for (const t of ['2 l de lait', '6 œufs', '1 kg de pommes de terre', 'pain', '400 g de bœuf haché', 'papier toilette']) addProduct(t);
 }

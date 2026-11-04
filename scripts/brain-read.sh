@@ -8,8 +8,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 [ -f "$ROOT/.env.local" ] && { set -a; . "$ROOT/.env.local"; set +a; }
 : "${BRAIN_AGENT_EMAIL:?BRAIN_AGENT_EMAIL manquant}" "${BRAIN_AGENT_PASSWORD:?BRAIN_AGENT_PASSWORD manquant}"
 
-URL="https://zqdvtbkjvfzkjqtaffbb.supabase.co"
-KEY="sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp"
+URL="$(sed -n "s/.*url: '\(.*\)'.*/\1/p" "$ROOT/config.js")"
+KEY="$(sed -n "s/.*key: '\(.*\)'.*/\1/p" "$ROOT/config.js")"
 
 login=$(python3 -c 'import json,os;print(json.dumps({"email":os.environ["BRAIN_AGENT_EMAIL"],"password":os.environ["BRAIN_AGENT_PASSWORD"]}))' \
   | curl -sS "$URL/auth/v1/token?grant_type=password" -H "apikey: $KEY" -H "Content-Type: application/json" -d @-)
