@@ -251,6 +251,13 @@ values ('captures', 'captures', false, 10485760,
         array['image/jpeg','image/png','image/heic','image/webp','image/gif'])
 on conflict (id) do nothing;
 
+-- Lecture des photos du raccourci : la clé du dossier est-elle à moi ? (security definer : la politique
+-- de stockage ne dépend plus des règles d'accès de capture_tokens)
+create or replace function public.inbox_key_is_mine(p_token text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.capture_tokens where token = p_token and user_id = auth.uid());
+$$;
+
 drop policy if exists "captures_owner" on storage.objects;
 create policy "captures_owner" on storage.objects
   for all to authenticated
@@ -259,10 +266,7 @@ create policy "captures_owner" on storage.objects
       (storage.foldername(name))[1] = auth.uid()::text
       or (
         (storage.foldername(name))[1] = 'inbox'
-        and exists (
-          select 1 from public.capture_tokens t
-          where t.token = (storage.foldername(name))[2] and t.user_id = auth.uid()
-        )
+        and public.inbox_key_is_mine((storage.foldername(name))[2])
       )
     )
   )
@@ -728,7 +732,7 @@ create trigger items_log_event after insert or update or delete on public.items
 create or replace function public.brain_status() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'schema', 19, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'schema', 20, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
     'vapid', c.public_key is not null,
     'url', c.project_url,
     'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),
@@ -794,7 +798,7 @@ begin
   -- réservées aux comptes connectés
   foreach f in array array[
     'push_public_key()', 'is_admin()', 'row_role(uuid, uuid, uuid)', 'item_role(uuid)',
-    'share_item(uuid, text, text)', 'brain_status()', 'brain_setup(text)'
+    'share_item(uuid, text, text)', 'brain_status()', 'brain_setup(text)', 'inbox_key_is_mine(text)'
   ] loop
     execute format('revoke all on function public.%s from public, anon, authenticated', f);
     execute format('grant execute on function public.%s to authenticated', f);

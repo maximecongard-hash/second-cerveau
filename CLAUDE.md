@@ -23,7 +23,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (4 novembre 2026)
 
-- Version **0.19.0**, cache SW `sc-0.19.0`, schéma 19.
+- Version **0.19.1**, cache SW `sc-0.19.1`, schéma 20 (lecture des photos du raccourci corrigée : `inbox_key_is_mine`, fonction présente sur Supabase, correctif confirmé par l'utilisateur le 4 novembre 2026).
 - La 0.19 est une remise à plat, sans nouveau module :
   - **Installation** : `supabase/schema.sql` est le seul fichier SQL (installe et met à jour, idempotent) ; une seule Edge Function `brain` (routes `ping`, `calendrier`, `reminders`, `add-user`, Verify JWT désactivé) ; premier compte = administrateur ; purge de la corbeille après 30 jours (`brain-purge`) ; `brain_status()` et `SCHEMA_VERSION`.
   - **Synchro** : démarrage immédiat sur le cache, connexion demandée seulement si la session est invalide ; envoi par champ (`S.dirty` = Map id → champs) ; ligne refusée isolée (`S.stuck`) ; préférences fusionnées clé par clé ; rien n'est échangé sans session ; service worker servi depuis le cache de la version.
@@ -42,6 +42,7 @@ RLS), hors ligne via localStorage + service worker.
   - 0.15 et 0.16 : module Sport, contenu par type de séance, Projets en cartes.
   - 0.17 et 0.18 : module Courses (recettes, liste, foyer, clés d'accès nommées), panier.
   - 0.19 : remise à plat (voir ci-dessus).
+  - 0.19.1 : lecture des photos du raccourci par une fonction security definer.
 
 ## Pistes ouvertes
 
