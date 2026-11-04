@@ -798,6 +798,8 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .rc-ing input { min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font: 15px var(--f-ui); }
 .rc-ing .rc-q { width: 56px; flex: none; text-align: right; font-family: var(--f-mono); }
 .rc-ing .rc-u { width: 76px; flex: none; }
+.fields .rc-ing input.rc-q { width: 56px; }
+.fields .rc-ing input.rc-u { width: 76px; }
 .rc-ing .rc-n { flex: 1; }
 .rc-ing input:focus { border-color: var(--accent); outline: 0; }
 .sh-row { align-items: center; }
