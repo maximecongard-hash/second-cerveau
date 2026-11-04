@@ -2,7 +2,7 @@ import { esc, I, empty, chip, fmtDur } from '../../core/util.js';
 import { S, ofKindAll } from '../../core/store.js';
 import { foyerView } from './foyer.js';
 import { panierView } from './panier.js';
-import { KINDS, AISLES, metaOf, seasonOf, seasonOrder, inSeason, shopMeta, fmtQty } from './model.js';
+import { KINDS, AISLES, aisleFor, metaOf, seasonOf, seasonOrder, inSeason, shopMeta, fmtQty } from './model.js';
 
 // ---------------------------------------------------------------------------
 // Banque de recettes : liste, recherche, filtres (favoris, tags, saison)
@@ -84,7 +84,7 @@ export function shopList() {
   const all = ofKindAll('shop_item');
   const todo = all.filter(i => i.status !== 'done'), done = all.filter(i => i.status === 'done').sort(byName);
   if (!all.length) return empty('Liste vide', 'Ajoute un produit ci-dessus, par exemple « 2 l de lait ».');
-  const groups = AISLES.map(a => [a, todo.filter(i => shopMeta(i).aisle === a).sort(byName)]).filter(([, l]) => l.length);
+  const groups = AISLES.map(a => [a, todo.filter(i => aisleFor(i.title, shopMeta(i).aisle) === a).sort(byName)]).filter(([, l]) => l.length);
   // un rayon inconnu (modifié ailleurs) retombe dans Autre
   const known = new Set(groups.flatMap(([, l]) => l.map(i => i.id)));
   const rest = todo.filter(i => !known.has(i.id));

@@ -3,7 +3,7 @@ import { S, newItem, saveItem, patch } from '../../core/store.js';
 import { SH, renderEditor, openEditor, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { inFoyer, foyerEditor } from './foyer.js';
-import { SEASONS, QUICK_TAGS, UNITS, AISLES, metaOf, shopMeta, fmtQty, parseQty, parseIngredient } from './model.js';
+import { SEASONS, QUICK_TAGS, UNITS, metaOf, shopMeta, fmtQty, parseQty, parseIngredient } from './model.js';
 
 // ---------------------------------------------------------------------------
 // Éditeur d'une recette : titre, favori, parts, durée, tags, saisons, ingrédients, étapes
@@ -20,12 +20,10 @@ function ingredientRow(g) {
 // Produit de la liste de courses
 function shopEditor(it) {
   const m = shopMeta(it), done = it.status === 'done';
-  const aisles = [...new Set([...AISLES, m.aisle])];
   return `${sheetHead('Produit')}
     <input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Produit" autocomplete="off">
     <div class="fields">
       ${fRow('Quantité', `<div class="rc-ing" style="margin:0"><input class="rc-q" data-rc="shop" data-k="qty" value="${esc(fmtQty(m.qty))}" placeholder="Qté" inputmode="decimal" autocomplete="off"><input class="rc-u" data-rc="shop" data-k="unit" value="${esc(m.unit)}" placeholder="Unité" list="rc-units" autocomplete="off"></div><datalist id="rc-units">${UNITS.map(u => `<option value="${esc(u)}"></option>`).join('')}</datalist>`)}
-      ${fRow('Rayon', `<select data-rc="shop" data-k="aisle">${aisles.map(a => `<option ${a === m.aisle ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select>`)}
       ${fRow('Statut', `<button type="button" class="chip ${done ? 'on' : ''}" data-act="sh-check" data-id="${it.id}">${done ? 'Pris' : 'À prendre'}</button>`)}
     </div>`;
 }
