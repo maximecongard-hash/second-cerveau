@@ -89,7 +89,7 @@ Le script active `pg_cron` et `pg_net`. Si une erreur les mentionne : **Database
 Une seule fonction fait tout : abonnement Calendrier, envoi des rappels, ajout de comptes.
 
 1. **Edge Functions** > **Deploy a new function** > **Via Editor**.
-2. Nom exact : `brain`. Efface le code d'exemple, colle [`supabase/functions/brain/index.ts`](supabase/functions/brain/index.ts), puis **Deploy function**.
+2. Nom exact : `brain`, tout en minuscules, **avant le premier déploiement**. L'adresse se fixe à la création et distingue les majuscules : renommer la fonction ensuite ne change que le nom affiché. Efface le code d'exemple, colle [`supabase/functions/brain/index.ts`](supabase/functions/brain/index.ts), puis **Deploy function**.
 3. Onglet **Details** de la fonction : **désactive** « Verify JWT with legacy secret » (ou « Enforce JWT verification ») et enregistre. Calendrier et pg_cron n'envoient pas de clé : chaque route vérifie elle-même son jeton ou le compte de l'appelant.
 
 ### Étape 6 : brancher l'app
@@ -117,7 +117,7 @@ Dans l'app : **Réglages** > **Installation** (visible par l'administrateur) mon
 | Ligne | Vert si | Sinon |
 |---|---|---|
 | Base de données | le schéma est à jour | recolle `schema.sql` |
-| Fonction brain | la fonction répond | étape 5, en vérifiant « Verify JWT » |
+| Fonction brain | la fonction répond | étape 5, en vérifiant « Verify JWT » et que l'URL de la fonction finit par `/functions/v1/brain`. Si elle a une majuscule, supprime la fonction et recrée-la |
 | Rappels | la tâche de chaque minute existe et connaît l'adresse du projet | active `pg_cron` et `pg_net`, recolle `schema.sql` ; l'adresse se remplit à la première ouverture de l'app par l'administrateur |
 | Notifications | les clés de chiffrement existent | créées une minute après le déploiement de la fonction |
 | Nettoyage | la purge de nuit de la corbeille existe | active `pg_cron`, recolle `schema.sql` |
@@ -135,7 +135,7 @@ L'app se met à jour seule : la nouvelle version se télécharge en arrière-pla
 Les anciennes migrations numérotées et les trois fonctions (`calendrier`, `send-reminders`, `add-user`) sont remplacées. Dans cet ordre :
 
 1. Déploie la fonction `brain` (étape 5).
-2. Colle `schema.sql` : il reprend tout seul l'adresse du projet et applique ce qui manquerait.
+2. Colle `schema.sql` : il reprend tout seul l'adresse du projet et applique ce qui manquerait. Il redirige aussi les rappels vers `brain` : sans la fonction, ils ne partent plus (les rappels en retard partiront d'un coup au déploiement, les fins de créneau trop anciennes sont perdues).
 3. Ouvre l'app, vérifie que Réglages > Installation est au vert.
 4. Supprime `send-reminders` et `add-user`. Si Calendrier est déjà abonné, garde l'ancienne fonction `calendrier` : le lien reste valable. Pour la retirer, crée un nouveau lien dans Réglages > iPhone et Calendrier, abonne-toi avec, puis supprime-la.
 

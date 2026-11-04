@@ -29,7 +29,7 @@ RLS), hors ligne via localStorage + service worker.
   - **Synchro** : démarrage immédiat sur le cache, connexion demandée seulement si la session est invalide ; envoi par champ (`S.dirty` = Map id → champs) ; ligne refusée isolée (`S.stuck`) ; préférences fusionnées clé par clé ; rien n'est échangé sans session ; service worker servi depuis le cache de la version.
   - **Réglages** : un groupe ouvert à la fois, `#/settings/<groupe>`, Corbeille, Installation, clés d'accès sans `prompt()` ; `sheetHead()` commun, Supprimer en bas des feuilles.
   - **Code** : `ITEM_DEFAULTS` dans `state.js`, `scripts/check.py`.
-- **À faire par l'utilisateur pour passer en 0.19** (README, partie 3) : déployer `brain`, coller `schema.sql`, vérifier Réglages > Installation, supprimer `send-reminders` et `add-user`, garder `calendrier` si Calendrier est déjà abonné. Tant que ce n'est pas fait, le point de synchro reste rouge avec le message « Base à mettre à jour ».
+- **Passage à la 0.19 (4 novembre 2026)** : PR #6 fusionnée, 0.19.0 publiée, `schema.sql` collé sur Supabase, fonction `brain` déployée (`ping` répond 200, Verify JWT désactivé). Reste à l'utilisateur : vérifier Réglages > Installation, supprimer `send-reminders` et `add-user`, créer un nouveau lien d'abonnement Calendrier s'il était abonné (la fonction `calendrier` n'existe plus sur Supabase).
 - Dépôt : https://github.com/maximecongard-hash/second-cerveau
 - En ligne (GitHub Pages, branche `main`) : https://maximecongard-hash.github.io/second-cerveau/
 - `.gitignore` : `.DS_Store`, fichiers de l'import Notion, sorties d'outils locaux.
@@ -45,7 +45,7 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Pistes ouvertes
 
-- **Fiabilité 0.19 à valider en vrai** : testée sur un faux serveur local et un Postgres WASM, pas sur Supabase. À vérifier : `schema.sql` sur la vraie base, déploiement de `brain`, purge et cron réels, mise à jour de l'app installée sur iPhone, ouverture hors ligne.
+- **Fiabilité 0.19 à valider en vrai** : la synchro a été testée sur un faux serveur local et le SQL sur un Postgres WASM ; sur le vrai Supabase, seules les routes publiques de `brain` ont été vérifiées. À vérifier : Réglages > Installation, envoi réel des rappels et de la purge, mise à jour de l'app installée sur iPhone, ouverture hors ligne. Le service worker n'a tourné qu'en simulation.
 - **Courses, suite** : 0.20 partage du foyer avec la conjointe et validation du partage 0.11 en vrai ; 0.21 mode magasin. Ensuite : planning de repas dans l'Agenda, import par URL.
 - **Widget Scriptable** (`widget/Brain.js`, fonction `widget_today`, README partie 5) : non testé sur iPhone.
 - **Sport, partie 2** : suivi des séances faites via COROS vers Strava (route `strava` de la fonction `brain`, OAuth une fois, webhook), rapprochement avec la séance prévue (`meta.result.source` / `ext_id` déjà prévus). **Partie 3** : envoi des séances vers la montre (export texte aujourd'hui ; FIT ou API non officielle à étudier).
@@ -70,6 +70,7 @@ Pas de tests automatisés de l'interface : vérifier à la main en largeur mobil
 - Chaque nouvelle version : `VERSION` dans `js/core/config.js` **et** `CACHE` dans `sw.js`. L'app se sert depuis le cache : sans nouvelle version, personne ne reçoit les changements.
 - Chaque nouveau fichier JS : l'ajouter à `SHELL` dans `sw.js`. `python3 scripts/check.py` vérifie tout ça.
 - Changement de schéma : modifier `supabase/schema.sql` (seul fichier SQL) et `SCHEMA_VERSION` ; l'utilisateur le recolle lui-même dans le SQL Editor Supabase.
+- Edge Function : l'adresse se fixe à la création et distingue les majuscules. Renommer dans Details ne change que le nom affiché : `Brain` répond 404 sur `/brain`, il faut supprimer et recréer.
 - Interface en français, ton calme, pas de point d'exclamation.
 - Raccourcis iOS : fichiers signés dans `raccourcis/`, refaits sur Mac par `python3 raccourcis/build.py`
   (clé d'accès demandée à l'installation, jamais dans les fichiers). Si `capture()`, l'URL ou la clé publique changent, refaire les raccourcis.
