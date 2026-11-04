@@ -1,18 +1,32 @@
--- Second Cerveau : schéma Supabase
--- À coller en entier dans Supabase > SQL Editor > New query, puis "Run".
--- Le script peut être relancé sans risque (il ne supprime aucune donnée).
+-- Brain (Second Cerveau) : base de données complète, en un seul morceau.
+--
+-- Installation neuve comme mise à jour : coller tout ce fichier dans
+-- Supabase > SQL Editor > New query, puis "Run".
+-- Il se relance sans risque et monte une base de n'importe quelle ancienne version.
+-- Il ne supprime aucune donnée (seule la purge de nuit retire la corbeille de plus de 30 jours).
+--
+-- Quand ce fichier change, augmenter le numéro renvoyé par brain_status() (section 9)
+-- et SCHEMA_VERSION dans js/core/config.js : l'app signale alors la mise à jour à faire.
+--
+-- Sommaire
+--   1. Éléments            5. Calendrier Apple        9. État de l'installation
+--   2. Préférences         6. Notifications          10. Purge de la corbeille
+--   3. Clés d'accès        7. Comptes et partage     11. Droits des fonctions
+--   4. Photos              8. Historique
 
 create extension if not exists pgcrypto;
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
 
 -- ---------------------------------------------------------------------------
--- Éléments : inbox, tâches, projets, notes, signets et domaines dans une seule table
+-- 1. Éléments : tâches, projets, notes, séances, recettes… dans une seule table
+-- Chaque module déclare ses types (kind) : un nouveau module n'a pas besoin de toucher à la base.
 -- ---------------------------------------------------------------------------
 create table if not exists public.items (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  -- inbox, task, project, area (Organisation), note, bookmark (Notes)… : chaque module déclare les siens
-  kind           text not null default 'inbox' constraint items_kind_check check (kind ~ '^[a-z][a-z_]*$'),
-  status         text not null default 'active' check (status in ('active','waiting','someday','done','trashed','clarify')),
+  kind           text not null default 'inbox',
+  status         text not null default 'active',
   title          text not null default '',
   body           text not null default '',
   url            text,
@@ -27,38 +41,97 @@ create table if not exists public.items (
   scheduled_time time,
   day_order      double precision,
   waiting_for    text,
-  focus          smallint check (focus between 1 and 3),
-  outcome        text,
-  review_date    date,
-  recurrence     text check (recurrence in ('daily','weekdays','weekly','monthly','yearly')),
-  links          uuid[] not null default '{}',
-  pinned         boolean not null default false,
+  recurrence     text,
   source         text not null default 'app',
   completed_at   timestamptz,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
 
+-- Colonnes ajoutées au fil des versions : une base ancienne les reçoit ici
+alter table public.items add column if not exists focus            smallint check (focus between 1 and 3);
+alter table public.items add column if not exists outcome          text;
+alter table public.items add column if not exists review_date      date;
+alter table public.items add column if not exists links            uuid[] not null default '{}';
+alter table public.items add column if not exists pinned           boolean not null default false;
+alter table public.items add column if not exists remind_at        timestamptz; -- heure du rappel
+alter table public.items add column if not exists reminded_at      timestamptz; -- rempli à l'envoi
+alter table public.items add column if not exists spent_sec        int not null default 0; -- chronomètre : temps passé
+alter table public.items add column if not exists timer_started_at timestamptz; -- chronomètre : départ en cours
+alter table public.items add column if not exists end_at           timestamptz; -- fin du créneau, calculée par l'app
+alter table public.items add column if not exists end_notified_at  timestamptz; -- rempli à l'envoi
+alter table public.items add column if not exists completed_by     uuid references auth.users(id) on delete set null;
+alter table public.items add column if not exists meta             jsonb; -- contenu propre à un module (séance, recette…)
+
+alter table public.items drop constraint if exists items_kind_check;
+alter table public.items add constraint items_kind_check check (kind ~ '^[a-z][a-z_]*$');
+alter table public.items drop constraint if exists items_status_check;
+alter table public.items add constraint items_status_check
+  check (status in ('active','waiting','someday','done','trashed','clarify'));
+-- monthday:25 = le 25 de chaque mois ; nth:1:6 = le 1er samedi de chaque mois
+alter table public.items drop constraint if exists items_recurrence_check;
+alter table public.items add constraint items_recurrence_check
+  check (recurrence ~ '^(daily|weekdays|weekly|monthly|yearly|monthday:[0-9]{1,2}|nth:[1-5]:[0-6])$');
+
 create index if not exists items_user_updated_idx on public.items (user_id, updated_at);
+create index if not exists items_parent_idx on public.items (parent_id);
+create index if not exists items_remind_idx on public.items (remind_at) where reminded_at is null;
+create index if not exists items_end_idx on public.items (end_at) where end_notified_at is null;
 
 -- updated_at est toujours fixé par le serveur : il sert de curseur de synchro
-create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
+create or replace function public.touch_updated_at() returns trigger language plpgsql as $$
 begin
   new.updated_at := clock_timestamp();
   return new;
 end $$;
-
 drop trigger if exists items_touch on public.items;
-create trigger items_touch
-  before insert or update on public.items
+create trigger items_touch before insert or update on public.items
   for each row execute function public.touch_updated_at();
 
+-- Changer l'heure du rappel ou du créneau réarme la notification
+create or replace function public.rearm_reminder() returns trigger language plpgsql as $$
+begin
+  if new.remind_at is distinct from old.remind_at then new.reminded_at := null; end if;
+  if new.end_at is distinct from old.end_at then new.end_notified_at := null; end if;
+  return new;
+end $$;
+drop trigger if exists items_rearm_reminder on public.items;
+create trigger items_rearm_reminder before update on public.items
+  for each row execute function public.rearm_reminder();
+
+-- Le propriétaire d'une ligne ne change jamais (un invité qui modifie garde le user_id d'origine)
+create or replace function public.keep_item_owner() returns trigger language plpgsql as $$
+begin
+  new.user_id := old.user_id;
+  return new;
+end $$;
+drop trigger if exists items_keep_owner on public.items;
+create trigger items_keep_owner before update on public.items
+  for each row execute function public.keep_item_owner();
+
+-- Qui a terminé une tâche : fixé par le serveur, l'app ne peut pas le falsifier
+create or replace function public.set_completed_by() returns trigger language plpgsql as $$
+begin
+  if new.status = 'done' then
+    if tg_op = 'INSERT' or old.status is distinct from 'done' then
+      new.completed_by := coalesce(auth.uid(), new.completed_by);
+    else
+      new.completed_by := old.completed_by;
+    end if;
+  else
+    new.completed_by := null;
+  end if;
+  return new;
+end $$;
+drop trigger if exists items_set_completed_by on public.items;
+create trigger items_set_completed_by before insert or update on public.items
+  for each row execute function public.set_completed_by();
+
 alter table public.items enable row level security;
--- les politiques de la table (propriétaire + partages) sont définies plus bas, section « Partage »
+-- les règles d'accès de la table sont en section 7, avec le partage
 
 -- ---------------------------------------------------------------------------
--- Préférences (contextes, date de dernière revue…)
+-- 2. Préférences (contextes, modules, dates de revue…), une ligne par compte
 -- ---------------------------------------------------------------------------
 create table if not exists public.prefs (
   user_id    uuid primary key default auth.uid() references auth.users(id) on delete cascade,
@@ -74,16 +147,17 @@ create policy "prefs_owner" on public.prefs
   with check (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
--- Clés d'accès des raccourcis iOS et du widget (générées depuis l'app ; table historique capture_tokens)
+-- 3. Clés d'accès des raccourcis iPhone et du widget (table historique capture_tokens)
+-- Trois portes, sans mot de passe : capture (Inbox), agenda (Calendrier), widget (lecture du jour).
 -- ---------------------------------------------------------------------------
 create table if not exists public.capture_tokens (
   token      text primary key check (length(token) >= 32),
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  name       text,                                 -- nom donné à la clé (0.17.3)
-  uses       jsonb not null default '{}'::jsonb,   -- compteur par porte : capture, agenda, widget
-  last_used_at timestamptz
+  created_at timestamptz not null default now()
 );
+alter table public.capture_tokens add column if not exists name         text;
+alter table public.capture_tokens add column if not exists uses         jsonb not null default '{}'::jsonb; -- compteur par porte
+alter table public.capture_tokens add column if not exists last_used_at timestamptz;
 
 alter table public.capture_tokens enable row level security;
 drop policy if exists "tokens_owner" on public.capture_tokens;
@@ -92,7 +166,7 @@ create policy "tokens_owner" on public.capture_tokens
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
--- Vérifie la clé, compte l'utilisation et rend le compte propriétaire (migration 014)
+-- Vérifie la clé, compte l'utilisation et rend le compte propriétaire
 create or replace function public.use_token(p_token text, p_door text)
 returns uuid language plpgsql security definer set search_path = public as $$
 declare
@@ -106,17 +180,12 @@ begin
   return v_user;
 end $$;
 
-revoke all on function public.use_token(text, text) from public;
-
 create or replace function public.capture_token_valid(p_token text)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.capture_tokens where token = p_token);
 $$;
 
-revoke all on function public.capture_token_valid(text) from public;
-grant execute on function public.capture_token_valid(text) to anon, authenticated;
-
--- Point d'entrée du raccourci : ajoute un élément dans l'Inbox
+-- Porte « capture » : ajoute un élément dans l'Inbox
 create or replace function public.capture(
   p_token      text,
   p_text       text default null,
@@ -136,7 +205,7 @@ declare
 begin
   v_user := public.use_token(p_token, 'capture');
   if v_user is null then
-    raise exception 'Jeton de capture invalide' using errcode = '28000';
+    raise exception 'Clé d''accès invalide' using errcode = '28000';
   end if;
 
   -- un lien partagé seul arrive souvent comme texte
@@ -145,7 +214,7 @@ begin
     v_text := '';
   end if;
 
-  -- une image doit venir du dossier de ce jeton
+  -- une image doit venir du dossier de cette clé
   if v_img is not null and v_img not like 'inbox/' || p_token || '/%' then
     v_img := null;
   end if;
@@ -172,13 +241,10 @@ begin
   return v_id;
 end $$;
 
-revoke all on function public.capture(text, text, text, text) from public;
-grant execute on function public.capture(text, text, text, text) to anon, authenticated;
-
 -- ---------------------------------------------------------------------------
--- Stockage des photos (bucket privé)
+-- 4. Photos (bucket privé)
 --   app       : <user_id>/<fichier>.jpg
---   raccourci : inbox/<jeton>/<fichier>.jpg
+--   raccourci : inbox/<clé>/<fichier>.jpg
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('captures', 'captures', false, 10485760,
@@ -214,9 +280,9 @@ create policy "captures_shortcut_upload" on storage.objects
   );
 
 -- ---------------------------------------------------------------------------
--- Brain vers Calendrier : flux ICS lu par l'abonnement de Calendrier (Edge Function « calendrier »)
+-- 5. Calendrier Apple, dans les deux sens et en lecture seule
 -- ---------------------------------------------------------------------------
--- Jeton du lien d'abonnement : distinct du jeton de capture, il ne permet que de lire l'agenda
+-- Brain vers Calendrier : jeton du lien d'abonnement, il ne permet que de lire l'agenda
 create table if not exists public.calendar_tokens (
   token      text primary key check (length(token) >= 32),
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
@@ -230,7 +296,7 @@ create policy "calendar_tokens_owner" on public.calendar_tokens
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
--- Éléments placés à une heure, d'un mois en arrière à six mois devant
+-- Éléments placés à une heure, d'un mois en arrière à six mois devant (lus par la fonction brain)
 create or replace function public.calendar_feed(p_token text)
 returns table (
   id             uuid,
@@ -258,14 +324,8 @@ language sql stable security definer set search_path = public as $$
   limit 2000;
 $$;
 
-revoke all on function public.calendar_feed(text) from public;
-grant execute on function public.calendar_feed(text) to anon, authenticated;
-
--- ---------------------------------------------------------------------------
--- Calendrier vers Brain : événements Apple envoyés par le raccourci « Agenda Apple »
--- Lecture seule dans l'app ; seul le raccourci (jeton de capture) les remplace.
--- Heures locales sans fuseau, comme les créneaux de Brain.
--- ---------------------------------------------------------------------------
+-- Calendrier vers Brain : événements envoyés par le raccourci « Agenda Apple »
+-- Lecture seule dans l'app. Heures locales sans fuseau, comme les créneaux de Brain.
 create table if not exists public.events (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
@@ -286,7 +346,7 @@ create policy "events_owner_read" on public.events
   for select to authenticated
   using (user_id = auth.uid());
 
--- p_lines : un événement par enregistrement, séparés par ␞, champs séparés par une tabulation :
+-- Porte « agenda ». p_lines : un événement par enregistrement, séparés par ␞, champs séparés par une tabulation :
 --   calendrier, début, fin, journée entière, titre, lieu   (dates au format 2026-11-02T09:30)
 -- Remplace les événements à partir du premier début reçu, ignore le calendrier « Brain »
 -- (l'abonnement à Brain lui-même) et oublie ceux de plus de deux mois.
@@ -298,7 +358,7 @@ declare
 begin
   v_user := public.use_token(p_token, 'agenda');
   if v_user is null then
-    raise exception 'Jeton de capture invalide' using errcode = '28000';
+    raise exception 'Clé d''accès invalide' using errcode = '28000';
   end if;
 
   with recs as (
@@ -331,38 +391,48 @@ begin
   return v_count;
 end $$;
 
-revoke all on function public.sync_events(text, text) from public;
-grant execute on function public.sync_events(text, text) to anon, authenticated;
-
--- ---------------------------------------------------------------------------
--- Notifications de Brain (identique à 006_notifications.sql)
--- Il faut aussi déployer la fonction supabase/functions/send-reminders (voir le README).
--- ---------------------------------------------------------------------------
-create extension if not exists pg_cron;
-create extension if not exists pg_net;
-
--- ---------------------------------------------------------------------------
--- Heure du rappel d'un élément ; reminded_at est rempli par la fonction send-reminders
--- ---------------------------------------------------------------------------
-alter table public.items add column if not exists remind_at timestamptz;
-alter table public.items add column if not exists reminded_at timestamptz;
-create index if not exists items_remind_idx on public.items (remind_at) where reminded_at is null;
-
--- Changer l'heure du rappel le réarme
-create or replace function public.rearm_reminder() returns trigger language plpgsql as $$
+-- Porte « widget » : résumé de la journée (Top 3, tâches datées, échéances, Inbox, événements).
+-- p_day : le jour vu par l'iPhone (évite le décalage de fuseau du serveur).
+create or replace function public.widget_today(p_token text, p_day date default current_date)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid;
 begin
-  if new.remind_at is distinct from old.remind_at then
-    new.reminded_at := null;
+  v_user := public.use_token(p_token, 'widget');
+  if v_user is null then
+    raise exception 'Clé d''accès invalide' using errcode = '28000';
   end if;
-  return new;
+
+  return jsonb_build_object(
+    'day', p_day,
+    'tasks', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'title', i.title, 'time', to_char(i.scheduled_time, 'HH24:MI'), 'duration', i.duration_min,
+        'focus', i.focus, 'done', i.status = 'done')
+        order by i.scheduled_time nulls last, i.day_order nulls last, i.created_at)
+      from public.items i
+      where i.user_id = v_user and i.kind = 'task' and i.scheduled_date = p_day
+        and i.status in ('active', 'waiting', 'done')), '[]'::jsonb),
+    'overdue', (
+      select count(*) from public.items i
+      where i.user_id = v_user and i.kind = 'task' and i.status = 'active'
+        and (i.due_date < p_day or i.scheduled_date < p_day)),
+    'inbox', (
+      select count(*) from public.items i
+      where i.user_id = v_user and i.kind = 'inbox' and i.status <> 'trashed'),
+    'events', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'title', e.title, 'start', to_char(e.starts_at, 'HH24:MI'), 'end', to_char(e.ends_at, 'HH24:MI'),
+        'allDay', e.all_day) order by e.all_day desc, e.starts_at)
+      from public.events e
+      where e.user_id = v_user and e.starts_at::date <= p_day and e.ends_at::date >= p_day), '[]'::jsonb)
+  );
 end $$;
-drop trigger if exists items_rearm_reminder on public.items;
-create trigger items_rearm_reminder before update on public.items
-  for each row execute function public.rearm_reminder();
 
 -- ---------------------------------------------------------------------------
--- Appareils abonnés aux notifications (un par iPhone, Mac…)
+-- 6. Notifications (Web Push, envoyées par la fonction brain, appelée chaque minute par pg_cron)
 -- ---------------------------------------------------------------------------
+-- Appareils abonnés (un par iPhone, Mac…)
 create table if not exists public.push_subscriptions (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null default auth.uid() references auth.users on delete cascade,
@@ -378,48 +448,49 @@ create policy "push_owner" on public.push_subscriptions
   for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
--- ---------------------------------------------------------------------------
--- Réglages de l'envoi : clés VAPID (créées par la fonction au premier appel)
--- et secret qui autorise pg_cron à appeler la fonction. Aucune règle RLS :
--- seule la clé de service (la fonction) peut lire cette table.
--- ---------------------------------------------------------------------------
+-- Réglages de l'envoi. Aucune règle RLS : seule la clé de service (la fonction brain) lit cette table.
+--   public_key, private_jwk : clés VAPID, créées par la fonction au premier appel
+--   cron_secret             : autorise pg_cron à appeler la fonction
+--   project_url             : adresse du projet, donnée par l'app à la première ouverture de l'administrateur
 create table if not exists public.push_config (
   id          int primary key default 1 check (id = 1),
   public_key  text,
   private_jwk jsonb,
   cron_secret text not null default replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')
 );
+alter table public.push_config add column if not exists project_url text;
 alter table public.push_config enable row level security;
 insert into public.push_config (id) values (1) on conflict (id) do nothing;
+
+-- Une base déjà installée retrouve son adresse dans l'ancienne tâche planifiée
+update public.push_config
+   set project_url = (select substring(command from 'https://[a-z0-9-]+\.supabase\.co') from cron.job
+                       where jobname = 'brain-reminders' limit 1)
+ where id = 1 and project_url is null;
 
 -- Clé publique VAPID, dont l'app a besoin pour s'abonner
 create or replace function public.push_public_key() returns text
 language sql security definer set search_path = public stable as $$
   select public_key from public.push_config where id = 1;
 $$;
-revoke all on function public.push_public_key() from public;
-grant execute on function public.push_public_key() to authenticated;
 
--- ---------------------------------------------------------------------------
--- Chaque minute : appelle la fonction send-reminders
--- ---------------------------------------------------------------------------
+-- Chaque minute : appelle la fonction brain (rien tant que l'adresse du projet n'est pas connue)
 select cron.unschedule('brain-reminders') where exists (select 1 from cron.job where jobname = 'brain-reminders');
 select cron.schedule('brain-reminders', '* * * * *', $$
   select net.http_post(
-    url := 'https://zqdvtbkjvfzkjqtaffbb.supabase.co/functions/v1/send-reminders',
-    headers := jsonb_build_object('Content-Type', 'application/json',
-                                  'x-cron-secret', (select cron_secret from public.push_config where id = 1)),
+    url := c.project_url || '/functions/v1/brain/reminders',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', c.cron_secret),
     body := '{}'::jsonb,
     timeout_milliseconds := 20000
-  );
+  )
+  from public.push_config c
+  where c.id = 1 and c.project_url is not null;
 $$);
 
 -- ---------------------------------------------------------------------------
--- Partage : plusieurs utilisateurs (identique à 007_partage.sql)
--- Il faut aussi déployer la fonction supabase/functions/add-user (voir le README).
+-- 7. Comptes et partage
 -- ---------------------------------------------------------------------------
 -- Profils : un par compte (email, nom affiché, administrateur)
--- ---------------------------------------------------------------------------
 create table if not exists public.profiles (
   id         uuid primary key references auth.users(id) on delete cascade,
   email      text not null default '',
@@ -428,12 +499,14 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
+-- Tout nouveau compte reçoit son profil ; le premier devient administrateur
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, email, name)
+  insert into public.profiles (id, email, name, is_admin)
   values (new.id, coalesce(new.email, ''),
-          coalesce(nullif(btrim(new.raw_user_meta_data->>'name'), ''), split_part(coalesce(new.email, ''), '@', 1)))
+          coalesce(nullif(btrim(new.raw_user_meta_data->>'name'), ''), split_part(coalesce(new.email, ''), '@', 1)),
+          not exists (select 1 from public.profiles where is_admin))
   on conflict (id) do nothing;
   return new;
 end $$;
@@ -442,7 +515,7 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- comptes déjà présents ; le plus ancien devient administrateur s'il n'y en a pas
+-- Comptes déjà présents ; le plus ancien devient administrateur s'il n'y en a pas
 insert into public.profiles (id, email, name, created_at)
 select u.id, coalesce(u.email, ''), split_part(coalesce(u.email, ''), '@', 1), u.created_at from auth.users u
 on conflict (id) do nothing;
@@ -455,13 +528,22 @@ create or replace function public.is_admin() returns boolean
 language sql stable security definer set search_path = public as $$
   select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
 $$;
-revoke all on function public.is_admin() from public;
-grant execute on function public.is_admin() to authenticated;
 
--- ---------------------------------------------------------------------------
--- Partages : un élément (projet, tâche…) partagé avec un autre compte
--- Un projet partagé donne aussi accès à ses tâches (parent_id).
--- ---------------------------------------------------------------------------
+-- Profils visibles de tous les comptes (petit groupe privé), pour choisir avec qui partager.
+-- Seul le nom se modifie depuis l'app ; is_admin ne se change que dans le SQL Editor.
+alter table public.profiles enable row level security;
+drop policy if exists "profiles_read" on public.profiles;
+create policy "profiles_read" on public.profiles
+  for select to authenticated
+  using (true);
+drop policy if exists "profiles_update_self" on public.profiles;
+create policy "profiles_update_self" on public.profiles
+  for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+revoke update on public.profiles from authenticated;
+grant update (name) on public.profiles to authenticated;
+
+-- Partages : un élément (projet, tâche, foyer…) partagé avec un autre compte.
+-- Un élément partagé donne aussi accès à ses enfants directs (parent_id).
 create table if not exists public.shares (
   id         uuid primary key default gen_random_uuid(),
   item_id    uuid not null references public.items(id) on delete cascade,
@@ -496,20 +578,14 @@ returns text language sql stable security definer set search_path = public as $$
     )
   end;
 $$;
-revoke all on function public.row_role(uuid, uuid, uuid) from public;
-grant execute on function public.row_role(uuid, uuid, uuid) to authenticated;
 
 create or replace function public.item_role(p_id uuid)
 returns text language sql stable security definer set search_path = public as $$
   select public.row_role(i.id, i.parent_id, i.user_id) from public.items i where i.id = p_id;
 $$;
-revoke all on function public.item_role(uuid) from public;
-grant execute on function public.item_role(uuid) to authenticated;
 
--- ---------------------------------------------------------------------------
--- Éléments : le propriétaire, les invités du partage, et le propriétaire d'un projet
--- voit les tâches que ses invités y ajoutent
--- ---------------------------------------------------------------------------
+-- Règles d'accès des éléments : le propriétaire, les invités du partage,
+-- et le propriétaire d'un projet pour les tâches que ses invités y ajoutent
 drop policy if exists "items_owner" on public.items;
 drop policy if exists "items_select" on public.items;
 drop policy if exists "items_insert" on public.items;
@@ -536,36 +612,9 @@ create policy "items_delete" on public.items
   for delete to authenticated
   using (user_id = auth.uid());
 
--- le propriétaire d'une ligne ne change jamais (un invité qui modifie garde le user_id d'origine)
-create or replace function public.keep_item_owner() returns trigger language plpgsql as $$
-begin
-  new.user_id := old.user_id;
-  return new;
-end $$;
-drop trigger if exists items_keep_owner on public.items;
-create trigger items_keep_owner before update on public.items
-  for each row execute function public.keep_item_owner();
-
--- ---------------------------------------------------------------------------
--- Profils : visibles de tous les comptes (petit groupe privé), pour choisir avec qui partager
--- ---------------------------------------------------------------------------
-alter table public.profiles enable row level security;
-drop policy if exists "profiles_read" on public.profiles;
-create policy "profiles_read" on public.profiles
-  for select to authenticated
-  using (true);
-drop policy if exists "profiles_update_self" on public.profiles;
-create policy "profiles_update_self" on public.profiles
-  for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
--- seul le nom est modifiable depuis l'app
-revoke update on public.profiles from authenticated;
-grant update (name) on public.profiles to authenticated;
-
--- ---------------------------------------------------------------------------
--- Partager un élément avec un compte, par email (ou changer son droit)
+-- Partager un élément avec un compte, par email (ou changer son droit).
 -- Le propriétaire seul peut partager. Les éléments concernés sont « touchés »
 -- pour que l'invité les reçoive à sa prochaine synchro.
--- ---------------------------------------------------------------------------
 create or replace function public.share_item(p_item uuid, p_email text, p_role text default 'edit')
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
@@ -576,7 +625,7 @@ declare
   v_prof  public.profiles;
 begin
   select user_id into v_owner from public.items where id = p_item;
-  if v_owner is distinct from auth.uid() then
+  if auth.uid() is null or v_owner is distinct from auth.uid() then
     raise exception 'Tu ne peux partager que tes propres éléments';
   end if;
   select id into v_guest from auth.users where lower(email) = lower(btrim(p_email));
@@ -598,66 +647,9 @@ begin
   return jsonb_build_object('id', v_share, 'item_id', p_item, 'owner_id', auth.uid(), 'user_id', v_guest, 'role', v_role,
                             'email', v_prof.email, 'name', v_prof.name);
 end $$;
-revoke all on function public.share_item(uuid, text, text) from public;
-grant execute on function public.share_item(uuid, text, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- Chronomètre des tâches : temps passé (secondes) et début du chrono en cours
--- ---------------------------------------------------------------------------
-alter table public.items add column if not exists spent_sec int not null default 0;
-alter table public.items add column if not exists timer_started_at timestamptz;
-
--- ---------------------------------------------------------------------------
--- Notification de fin de créneau : instant de fin (calculé par l'app) et envoi fait
--- ---------------------------------------------------------------------------
-alter table public.items add column if not exists end_at timestamptz;
-alter table public.items add column if not exists end_notified_at timestamptz;
-create index if not exists items_end_idx on public.items (end_at) where end_notified_at is null;
-create or replace function public.rearm_reminder() returns trigger language plpgsql as $$
-begin
-  if new.remind_at is distinct from old.remind_at then
-    new.reminded_at := null;
-  end if;
-  if new.end_at is distinct from old.end_at then
-    new.end_notified_at := null;
-  end if;
-  return new;
-end $$;
-
--- ---------------------------------------------------------------------------
--- Répétitions : aussi « le N du mois » (monthday:25) et « Nème jour de semaine » (nth:1:6)
--- ---------------------------------------------------------------------------
-alter table public.items drop constraint if exists items_recurrence_check;
-alter table public.items add constraint items_recurrence_check
-  check (recurrence ~ '^(daily|weekdays|weekly|monthly|yearly|monthday:[0-9]{1,2}|nth:[1-5]:[0-6])$');
-
--- ---------------------------------------------------------------------------
--- 0.14 : « terminé par » et historique des projets (voir 011_historique.sql)
--- ---------------------------------------------------------------------------
--- ---------------------------------------------------------------------------
--- Qui a terminé une tâche : fixé par le serveur, l'app ne peut pas le falsifier
--- ---------------------------------------------------------------------------
-alter table public.items add column if not exists completed_by uuid references auth.users(id) on delete set null;
-
-create or replace function public.set_completed_by() returns trigger language plpgsql as $$
-begin
-  if new.status = 'done' then
-    if tg_op = 'INSERT' or old.status is distinct from 'done' then
-      new.completed_by := coalesce(auth.uid(), new.completed_by);
-    else
-      new.completed_by := old.completed_by;
-    end if;
-  else
-    new.completed_by := null;
-  end if;
-  return new;
-end $$;
-drop trigger if exists items_set_completed_by on public.items;
-create trigger items_set_completed_by before insert or update on public.items
-  for each row execute function public.set_completed_by();
-
--- ---------------------------------------------------------------------------
--- Historique : une ligne par évènement sur un projet ou l'une de ses tâches
+-- 8. Historique : une ligne par évènement sur un projet ou l'une de ses tâches
 -- Écrit uniquement par le trigger ci-dessous. Lisible par ceux qui ont accès au projet.
 -- ---------------------------------------------------------------------------
 create table if not exists public.item_events (
@@ -731,8 +723,83 @@ create trigger items_log_event after insert or update or delete on public.items
   for each row execute function public.log_item_event();
 
 -- ---------------------------------------------------------------------------
--- 0.15 : module Sport (contenu des séances en JSON)
+-- 9. État de l'installation, lu par Réglages > Installation
 -- ---------------------------------------------------------------------------
-alter table public.items add column if not exists meta jsonb;
+create or replace function public.brain_status() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'schema', 19, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'vapid', c.public_key is not null,
+    'url', c.project_url,
+    'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),
+    'purge', exists (select 1 from cron.job where jobname = 'brain-purge')
+  )
+  from public.push_config c where c.id = 1;
+$$;
 
+-- L'app de l'administrateur donne l'adresse du projet : aucune adresse n'est écrite dans ce fichier
+create or replace function public.brain_setup(p_url text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Réservé à l’administrateur';
+  end if;
+  if p_url !~ '^https://[a-zA-Z0-9.-]+$' then
+    raise exception 'Adresse de projet invalide';
+  end if;
+  update public.push_config set project_url = p_url where id = 1;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 10. Purge de la corbeille : chaque nuit, les éléments supprimés depuis plus de 30 jours
+-- ---------------------------------------------------------------------------
+create or replace function public.brain_purge() returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  v_count int;
+begin
+  delete from public.items where status = 'trashed' and updated_at < now() - interval '30 days';
+  get diagnostics v_count = row_count;
+  -- l'historique d'un projet disparu ne se lit plus
+  delete from public.item_events e where not exists (select 1 from public.items i where i.id = e.project_id);
+  return v_count;
+end $$;
+
+select cron.unschedule('brain-purge') where exists (select 1 from cron.job where jobname = 'brain-purge');
+select cron.schedule('brain-purge', '17 3 * * *', 'select public.brain_purge();');
+
+-- ---------------------------------------------------------------------------
+-- 11. Droits des fonctions. Supabase donne EXECUTE à anon et authenticated par défaut :
+-- un « revoke from public » ne suffit pas, chaque rôle est retiré puis redonné au besoin.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  f text;
+begin
+  -- internes : jamais appelées depuis l'API
+  foreach f in array array[
+    'use_token(text, text)', 'brain_purge()', 'handle_new_user()', 'log_item_event()',
+    'touch_updated_at()', 'rearm_reminder()', 'keep_item_owner()', 'set_completed_by()'
+  ] loop
+    execute format('revoke all on function public.%s from public, anon, authenticated', f);
+  end loop;
+  -- portes des raccourcis, du widget et de l'abonnement : ouvertes, protégées par une clé
+  foreach f in array array[
+    'capture_token_valid(text)', 'capture(text, text, text, text)', 'calendar_feed(text)',
+    'sync_events(text, text)', 'widget_today(text, date)'
+  ] loop
+    execute format('revoke all on function public.%s from public, anon, authenticated', f);
+    execute format('grant execute on function public.%s to anon, authenticated', f);
+  end loop;
+  -- réservées aux comptes connectés
+  foreach f in array array[
+    'push_public_key()', 'is_admin()', 'row_role(uuid, uuid, uuid)', 'item_role(uuid)',
+    'share_item(uuid, text, text)', 'brain_status()', 'brain_setup(text)'
+  ] loop
+    execute format('revoke all on function public.%s from public, anon, authenticated', f);
+    execute format('grant execute on function public.%s to authenticated', f);
+  end loop;
+end $$;
+
+-- recharge le cache de l'API pour qu'elle voie tout de suite les changements
 notify pgrst, 'reload schema';
