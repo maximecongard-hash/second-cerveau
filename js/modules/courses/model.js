@@ -1,4 +1,5 @@
 import { uuid } from '../../core/util.js';
+import { S } from '../../core/store.js';
 
 // ---------------------------------------------------------------------------
 // Modèle des recettes. Une recette est un élément `recipe` ; les étapes vivent dans `body`,
@@ -75,9 +76,14 @@ const AISLE_RULES = [
   ['Fruits et légumes', /pomme|poire|banane|fraise|orange|citron|tomate|oignon|\bail\b|echalote|carotte|courgette|aubergine|poivron|champignon|salade|potimarron|potiron|persil|basilic|coriandre|menthe|avocat|concombre|poireau|haricots verts|\bchou|epinard|patate|raisin|framboise|ciboulette/],
   ['Épicerie', /farine|sucre|\bsel\b|poivre|\briz\b|pates|spaghetti|lasagne|lentille|haricots|pois chiche|paprika|curry|epice|muscade|conserve|chocolat|cafe|\bthe\b|moutarde|miel|cereale|semoule|\bble\b|chapelure/]
 ];
+// Rayon choisi par l'utilisateur dans Réglages > Courses (S.prefs.rcAisles : clé du produit → { n: nom, a: rayon }), prioritaire sur tout le reste
+export const aisleFor = (name, fallback) => {
+  const a = S.prefs.rcAisles?.[productKey(name)]?.a;
+  return a && AISLES.includes(a) ? a : fallback;
+};
 export function guessAisle(name) {
   const n = strip(name);
-  return (AISLE_RULES.find(([, re]) => re.test(n)) || ['Autre'])[0];
+  return aisleFor(name, (AISLE_RULES.find(([, re]) => re.test(n)) || ['Autre'])[0]);
 }
 export const shopMeta = it => ({ qty: null, unit: '', aisle: 'Autre', stage: 'list', ...(it.meta || {}) });
 // Champs d'un produit à partir d'un texte (« 2 l de lait », « sel »)

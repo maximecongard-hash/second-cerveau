@@ -4,7 +4,9 @@ import { registerModule } from '../../core/modules.js';
 import { SH, render, renderEditor, toast } from '../../core/ui.js';
 import { KINDS, views, recipesList, recipeRow, shopRow } from './views.js';
 import { editorHTML, setField, createAndEdit, toggleIn, addIngredient, delIngredient, editorChange } from './editor.js';
-import { parseIngredient } from './model.js';
+
+const aisleOpts = cur => AISLES.map(a => `<option ${a === cur ? 'selected' : ''}>${esc(a)}</option>`).join('');
+import { parseIngredient, AISLES, productKey } from './model.js';
 import { addProduct } from './shop.js';
 import { panierActs } from './panier.js';
 import { STARTERS } from './starters.js';
@@ -32,6 +34,13 @@ const acts = {
     savePrefs();
     toast('Retiré du placard', () => { S.prefs.rcHave = before; savePrefs(); });
   },
+  'rc-aisle-del': el => {
+    const before = S.prefs.rcAisles || {}, next = { ...before };
+    delete next[el.dataset.v];
+    S.prefs.rcAisles = next;
+    savePrefs();
+    toast('Rayon oublié', () => { S.prefs.rcAisles = before; savePrefs(); });
+  },
   'fy-create': () => { createFoyer(); render(); toast('Foyer créé'); },
   // liste de courses
   'sh-check': el => {
@@ -55,6 +64,16 @@ const forms = {
     addIngredient(f.dataset.id, v);
     $('#rc-ing-new')?.focus();
   },
+  'rc-aisle-add': f => {
+    const input = f.querySelector('input'), name = input.value.trim();
+    if (!name) return;
+    const key = productKey(name);
+    if (!key) return;
+    S.prefs.rcAisles = { ...(S.prefs.rcAisles || {}), [key]: { n: name, a: f.querySelector('select').value } };
+    savePrefs();
+    input.value = '';
+    toast('Rayon retenu');
+  },
   'sh-add': f => {
     const input = f.querySelector('input'), v = input.value.trim();
     if (!v) return;
@@ -65,9 +84,12 @@ const forms = {
 };
 
 function settings() {
-  const have = S.prefs.rcHave || [];
+  const have = S.prefs.rcHave || [], aisles = Object.entries(S.prefs.rcAisles || {}).sort((a, b) => a[1].n.localeCompare(b[1].n, 'fr'));
   return sec('Foyer', `<div class="muted small pad">Recettes et liste de courses, à partager avec les personnes de ton choix.</div>
       <div class="btn-row"><a class="btn" href="#/foyer">Foyer et partage</a></div>`) +
+    sec('Rayons', `<div class="muted small pad">Le rayon est deviné d’après le nom du produit. Ici, tu imposes un rayon pour un produit : il sera retenu, au pluriel comme au singulier.</div>
+      <form class="inline-add" data-form="rc-aisle-add"><input placeholder="+ Produit (courgette)" autocomplete="off"><select>${aisleOpts('Autre')}</select><button class="btn" type="submit">Ajouter</button></form>
+      ${aisles.map(([k, v]) => `<div class="f-row"><label>${esc(v.n)}</label><div class="f-val"><select data-rc="aisle-map" data-k="${esc(k)}">${aisleOpts(v.a)}</select><button type="button" class="icon-btn" data-act="rc-aisle-del" data-v="${esc(k)}" aria-label="Oublier ${esc(v.n)}">${I.minus}</button></div></div>`).join('') || '<div class="muted pad">Aucun rayon imposé.</div>'}`) +
     sec('Placard', `<div class="muted small pad">Produits marqués « Déjà là » dans le panier : ils y seront pré-cochés la prochaine fois.</div>
       ${have.length ? `<div class="chips wrap">${have.map(x => `<button type="button" class="chip" data-act="rc-have-del" data-v="${esc(x)}">${esc(x)} ×</button>`).join('')}</div>` : '<div class="muted pad">Rien pour l’instant.</div>'}`);
 }
@@ -102,7 +124,7 @@ registerModule({
   tabOf: { foyer: 'courses', panier: 'recettes' },
   menu: () => [['#/foyer', 'Foyer et partage']],
   views, acts, forms, fab,
-  prefs: { rcHave: [] },
+  prefs: { rcHave: [], rcAisles: {} },
   ui: { rcQuery: '', rcFilter: 'all', rcSeason: null, rcSel: [], rcParts: {}, pnHave: {} },
   editor: editorHTML,
   setField,
@@ -110,8 +132,15 @@ registerModule({
   searchable: it => it.kind !== 'foyer',
   keepKinds: ['foyer'],
   settings,
-  settingsMeta: 'Foyer · placard',
+  settingsMeta: 'Foyer · rayons · placard',
   seedDemo,
   onInput,
-  onChange: editorChange
+  onChange: t => {
+    if (t.dataset.rc === 'aisle-map') {
+      const cur = (S.prefs.rcAisles || {})[t.dataset.k];
+      if (cur) { S.prefs.rcAisles = { ...S.prefs.rcAisles, [t.dataset.k]: { ...cur, a: t.value } }; savePrefs(); }
+      return true;
+    }
+    return editorChange(t);
+  }
 });
