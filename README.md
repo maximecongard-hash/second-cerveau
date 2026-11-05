@@ -56,7 +56,7 @@ Une barre latérale (fixe sur grand écran, ouverte par ☰ sur iPhone) donne ac
 | **Agenda** | grille jour et semaine. Toute tâche avec une heure devient un bloc. Touche un créneau vide pour y placer une tâche. Sur grand écran : glisser-déposer. Les événements de Calendrier Apple s'ajoutent en gris |
 | **Notes** | notes en Markdown, signets (à lire / lus), épinglés, liés aux tâches et aux projets |
 | **Sport** (désactivé par défaut) | séances de course, vélo, natation, rando, renfo et mobilité ; modèles et semaines types ; mode direct (chrono, minuteur de repos) ; historique et progression |
-| **Courses** (désactivé par défaut) | banque de recettes, panier de la semaine (parts, ingrédients fusionnés, « Déjà là / Acheter »), liste de courses, foyer à partager |
+| **Courses** (désactivé par défaut) | banque de recettes, panier de la semaine (parts, ingrédients fusionnés, « Déjà là / Acheter »), liste de courses (un toucher coche, appui long pour la fiche, tri par rayon ou par magasin, prix de promo ramené au kilo), foyer à partager |
 
 Recherche partout, thème clair et sombre automatique, icône au choix, export JSON et Corbeille (30 jours) dans Réglages > Données.
 
@@ -186,7 +186,7 @@ Pour un lien, le raccourci demande « Titre ou note ? » : la première ligne de
 
 ### Widget Scriptable « Ma journée »
 
-Le widget met en avant ce qui compte : le créneau en cours (avec sa barre de progression) ou le suivant, puis, en grand format, le Top 3 sur une ligne, la grille horaire de la journée (tâches faites estompées avec ✓, tâches prévues, événements des autres calendriers, trait rouge pour l'heure) et les 2 prochaines tâches à venir. Le moyen format garde le créneau mis en avant et deux lignes de la journée (avec le nom du calendrier), le petit seulement le créneau. Il demande le `schema.sql` à jour (schéma 21) : recolle-le dans le SQL Editor.
+Le widget met en avant ce qui compte : le créneau en cours (avec sa barre de progression) ou le suivant, puis, en grand format, le Top 3 sur une ligne, la grille horaire de la journée (tâches faites estompées avec ✓, tâches prévues, événements des autres calendriers, trait rouge pour l'heure) et les 2 prochaines tâches à venir. Le moyen format garde le créneau mis en avant et deux lignes de la journée (avec le nom du calendrier), le petit seulement le créneau. Il demande le `schema.sql` à jour (schéma 22) : recolle-le dans le SQL Editor.
 
 1. Installe l'app **Scriptable** (gratuite), crée un script « Brain » et colles-y le code : **Réglages > iPhone et Calendrier > Widget > Copier le code** (ou [`widget/Brain.js`](widget/Brain.js)).
 2. Lance-le dans Scriptable : il demande une clé d'accès et la garde dans le Trousseau.

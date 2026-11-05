@@ -21,9 +21,12 @@ en **modules** dans une barre latérale.
 Stack : HTML + CSS + modules ES natifs, sans build ni npm. Données dans Supabase (table unique `items`,
 RLS), hors ligne via localStorage + service worker.
 
-## Où en est le projet (4 novembre 2026)
+## Où en est le projet (5 novembre 2026)
 
-- Version **0.20.1** (widget Scriptable simplifié, voir Pistes ouvertes). 0.20.0 (Courses : toucher une ligne de la liste la coche, la fiche s'ouvre par appui long ou bouton ⋯ ; promo par produit `meta.price/pqty/punit/store`, prix au kilo calculé, tri Rayon / Prix au kilo / Magasin, à valider sur iPhone) ; avant : 0.19.3 (synchro : relecture complète au moins une fois par heure et sur « Synchroniser », pour retirer d'un appareil ce qu'un autre a supprimé pour de bon, et récupérer une ligne manquée), cache SW `sc-0.20.0`, schéma 20 (lecture des photos du raccourci corrigée : `inbox_key_is_mine`, fonction présente sur Supabase, correctif confirmé par l'utilisateur le 4 novembre 2026).
+- Version **0.20.1**, cache SW `sc-0.20.1`, schéma 22. Tout est fusionné sur `main` (PR #11 à #13), rien en attente.
+- **0.20.0** : Courses, un toucher coche un produit, appui long pour sa fiche, tri par rayon ou par magasin, prix de promo ramené au kilo / litre / pièce (schéma 21 : `widget_today` renvoie les jours à venir).
+- **0.20.1** : widget Scriptable refait (créneau en cours, grille horaire, Top 3, jours à venir, calendrier des événements), schéma 22. Reste à valider sur l'iPhone.
+- **Schéma** : recoller `supabase/schema.sql` dans le SQL Editor Supabase à chaque montée de schéma (22 pour le widget).
 - La 0.19 est une remise à plat, sans nouveau module :
   - **Installation** : `supabase/schema.sql` est le seul fichier SQL (installe et met à jour, idempotent) ; une seule Edge Function `brain` (routes `ping`, `calendrier`, `reminders`, `add-user`, Verify JWT désactivé) ; premier compte = administrateur ; purge de la corbeille après 30 jours (`brain-purge`) ; `brain_status()` et `SCHEMA_VERSION`.
   - **Synchro** : démarrage immédiat sur le cache, connexion demandée seulement si la session est invalide ; envoi par champ (`S.dirty` = Map id → champs) ; ligne refusée isolée (`S.stuck`) ; préférences fusionnées clé par clé ; rien n'est échangé sans session ; service worker servi depuis le cache de la version.
@@ -44,6 +47,8 @@ RLS), hors ligne via localStorage + service worker.
   - 0.19 : remise à plat (voir ci-dessus).
   - 0.19.1 : lecture des photos du raccourci par une fonction security definer.
   - 0.19.2 : Courses, rayons imposés par produit dans Réglages > Courses > Rayons (pref `rcAisles`, prioritaires sur `guessAisle`), champ Rayon retiré de la fiche produit.
+  - 0.19.3 : synchro, relecture complète au moins une fois par heure.
+  - 0.20.0 : Courses, toucher coche, fiche par appui long, promos au kilo et magasin. 0.20.1 : widget refait.
 
 ## Pistes ouvertes
 
