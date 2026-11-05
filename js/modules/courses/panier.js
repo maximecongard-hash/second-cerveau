@@ -31,7 +31,7 @@ const haveOf = l => S.ui.pnHave[l.key] ?? (S.prefs.rcHave || []).includes(produc
 
 function line(l) {
   const have = haveOf(l), q = [fmtQty(l.qty), l.unit].filter(Boolean).join(' ');
-  return `<div class="pn-line ${have ? 'have' : ''}"><div class="row-main"><div class="row-title">${esc(l.name)}${q ? ` <span class="sh-q">${esc(q)}</span>` : ''}</div><div class="sh-from">${esc(l.from.join(', '))}</div></div>
+  return `<div class="pn-line ${have ? 'have' : ''}" data-act="pn-toggle" data-k="${esc(l.key)}"><div class="row-main"><div class="row-title">${esc(l.name)}${q ? ` <span class="sh-q">${esc(q)}</span>` : ''}</div><div class="sh-from">${esc(l.from.join(', '))}</div></div>
     <div class="seg small"><button type="button" class="${have ? 'on' : ''}" data-act="pn-set" data-k="${esc(l.key)}" data-v="1">Déjà là</button><button type="button" class="${have ? '' : 'on'}" data-act="pn-set" data-k="${esc(l.key)}" data-v="0">Acheter</button></div></div>`;
 }
 
@@ -64,6 +64,8 @@ export const panierActs = {
     if (r) S.ui.rcParts[r.id] = Math.max(1, Math.min(99, partsOf(r) + +el.dataset.d));
     render();
   },
+  // toute la ligne bascule entre « Déjà là » et « Acheter »
+  'pn-toggle': el => { const l = basketLines().find(x => x.key === el.dataset.k); if (l) S.ui.pnHave[l.key] = !haveOf(l); render(); },
   'pn-set': el => { S.ui.pnHave[el.dataset.k] = el.dataset.v === '1'; render(); },
   'pn-send': () => {
     const have = new Set(S.prefs.rcHave || []);
