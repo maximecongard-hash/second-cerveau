@@ -2,7 +2,7 @@ import { esc, I, empty, chip, fmtDur } from '../../core/util.js';
 import { S, ofKindAll } from '../../core/store.js';
 import { foyerView } from './foyer.js';
 import { panierView } from './panier.js';
-import { KINDS, AISLES, aisleFor, metaOf, seasonOf, seasonOrder, inSeason, shopMeta, fmtQty, unitPrice, promoText } from './model.js';
+import { KINDS, AISLES, aisleFor, metaOf, seasonOf, seasonOrder, inSeason, shopMeta, fmtQty, STORES } from './model.js';
 
 // ---------------------------------------------------------------------------
 // Banque de recettes : liste, recherche, filtres (favoris, tags, saison)
@@ -72,7 +72,7 @@ views.panier = panierView;
 // ---------------------------------------------------------------------------
 export function shopRow(it) {
   const m = shopMeta(it), done = it.status === 'done';
-  const q = [fmtQty(m.qty), m.unit].filter(Boolean).join(' '), promo = promoText(m);
+  const q = [fmtQty(m.qty), m.unit].filter(Boolean).join(' '), promo = S.ui.shSort === 'store' ? '' : m.store;
   // toute la ligne coche ; la fiche s'ouvre par appui long ou par le bouton ⋯ (pas de zone morte entre les deux)
   return `<div class="row sh-row ${done ? 'done' : ''}" data-act="sh-check" data-long="edit" data-id="${it.id}">
     <button type="button" class="check ${done ? 'on' : ''}" aria-label="${done ? 'Remettre dans la liste' : 'Marquer comme pris'}"></button>
@@ -81,34 +81,31 @@ export function shopRow(it) {
   </div>`;
 }
 const byName = (a, b) => a.title.localeCompare(b.title, 'fr');
-const kiloOf = i => unitPrice(shopMeta(i));
-const SORTS = [['aisle', 'Rayon'], ['kilo', 'Prix au kilo'], ['store', 'Magasin']];
+const SORTS = [['aisle', 'Rayon'], ['store', 'Magasin']];
 const sortChips = () => `<div class="chips scroll">${SORTS.map(([v, l]) => chip(l, (S.ui.shSort || 'aisle') === v, 'sh-sort', v)).join('')}</div>`;
+
+// Rayons d'une liste de produits, dans l'ordre des rayons ; un rayon inconnu retombe dans Autre
+function byAisle(list) {
+  const groups = AISLES.map(a => [a, list.filter(i => aisleFor(i.title, shopMeta(i).aisle) === a).sort(byName)]).filter(([, l]) => l.length);
+  const known = new Set(groups.flatMap(([, l]) => l.map(i => i.id)));
+  const rest = list.filter(i => !known.has(i.id));
+  if (rest.length) { const g = groups.find(([a]) => a === 'Autre'); if (g) g[1].push(...rest); else groups.push(['Autre', rest]); }
+  return groups;
+}
+const aisleSec = ([a, l]) => `<section class="sec"><div class="sec-head"><h2>${esc(a)}</h2><span class="muted small">${l.length}</span></div>${l.map(shopRow).join('')}</section>`;
 
 export function shopList() {
   const all = ofKindAll('shop_item');
   const todo = all.filter(i => i.status !== 'done'), done = all.filter(i => i.status === 'done').sort(byName);
   if (!all.length) return empty('Liste vide', 'Ajoute un produit ci-dessus, par exemple « 2 l de lait ».');
-  const sort = S.ui.shSort || 'aisle';
-  let groups;
-  if (sort === 'kilo') {
-    // du moins cher au plus cher, par unité comparable (kg, puis litre, puis pièce) ; sans prix en dernier
-    const rank = i => { const u = kiloOf(i); return u ? ['€/kg', '€/L', '€/pièce'].indexOf(u.u) : 3; };
-    const list = [...todo].sort((a, b) => rank(a) - rank(b) || (kiloOf(a)?.v ?? 0) - (kiloOf(b)?.v ?? 0) || byName(a, b));
-    groups = list.length ? [['Du moins cher au plus cher', list]] : [];
-  } else if (sort === 'store') {
-    const by = new Map();
-    for (const i of todo) { const s = shopMeta(i).store.trim() || 'Sans magasin'; by.set(s, [...(by.get(s) || []), i]); }
-    groups = [...by.entries()].sort((a, b) => (a[0] === 'Sans magasin') - (b[0] === 'Sans magasin') || a[0].localeCompare(b[0], 'fr')).map(([s, l]) => [s, l.sort(byName)]);
-  } else {
-    groups = AISLES.map(a => [a, todo.filter(i => aisleFor(i.title, shopMeta(i).aisle) === a).sort(byName)]).filter(([, l]) => l.length);
-    // un rayon inconnu (modifié ailleurs) retombe dans Autre
-    const known = new Set(groups.flatMap(([, l]) => l.map(i => i.id)));
-    const rest = todo.filter(i => !known.has(i.id));
-    if (rest.length) { const g = groups.find(([a]) => a === 'Autre'); if (g) g[1].push(...rest); else groups.push(['Autre', rest]); }
-  }
-  return groups.map(([a, l]) => `<section class="sec"><div class="sec-head"><h2>${esc(a)}</h2><span class="muted small">${l.length}</span></div>${l.map(shopRow).join('')}</section>`).join('')
-    + (done.length ? `<section class="sec"><div class="sec-head"><h2>Pris</h2><button class="link" data-act="sh-clear">Vider</button></div>${done.map(shopRow).join('')}</section>` : '');
+  let html;
+  if (S.ui.shSort === 'store') {
+    // un bloc par magasin, avec tous ses rayons ; puis les produits sans magasin
+    const names = [...STORES, ...new Set(todo.map(i => shopMeta(i).store).filter(s => s && !STORES.includes(s)))];
+    const blocks = [...names.map(s => [s, todo.filter(i => shopMeta(i).store === s)]), ['Sans magasin', todo.filter(i => !shopMeta(i).store)]].filter(([, l]) => l.length);
+    html = blocks.map(([s, l]) => `<div class="sh-store"><h2 class="sh-store-h">${esc(s)}<span class="muted small">${l.length}</span></h2>${byAisle(l).map(aisleSec).join('')}</div>`).join('');
+  } else html = byAisle(todo).map(aisleSec).join('');
+  return html + (done.length ? `<section class="sec"><div class="sec-head"><h2>Pris</h2><button class="link" data-act="sh-clear">Vider</button></div>${done.map(shopRow).join('')}</section>` : '');
 }
 
 views.foyer = foyerView;
