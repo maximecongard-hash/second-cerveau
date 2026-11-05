@@ -23,7 +23,7 @@ L'app est organisée en **modules** affichés dans une barre latérale :
   `{ sport, goal, blocks | exercises, result, tpl, manualDur }` (détail en tête de `js/modules/sport/model.js`). L'Agenda place
   les séances comme des tâches via les hooks `schedulable` et `createAt`. Fichiers : `model.js` (données, estimations, export texte),
   `editor.js`, `views.js`, `live.js`, `programs.js`, `stats.js`, `exercises.js`. Prévu ensuite : suivi COROS via Strava, envoi à la montre.
-- **Courses** (`courses`, désactivé par défaut) : banque de recettes. Kind `recipe` : étapes dans `body`, tags dans `tags` (Rapide, Batch cooking en raccourcis), favori dans `pinned`, durée dans `duration_min`, `meta` = `{ servings, seasons, ingredients: [{ id, qty, unit, name }] }` (`seasons` vide = toute l'année, saison courante calculée par `seasonOf()`). Liste de courses : kind `shop_item` (nom dans `title`, `status` active / done, `meta` = `{ qty, unit, aisle, stage }`, rayon deviné par `guessAisle()`). Fichiers : `model.js` (saisons, `parseIngredient`, rayons), `views.js`, `editor.js`, `starters.js` (recettes de départ, utilisées par `seedDemo` seulement). Foyer : kind `foyer` (`foyer.js`), racine partageable dont dépendent recettes et produits (`parent_id`) ; un seul partage couvre tout. Panier (`panier.js`) : sélection `S.ui.rcSel`, page `#/panier` (parts, fusion par `productKey()`, tri « Déjà là / Acheter »), envoi via `addShop()` de `shop.js` (fusion des quantités, `meta.from` = recettes d'origine) ; le placard (`S.prefs.rcHave`, clés de produit) est pré-coché la fois suivante.
+- **Courses** (`courses`, désactivé par défaut) : banque de recettes. Kind `recipe` : étapes dans `body`, tags dans `tags` (Rapide, Batch cooking en raccourcis), favori dans `pinned`, durée dans `duration_min`, `meta` = `{ servings, seasons, ingredients: [{ id, qty, unit, name }] }` (`seasons` vide = toute l'année, saison courante calculée par `seasonOf()`). Liste de courses : kind `shop_item` (nom dans `title`, `status` active / done, `meta` = `{ qty, unit, aisle, stage, price, pqty, punit, store }` (prix de promo : `unitPrice()` le ramène au kg, au litre ou à la pièce, `promoText()` l'affiche), rayon deviné par `guessAisle()`). Fichiers : `model.js` (saisons, `parseIngredient`, rayons), `views.js`, `editor.js`, `starters.js` (recettes de départ, utilisées par `seedDemo` seulement). Foyer : kind `foyer` (`foyer.js`), racine partageable dont dépendent recettes et produits (`parent_id`) ; un seul partage couvre tout. Panier (`panier.js`) : sélection `S.ui.rcSel`, page `#/panier` (parts, fusion par `productKey()`, tri « Déjà là / Acheter »), envoi via `addShop()` de `shop.js` (fusion des quantités, `meta.from` = recettes d'origine) ; le placard (`S.prefs.rcHave`, clés de produit) est pré-coché la fois suivante.
   Écriture par l'agent : `scripts/brain-write.sh [--dry] fichier.json` ajoute des recettes dans le foyer avec le compte agent (même `.env.local` que `brain-read.sh`) ; la base n'autorise que ce qui est partagé en « Peut modifier ».
 
 Autres repères :
@@ -163,7 +163,7 @@ L'agent ne peut pas exécuter le SQL sur Supabase : il le prépare et dit à l'u
 
 L'app se sert depuis le cache de sa version : **sans nouvelle version, personne ne reçoit les changements.**
 
-- Changer `VERSION` dans `js/core/config.js` et `CACHE` dans `sw.js` (`sc-0.19.0` → `sc-0.19.1`…). Le numéro reste écrit dans `sw.js` : c'est la modification de ce fichier qui déclenche la mise à jour sur iOS.
+- Changer `VERSION` dans `js/core/config.js` et `CACHE` dans `sw.js` (`sc-0.20.0` → `sc-0.20.1`…). Le numéro reste écrit dans `sw.js` : c'est la modification de ce fichier qui déclenche la mise à jour sur iOS.
 - Lancer `python3 scripts/check.py` : il vérifie que les deux concordent et que `SHELL` liste tous les fichiers de `js/`.
 
 ## Accès de l'agent aux données (compte agent)
@@ -197,6 +197,17 @@ Identifiants dans `.env.local` à la racine (`BRAIN_AGENT_EMAIL`, `BRAIN_AGENT_P
   Pas de couleur en dur dans les règles de composants. Chaque nouveau token a sa valeur claire **et** sombre.
 - Textes d'interface : verbes d'action courts (« Noter », « Trier », « Reporter à demain »), pas de point d'exclamation,
   pas de vocabulaire culpabilisant.
+
+## Travail visuel : preview d'abord, code ensuite
+
+Règle de l'utilisateur, non négociable. Elle vaut pour tout ce qui change ce que l'utilisateur **voit** : widget, nouvel écran, refonte d'une vue, composant, couleurs, icônes, mise en page.
+
+1. **Aucun code avant validation.** Ne rien écrire ni modifier dans le dépôt tant qu'un visuel n'est pas choisi.
+2. **Au moins deux propositions** différentes à chaque fois (pas deux variantes de couleur : deux vraies idées). Exception : l'utilisateur demande explicitement un changement très précis (« mets ce bouton en bleu », « décale ce texte ») : une seule preview suffit, voire aucune si c'est trivial.
+3. **Forme de la preview** : maquette visible (aperçu intégré à la conversation ou page HTML dans le scratchpad, ouverte dans le navigateur), en largeur iPhone (~390 px), avec les couleurs et polices de la DA « carnet » (voir plus bas), en clair et en sombre si le rendu change. Données réalistes, en français.
+4. **Présenter simplement** : ce que chaque idée change pour l'utilisateur, pas comment elle sera codée. Donner une recommandation.
+5. **Boucle** : l'utilisateur choisit, demande des retouches, la preview est refaite. Le code ne commence qu'après un « je valide » clair sur un modèle précis.
+6. Après le code, vérifier que le résultat ressemble au modèle validé (mode démo, ~390 px, mode sombre).
 
 ## Direction artistique
 
