@@ -15,11 +15,13 @@ export function recipeRow(r) {
   const m = metaOf(r), n = m.ingredients.length;
   const meta = [r.duration_min ? fmtDur(r.duration_min) : '', ...(r.tags || []).map(t => esc(t)), m.seasons.length ? esc(m.seasons.join(' / ')) : '', n ? `${n} ingrédient${n > 1 ? 's' : ''}` : ''].filter(Boolean);
   const on = (S.ui.rcSel || []).includes(r.id);
-  return `<div class="row" data-act="edit" data-id="${r.id}">
-    <button type="button" class="check ${on ? 'on' : ''}" data-act="rc-sel" data-id="${r.id}" aria-label="${on ? 'Retirer du panier' : 'Ajouter au panier'}"></button>
+  // toute la ligne ajoute la recette au panier ; la fiche s'ouvre par appui long ou par le bouton ⋯
+  return `<div class="row rc-row" data-act="rc-sel" data-long="edit" data-id="${r.id}">
+    <button type="button" class="check ${on ? 'on' : ''}" aria-label="${on ? 'Retirer du panier' : 'Ajouter au panier'}"></button>
     <div class="row-main"><div class="row-title">${esc(r.title) || '<i>Sans titre</i>'}</div>
     ${meta.length ? `<div class="row-meta">${meta.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div>
     <span data-act="rc-fav" data-id="${r.id}">${heart(r.pinned)}</span>
+    <button type="button" class="icon-btn sh-more" data-act="edit" data-id="${r.id}" aria-label="Détails de ${esc(r.title)}">${I.menu}</button>
   </div>`;
 }
 

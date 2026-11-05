@@ -802,8 +802,8 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .fields .rc-ing input.rc-u { width: 76px; }
 .rc-ing .rc-n { flex: 1; }
 .rc-ing input:focus { border-color: var(--accent); outline: 0; }
-.sh-row { align-items: center; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
-.sh-row .sh-more { flex: none; margin: -6px -8px -6px 0; color: var(--muted); }
+.sh-row, .rc-row, .pn-line { align-items: center; cursor: pointer; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.sh-row .sh-more, .rc-row .sh-more { flex: none; margin: -6px -8px -6px 0; color: var(--muted); }
 .sh-promo { font: 500 12px var(--f-mono); color: var(--accent); margin-top: 2px; }
 .sh-store { margin-top: 22px; }
 .sh-store-h { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 4px; padding-bottom: 6px; font: 600 20px var(--f-serif, inherit); border-bottom: 2px solid var(--accent); }

@@ -23,8 +23,9 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (5 novembre 2026)
 
-- Version **0.20.2** (non fusionnée, branche `feat/courses-magasins`, à valider), cache SW `sc-0.20.2`, schéma 22.
+- Version **0.20.3** (branche `feat/courses-appui-long`, non fusionnée), cache SW `sc-0.20.3`, schéma 22.
 - **0.20.0** : Courses, un toucher coche un produit, appui long pour sa fiche, tri par rayon ou par magasin (schéma 21 : `widget_today` renvoie les jours à venir).
+- **0.20.3** : Courses, même logique que la liste pour les recettes (toucher = panier, appui long ou ⋯ = fiche) et pour les lignes du panier (toucher = Déjà là / Acheter).
 - **0.20.2** : Courses, magasin par produit (Inter, Lidl, Leclerc, `meta.store`, puces dans la fiche), tri Magasin = un bloc par magasin avec tous ses rayons ; plus de prix au kilo (inutile, retiré avant publication).
 - **0.20.1** : widget Scriptable refait (créneau en cours, grille horaire, Top 3, jours à venir, calendrier des événements), schéma 22. Reste à valider sur l'iPhone.
 - **Schéma** : recoller `supabase/schema.sql` dans le SQL Editor Supabase à chaque montée de schéma (22 pour le widget).
