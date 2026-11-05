@@ -439,7 +439,7 @@ begin
     'events', coalesce((
       select jsonb_agg(jsonb_build_object(
         'title', e.title, 'start', to_char(e.starts_at, 'HH24:MI'), 'end', to_char(e.ends_at, 'HH24:MI'),
-        'allDay', e.all_day) order by e.all_day desc, e.starts_at)
+        'allDay', e.all_day, 'calendar', e.calendar) order by e.all_day desc, e.starts_at)
       from public.events e
       where e.user_id = v_user and e.starts_at::date <= p_day and e.ends_at::date >= p_day), '[]'::jsonb)
   );
@@ -744,7 +744,7 @@ create trigger items_log_event after insert or update or delete on public.items
 create or replace function public.brain_status() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'schema', 21, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'schema', 22, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
     'vapid', c.public_key is not null,
     'url', c.project_url,
     'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),
