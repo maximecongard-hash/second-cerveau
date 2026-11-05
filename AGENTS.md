@@ -198,6 +198,17 @@ Identifiants dans `.env.local` à la racine (`BRAIN_AGENT_EMAIL`, `BRAIN_AGENT_P
 - Textes d'interface : verbes d'action courts (« Noter », « Trier », « Reporter à demain »), pas de point d'exclamation,
   pas de vocabulaire culpabilisant.
 
+## Travail visuel : preview d'abord, code ensuite
+
+Règle de l'utilisateur, non négociable. Elle vaut pour tout ce qui change ce que l'utilisateur **voit** : widget, nouvel écran, refonte d'une vue, composant, couleurs, icônes, mise en page.
+
+1. **Aucun code avant validation.** Ne rien écrire ni modifier dans le dépôt tant qu'un visuel n'est pas choisi.
+2. **Au moins deux propositions** différentes à chaque fois (pas deux variantes de couleur : deux vraies idées). Exception : l'utilisateur demande explicitement un changement très précis (« mets ce bouton en bleu », « décale ce texte ») : une seule preview suffit, voire aucune si c'est trivial.
+3. **Forme de la preview** : maquette visible (aperçu intégré à la conversation ou page HTML dans le scratchpad, ouverte dans le navigateur), en largeur iPhone (~390 px), avec les couleurs et polices de la DA « carnet » (voir plus bas), en clair et en sombre si le rendu change. Données réalistes, en français.
+4. **Présenter simplement** : ce que chaque idée change pour l'utilisateur, pas comment elle sera codée. Donner une recommandation.
+5. **Boucle** : l'utilisateur choisit, demande des retouches, la preview est refaite. Le code ne commence qu'après un « je valide » clair sur un modèle précis.
+6. Après le code, vérifier que le résultat ressemble au modèle validé (mode démo, ~390 px, mode sombre).
+
 ## Direction artistique
 
 La DA « carnet » est appliquée depuis la version 0.4.0. Document de référence :

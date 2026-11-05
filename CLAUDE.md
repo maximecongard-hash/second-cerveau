@@ -74,6 +74,8 @@ Pas de tests automatisés de l'interface : vérifier à la main en largeur mobil
 
 ## Rappels qui reviennent souvent
 
+- **Visuel : preview d'abord, aucun code avant validation.** Pour tout ce que l'utilisateur voit (widget, écran, composant, couleurs), proposer au moins deux maquettes différentes, attendre son choix, puis coder. Détail dans AGENTS.md, « Travail visuel ». Une seule preview seulement s'il demande un changement très précis.
+
 - Chaque nouvelle version : `VERSION` dans `js/core/config.js` **et** `CACHE` dans `sw.js`. L'app se sert depuis le cache : sans nouvelle version, personne ne reçoit les changements.
 - Chaque nouveau fichier JS : l'ajouter à `SHELL` dans `sw.js`. `python3 scripts/check.py` vérifie tout ça.
 - Changement de schéma : modifier `supabase/schema.sql` (seul fichier SQL) et `SCHEMA_VERSION` ; l'utilisateur le recolle lui-même dans le SQL Editor Supabase.
