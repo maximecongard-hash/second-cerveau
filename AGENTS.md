@@ -134,7 +134,7 @@ mobile (~390 px) et en mode sombre, puis regarder la console (une erreur d'impor
 - **Démarrage** (`boot.js`) : le cache s'affiche d'abord (`S.uid`, `S.email`), la session se vérifie ensuite. Écran de connexion seulement si la session est réellement invalide, jamais sur une erreur réseau.
 - **Synchro** (`sync.js`) : rien ne part sans session valide (sinon la base répondrait « rien » à une requête sans compte, ce qui ressemblerait à des suppressions).
   1) envoi des items dirty : lignes partielles relues sur le serveur et fusionnées avec mes champs, puis upsert par lots de 200 ; une ligne refusée va dans `S.stuck`, le reste passe. 2) prefs fusionnées clé par clé contre `S.prefsBase` ; modifier les prefs passe par `savePrefs()` ou `touchPrefs()`.
-  3) pull des lignes dont `updated_at` dépasse le curseur (10 s de recouvrement), sans écraser un item encore dirty ; relecture complète après 25 jours d'absence pour retirer ce que la purge a effacé. 4) `afterSync()` de chaque module.
+  3) pull des lignes dont `updated_at` dépasse le curseur (10 s de recouvrement), sans écraser un item encore dirty. Le curseur ne voit pas une ligne supprimée ailleurs (Corbeille vidée, purge) : une relecture complète aligne le cache sur le serveur au moins une fois par heure (`S.lastFullRead`) et à chaque toucher sur « Synchroniser ». 4) `afterSync()` de chaque module.
   Une erreur réseau arrête le cycle sans rien perdre. `updated_at` est fixé par un trigger serveur et sert de curseur : ne pas le contourner.
 - **Dates** : chaînes `YYYY-MM-DD` locales via `ymd()`, `today()`, `parseYmd()`, `addDays()` de `util.js`.
   Pas de `toISOString()` pour une date du jour (décalage de fuseau). Formats d'affichage via les `Intl.DateTimeFormat` `fr-FR` existants.
