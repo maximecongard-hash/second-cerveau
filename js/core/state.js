@@ -31,6 +31,7 @@ export const S = {
   prefsGen: 0, // augmente à chaque changement : repère ce qui change pendant un envoi
   netDown: false, // serveur injoignable au dernier essai
   cursor: null,
+  lastFullRead: null, // dernière relecture complète ; null : à refaire au prochain cycle
   syncing: false,
   lastSync: null,
   lastError: null,

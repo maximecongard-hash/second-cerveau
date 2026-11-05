@@ -19,7 +19,7 @@ export function persistNow() {
     const json = JSON.stringify({
       uid: S.uid, email: S.email, items: [...S.items.values()], shares: S.shares, people: S.people, prefs: S.prefs,
       dirty: [...S.dirty].map(([id, f]) => [id, f ? [...f] : null]),
-      prefsDirty: S.prefsDirty, prefsBase: S.prefsBase, cursor: S.cursor, lastSync: S.lastSync
+      prefsDirty: S.prefsDirty, prefsBase: S.prefsBase, cursor: S.cursor, lastFullRead: S.lastFullRead, lastSync: S.lastSync
     });
     localStorage.setItem(LS_KEY, json);
     S.ui.storageFull = false;
@@ -46,12 +46,13 @@ export function restore() {
     S.prefsDirty = !!d.prefsDirty;
     S.prefsBase = d.prefsBase || null;
     S.cursor = d.cursor || null;
+    S.lastFullRead = d.lastFullRead || null;
     S.lastSync = d.lastSync || null;
   } catch (e) { console.warn('restore', e); }
 }
 export function resetLocal() {
   S.items = new Map(); S.shares = []; S.people = {}; S.dirty = new Map(); S.stuck = new Map(); S.prefs = { ...DEFAULT_PREFS };
-  S.prefsDirty = false; S.prefsBase = null; S.cursor = null; S.lastSync = null;
+  S.prefsDirty = false; S.prefsBase = null; S.cursor = null; S.lastFullRead = null; S.lastSync = null;
 }
 
 // ---------------------------------------------------------------------------

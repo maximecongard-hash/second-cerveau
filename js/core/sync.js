@@ -13,7 +13,7 @@ import { queueRender, toast } from './ui.js';
 // Une ligne refusée est mise de côté (S.stuck) sans bloquer le reste ; une panne réseau arrête le cycle sans rien perdre.
 // ---------------------------------------------------------------------------
 const TRASH_DAYS = 30; // comme brain_purge() de supabase/schema.sql
-const RESYNC_MS = (TRASH_DAYS - 5) * 864e5; // après une telle absence, la purge a pu retirer des lignes : tout est relu
+const FULL_READ_MS = 36e5; // au plus une heure entre deux relectures complètes
 
 let syncTimer = null;
 export function scheduleSync(delay = 800) {
@@ -151,15 +151,16 @@ async function syncPrefs() {
 
 // ---------------------------------------------------------------------------
 // 3. Réception (avec 10 s de recouvrement)
+//    Le curseur ne voit pas une ligne supprimée ailleurs (Corbeille vidée, purge) : la relecture complète aligne le cache sur le serveur.
 // ---------------------------------------------------------------------------
 async function pullItems() {
   let changed = false;
-  const full = !S.cursor || !S.lastSync || Date.now() - Date.parse(S.lastSync) > RESYNC_MS;
+  const full = !S.cursor || !S.lastFullRead || Date.now() - Date.parse(S.lastFullRead) > FULL_READ_MS;
   const seen = full ? new Set() : null;
   let since = full ? null : new Date(Date.parse(S.cursor) - 10000).toISOString();
   for (;;) {
-    let q = sb.from('items').select('*').order('updated_at', { ascending: true }).limit(1000);
-    if (since) q = q.gt('updated_at', since);
+    let q = sb.from('items').select('*').order('updated_at', { ascending: true }).order('id', { ascending: true }).limit(1000);
+    if (since) q = q.gte('updated_at', since);
     const data = must(await q);
     for (const r of data) {
       seen?.add(r.id);
@@ -171,11 +172,16 @@ async function pullItems() {
       if (!cur || !sameRow(cur, next)) changed = true;
       S.items.set(r.id, next);
     }
-    if (data.length < 1000) break;
-    since = data[data.length - 1].updated_at;
+    const last = data[data.length - 1]?.updated_at;
+    if (data.length < 1000 || last === since) break;
+    since = last;
   }
-  // relecture complète : ce que le serveur n'a plus (purge de la corbeille) disparaît aussi ici
-  if (seen) for (const id of [...S.items.keys()]) if (!seen.has(id) && !S.dirty.has(id)) { S.items.delete(id); changed = true; }
+  if (seen) {
+    // Ce que le serveur n'a plus disparaît aussi ici. Une réponse vide est suspecte : on ne vide pas le cache sur cette seule foi.
+    // Les éléments d'autrui sont laissés à pruneForeign, qui détache aussi mes tâches rangées dedans.
+    if (seen.size) for (const [id, it] of [...S.items]) if (!seen.has(id) && !S.dirty.has(id) && isMine(it)) { S.items.delete(id); changed = true; }
+    S.lastFullRead = nowIso();
+  }
   return changed;
 }
 // Partages et comptes connus. Sans erreur si le serveur ne répond pas : l'app reste utilisable seule

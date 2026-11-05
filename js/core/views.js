@@ -242,7 +242,8 @@ Object.assign(ACTS, {
     render();
     document.querySelector('.fold[open]')?.scrollIntoView({ block: 'start' });
   },
-  'sync-now': async () => { S.lastError = null; S.stuck.clear(); render(); await sync(); render(); },
+  // demande explicite : tout relire, sans attendre la prochaine relecture complète
+  'sync-now': async () => { S.lastError = null; S.stuck.clear(); S.lastFullRead = null; render(); await sync(); render(); },
   'stuck-drop': el => dropStuck(el.dataset.v),
   'trash-restore': el => { patch(el.dataset.v, { status: 'active' }); toast('Restauré'); },
   'trash-empty': async () => {
