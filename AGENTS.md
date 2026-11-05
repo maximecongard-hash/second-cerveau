@@ -166,6 +166,17 @@ L'app se sert depuis le cache de sa version : **sans nouvelle version, personne 
 - Changer `VERSION` dans `js/core/config.js` et `CACHE` dans `sw.js` (`sc-0.19.0` → `sc-0.19.1`…). Le numéro reste écrit dans `sw.js` : c'est la modification de ce fichier qui déclenche la mise à jour sur iOS.
 - Lancer `python3 scripts/check.py` : il vérifie que les deux concordent et que `SHELL` liste tous les fichiers de `js/`.
 
+## Accès de l'agent aux données (compte agent)
+
+L'agent a un compte Brain dédié, distinct de celui de l'utilisateur. Il ne voit et n'écrit que ce que l'utilisateur lui partage dans Brain.
+Identifiants dans `.env.local` à la racine (`BRAIN_AGENT_EMAIL`, `BRAIN_AGENT_PASSWORD`), ignoré par git : ne jamais les afficher, les recopier ni les committer.
+
+- **Lire** : `scripts/brain-read.sh [since ISO8601]` écrit en JSON tous les éléments partagés avec le compte agent (hors corbeille). Ex. lister les tâches d'un projet : filtrer sur `kind`, `status`, `parent_id`.
+- **Écrire** : `scripts/brain-write.sh [--dry] fichier.json` ajoute des recettes (ou des produits `shop_item`) dans le foyer. Format du fichier en tête du script. Toujours un `--dry` d'abord, montrer le résultat à l'utilisateur, puis écrire. Une recette au titre déjà présent est ignorée.
+- Fichiers temporaires (JSON de recette, sorties) dans le dossier scratchpad, pas dans le dépôt.
+- Les droits sont ceux du partage : lecture seule ou « Peut modifier », imposés par la base (RLS). Un refus veut dire que l'élément n'est pas partagé en écriture : le dire à l'utilisateur, ne pas contourner.
+- Ne jamais tester sur le compte réel de l'utilisateur ni modifier ses données sans demande ; pour l'interface, utiliser `?demo=1`.
+
 ## Sécurité
 
 - `config.js` ne contient que la clé **publishable**. Ne jamais y mettre, ni committer, une clé `service_role` / secret.

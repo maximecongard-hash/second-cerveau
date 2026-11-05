@@ -75,6 +75,7 @@ Pas de tests automatisés de l'interface : vérifier à la main en largeur mobil
 - Interface en français, ton calme, pas de point d'exclamation.
 - Raccourcis iOS : fichiers signés dans `raccourcis/`, refaits sur Mac par `python3 raccourcis/build.py`
   (clé d'accès demandée à l'installation, jamais dans les fichiers). Si `capture()`, l'URL ou la clé publique changent, refaire les raccourcis.
+- **Compte agent** : l'agent peut lire et écrire dans Brain avec son propre compte (identifiants dans `.env.local`, jamais affichés). Lire : `scripts/brain-read.sh` (JSON des éléments partagés avec lui). Ajouter des recettes : `scripts/brain-write.sh [--dry] fichier.json`, toujours un `--dry` d'abord. Détail dans AGENTS.md, « Accès de l'agent aux données ».
 - Committer et pousser seulement sur demande.
 
 ## Tenir ce fichier à jour
