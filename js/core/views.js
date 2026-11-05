@@ -95,7 +95,8 @@ function iphoneBody() {
   return sec('Clés d’accès', `<div class="muted small pad">Les raccourcis et le widget s’identifient avec une clé secrète. Crée-en une par appareil ou par usage, pour voir ce qui s’en sert.</div>${tokensHtml()}`) +
     sec('Raccourcis', `<div class="muted small pad">Ouvre le lien sur l’iPhone. Le raccourci demande une clé d’accès à l’installation : copie-la d’abord.</div>
       ${SHORTCUTS.map(([name, what]) => `<div class="kv"><span class="row-main"><span class="row-title">${name}</span><span class="muted small">${what}</span></span><a class="btn" href="raccourcis/${encodeURIComponent(name)}.shortcut">Installer</a></div>`).join('')}`) +
-    sec('Widget', `<div class="muted small pad">Dans l’app Scriptable : crée un script avec <a href="widget/Brain.js" target="_blank" rel="noopener">ce fichier</a>, puis lance-le : il demande une clé d’accès (voir le README).</div>`) +
+    sec('Widget', `<div class="muted small pad">Dans l’app Scriptable : nouveau script, colle le code copié ici, puis lance-le : il demande une clé d’accès. Le code garde l’adresse de ton Brain.</div>
+      <div class="kv"><span class="row-main"><span class="row-title">Widget « Ma journée »</span><span class="muted small">Top 3, grille horaire du jour, fond transparent</span></span><div class="btn-row"><button class="btn" data-act="widget-copy">Copier le code</button><a class="btn" href="widget/Brain.js" target="_blank" rel="noopener">Voir</a></div></div>`) +
     fromModules('accessSettings').join('');
 }
 
@@ -271,6 +272,18 @@ Object.assign(ACTS, {
     if (error) { toast('Déconnexion impossible hors ligne : réessaie avec du réseau'); return; }
     resetLocal(); S.uid = null; S.email = null; persistNow();
     location.reload(); // repart d'un état d'affichage vierge
+  },
+  'widget-copy': async () => {
+    // Promesse donnée au presse-papiers : iOS accepte la copie malgré l'attente du réseau
+    const code = fetch('widget/Brain.js', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(t => (DEMO ? t : t.replace(/const APP_URL = '[^']*'/, `const APP_URL = '${new URL('./', location.href).href}'`)
+        .replace(/const API = '[^']*'/, `const API = '${CFG.url}'`).replace(/const KEY = '[^']*'/, `const KEY = '${CFG.key}'`)));
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/plain': code.then(t => new Blob([t], { type: 'text/plain' })) })]);
+      toast('Code copié');
+    } catch {
+      try { await navigator.clipboard.writeText(await code); toast('Code copié'); } catch { toast('Copie impossible'); }
+    }
   },
   copy: async el => { try { await navigator.clipboard.writeText(el.dataset.v); toast('Copié'); } catch { toast('Copie impossible'); } },
   'token-name': el => { S.ui.tokenEdit = el.dataset.v; render(); document.querySelector('[data-form="token-rename"] input')?.focus(); },

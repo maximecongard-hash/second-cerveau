@@ -1,7 +1,7 @@
 // Brain : widget Scriptable « Ma journée »
 // Importer ce fichier dans l'app Scriptable, puis ajouter un widget Scriptable à l'écran d'accueil (script « Brain »).
 // Grand format : en-tête, Top 3, grille horaire du jour (tâches et événements de Calendrier), pied avec compteurs.
-// Petit et moyen format : liste courte. Lancé dans l'app Scriptable : menu de réglages (jeton, fond transparent).
+// Petit et moyen format : liste courte. Lancé dans l'app Scriptable : menu de réglages (clé, fond transparent).
 // Fond transparent : iOS n'en offre pas ; le script découpe une capture de l'écran d'accueil derrière le widget.
 
 const APP_URL = 'https://maximecongard-hash.github.io/second-cerveau/';
@@ -59,9 +59,9 @@ const phone = () => {
 // ---------------------------------------------------------------------------
 async function askToken() {
   const a = new Alert();
-  a.title = 'Jeton de capture';
-  a.message = 'Brain > Réglages > Capture iPhone > Copier. Il reste dans le Trousseau de l’iPhone.';
-  a.addTextField('Jeton', '');
+  a.title = 'Clé d’accès';
+  a.message = 'Brain > Réglages > iPhone et Calendrier > Clés d’accès > Copier. Il reste dans le Trousseau de l’iPhone.';
+  a.addTextField('Clé', '');
   a.addAction('Enregistrer');
   a.addCancelAction('Annuler');
   if ((await a.present()) === -1) return null;
@@ -73,7 +73,7 @@ async function askToken() {
 async function load() {
   let token = Keychain.contains(TOKEN_KEY) ? Keychain.get(TOKEN_KEY) : null;
   if (!token && !config.runsInWidget) token = await askToken();
-  if (!token) return { error: 'Ouvre le script dans Scriptable pour saisir le jeton.' };
+  if (!token) return { error: 'Ouvre le script dans Scriptable pour saisir la clé d’accès.' };
   try {
     const r = new Request(`${API}/rest/v1/rpc/widget_today`);
     r.method = 'POST';
@@ -82,9 +82,9 @@ async function load() {
     r.timeoutInterval = 15;
     const data = await r.loadJSON();
     if (r.response.statusCode !== 200) {
-      const bad = /Jeton/.test(data?.message || '');
+      const bad = /Clé|Jeton/.test(data?.message || '');
       if (bad) Keychain.remove(TOKEN_KEY);
-      return { error: bad ? 'Jeton refusé. Relance le script pour en saisir un autre.' : (data?.message || 'Erreur ' + r.response.statusCode) };
+      return { error: bad ? 'Clé refusée. Relance le script pour en saisir un autre.' : (data?.message || 'Erreur ' + r.response.statusCode) };
     }
     fm.writeString(file(CACHE_FILE), JSON.stringify(data));
     return data;
@@ -204,6 +204,28 @@ function buildRows(d) {
   return [...top, ...timed, ...loose];
 }
 
+// Tâches des jours suivants (champ absent tant que le schéma n'est pas à jour)
+function upcomingRows(d, n) {
+  const df = new DateFormatter();
+  df.locale = 'fr-FR';
+  df.dateFormat = 'EEE d';
+  return (d.upcoming || []).slice(0, n).map(u => {
+    const [y, m, j] = u.date.split('-').map(Number);
+    return { title: u.title, time: u.time, star: !!u.focus, day: df.string(new Date(y, m - 1, j)) };
+  });
+}
+
+function addUpcoming(stack, r, P, size) {
+  const line = stack.addStack();
+  line.centerAlignContent();
+  line.spacing = 6;
+  txt(line, r.day, size - 1, P.muted, 'mono');
+  if (r.time) txt(line, r.time, size - 1, P.accent, 'mono');
+  const t = txt(line, `${r.star ? '★ ' : ''}${r.title || 'Sans titre'}`, size, P.text);
+  t.lineLimit = 1;
+  stack.addSpacer(3);
+}
+
 async function build(family) {
   const d = await load();
   const P = palette();
@@ -211,7 +233,7 @@ async function build(family) {
   styleBackground(w, P);
   w.url = APP_URL;
   w.setPadding(12, 14, 12, 14);
-  w.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
+  w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000); // iOS décide du rythme réel (souvent 5 à 15 min)
 
   if (d.error) {
     txt(w, 'Brain', 15, P.text, 'bold');
@@ -252,10 +274,17 @@ async function build(family) {
     if (allDay) { const a = txt(w, allDay, 11, P.muted); a.lineLimit = 1; }
     w.addSpacer(6);
 
+    const next = upcomingRows(d, 4);
     const p = phone();
-    const iw = p.mw - 28, ih = p.lh - 24 - 20 - 3 * 20 - (allDay ? 14 : 0) - 24 - 14;
+    const iw = p.mw - 28, ih = p.lh - 24 - 20 - 3 * 20 - (allDay ? 14 : 0) - 24 - 14 - (next.length ? 18 + next.length * 17 : 0);
     const img = w.addImage(drawTimeline(d, iw, ih, P));
     img.imageSize = new Size(iw, ih);
+    if (next.length) {
+      w.addSpacer(6);
+      txt(w, 'À VENIR', 9, P.muted, 'mono');
+      w.addSpacer(2);
+      next.forEach(r => addUpcoming(w, r, P, 12));
+    }
     w.addSpacer();
   } else {
     const max = family === 'small' ? 3 : 4;
@@ -272,6 +301,10 @@ async function build(family) {
       w.addSpacer(3);
     });
     if (rows.length > max) txt(w, `+ ${rows.length - max}`, 10, P.muted, 'mono');
+    // Place restante en moyen : la suite des jours à venir
+    const room = family === 'medium' ? Math.max(0, max - rows.length) : 0;
+    const next = upcomingRows(d, room);
+    next.forEach(r => addUpcoming(w, r, P, 12));
     w.addSpacer();
   }
 
@@ -350,7 +383,7 @@ if (config.runsInWidget) {
 } else {
   for (;;) {
     const c = await menu('Brain', hasBg() ? 'Fond transparent actif.' : 'Fond uni (pas de fond transparent).',
-      ['Aperçu grand format', 'Aperçu moyen', 'Configurer le fond transparent', 'Retirer le fond transparent', 'Changer le jeton']);
+      ['Aperçu grand format', 'Aperçu moyen', 'Configurer le fond transparent', 'Retirer le fond transparent', 'Changer la clé']);
     if (c === null) break;
     if (c === 0) await (await build('large')).presentLarge();
     else if (c === 1) await (await build('medium')).presentMedium();

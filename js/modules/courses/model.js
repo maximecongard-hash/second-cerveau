@@ -85,7 +85,20 @@ export function guessAisle(name) {
   const n = strip(name);
   return aisleFor(name, (AISLE_RULES.find(([, re]) => re.test(n)) || ['Autre'])[0]);
 }
-export const shopMeta = it => ({ qty: null, unit: '', aisle: 'Autre', stage: 'list', ...(it.meta || {}) });
+export const shopMeta = it => ({ qty: null, unit: '', aisle: 'Autre', stage: 'list', price: null, pqty: null, punit: '', store: '', ...(it.meta || {}) });
+// Prix comparable d'une promo : prix de l'étiquette ÷ quantité de l'étiquette, ramené au kg, au litre ou à la pièce
+const UNIT_BASE = { g: [0.001, '€/kg'], kg: [1, '€/kg'], mg: [0.000001, '€/kg'], ml: [0.001, '€/L'], cl: [0.01, '€/L'], l: [1, '€/L'] };
+export function unitPrice(m) {
+  if (!(m.price > 0)) return null;
+  const q = m.pqty > 0 ? m.pqty : 1, u = (m.punit || '').trim().toLowerCase(), b = UNIT_BASE[u];
+  return b ? { v: m.price / (q * b[0]), u: b[1] } : { v: m.price / q, u: '€/pièce' };
+}
+export const fmtPrice = n => n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// « 5,00 €/kg · Lidl » (vide s'il n'y a rien)
+export function promoText(m) {
+  const up = unitPrice(m);
+  return [up ? `${fmtPrice(up.v)} ${up.u}` : '', m.store].filter(Boolean).join(' · ');
+}
 // Champs d'un produit à partir d'un texte (« 2 l de lait », « sel »)
 export function shopFields(text) {
   const g = parseIngredient(text);

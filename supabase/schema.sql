@@ -417,6 +417,18 @@ begin
       from public.items i
       where i.user_id = v_user and i.kind = 'task' and i.scheduled_date = p_day
         and i.status in ('active', 'waiting', 'done')), '[]'::jsonb),
+    -- à venir : les 7 jours suivants, dans l'ordre
+    'upcoming', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'title', u.title, 'date', u.scheduled_date, 'time', to_char(u.scheduled_time, 'HH24:MI'),
+        'focus', u.focus) order by u.scheduled_date, u.scheduled_time nulls last, u.day_order nulls last)
+      from (
+        select i.title, i.scheduled_date, i.scheduled_time, i.focus, i.day_order
+        from public.items i
+        where i.user_id = v_user and i.kind = 'task' and i.status in ('active', 'waiting')
+          and i.scheduled_date > p_day and i.scheduled_date <= p_day + 7
+        order by i.scheduled_date, i.scheduled_time nulls last, i.day_order nulls last
+        limit 20) u), '[]'::jsonb),
     'overdue', (
       select count(*) from public.items i
       where i.user_id = v_user and i.kind = 'task' and i.status = 'active'
@@ -732,7 +744,7 @@ create trigger items_log_event after insert or update or delete on public.items
 create or replace function public.brain_status() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'schema', 20, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'schema', 21, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
     'vapid', c.public_key is not null,
     'url', c.project_url,
     'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),
