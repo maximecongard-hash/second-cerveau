@@ -33,6 +33,27 @@ Object.assign(ACTS, {
   'side-close': () => closeSide()
 });
 
+// Appui long sur une ligne [data-long] : ouvre la fiche (data-id). Le toucher bref garde l'action de la ligne.
+let longTimer = 0, longStart = null, longFired = 0;
+const longCancel = () => { clearTimeout(longTimer); longTimer = 0; };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-long]');
+  if (!el || e.target.closest('.icon-btn') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  longStart = [e.clientX, e.clientY];
+  longCancel();
+  longTimer = setTimeout(() => {
+    longTimer = 0;
+    longFired = Date.now();
+    navigator.vibrate?.(15);
+    openEditor(el.dataset.id);
+  }, 500);
+});
+document.addEventListener('pointermove', e => { if (longTimer && Math.hypot(e.clientX - longStart[0], e.clientY - longStart[1]) > 8) longCancel(); });
+['pointerup', 'pointercancel', 'scroll'].forEach(t => document.addEventListener(t, longCancel, { capture: true, passive: true }));
+document.addEventListener('contextmenu', e => { if (e.target.closest('[data-long]')) e.preventDefault(); });
+// le relâchement qui suit un appui long ne doit pas déclencher l'action de la ligne
+document.addEventListener('click', e => { if (Date.now() - longFired < 600) { e.stopPropagation(); e.preventDefault(); } }, true);
+
 document.addEventListener('click', e => {
   if (e.target.closest('.side a')) closeSide();
   const el = e.target.closest('[data-act]');

@@ -10,5 +10,6 @@ export const STARTERS = [
   ['Chili sin carne', 50, ['Batch cooking'], ['Automne', 'Hiver'], ['400 g de haricots rouges', '500 g de tomates concassées', '1 poivron', '1 oignon', '2 c. à c. de paprika', '200 g de riz'], 'Tout mijoter 35 min, servir avec le riz.'],
   ['Ratatouille', 60, ['Batch cooking'], ['Été'], ['2 aubergines', '3 courgettes', '3 poivrons', '500 g de tomates', '2 oignons', '2 gousses d’ail', '4 c. à s. d’huile d’olive'], 'Faire revenir les légumes séparément puis mijoter ensemble 30 min.'],
   ['Salade de lentilles', 15, ['Rapide'], ['Printemps', 'Été'], ['250 g de lentilles vertes', '2 tomates', '1 oignon rouge', '3 c. à s. d’huile d’olive', 'persil'], 'Cuire les lentilles, assaisonner tièdes.'],
+  ['Quiche au poireau', null, [], [], ['4 œufs', '2 pavés de saumon', '4 poireaux', '1 pâte feuilletée', '2 c. à s. de crème fraîche', '2 c. à c. de moutarde', '2 oignons', '150 ml de lait'], ''],
   ['Tarte aux fraises', 40, [], ['Printemps', 'Été'], ['1 pâte sablée', '500 g de fraises', '25 cl de crème pâtissière'], 'Garnir le fond de tarte cuit, ranger les fraises.']
 ];

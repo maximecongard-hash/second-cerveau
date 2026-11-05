@@ -15,6 +15,7 @@ import { createFoyer, inFoyer } from './foyer.js';
 // ---------------------------------------------------------------------------
 // Module « Courses » : banque de recettes, panier, liste de courses, foyer partagé.
 // ---------------------------------------------------------------------------
+let shLast = { id: '', t: 0 };
 const acts = {
   ...panierActs,
   'rc-fav': el => {
@@ -43,9 +44,13 @@ const acts = {
   },
   'fy-create': () => { createFoyer(); render(); toast('Foyer créé'); },
   // liste de courses
+  'sh-sort': el => { S.ui.shSort = el.dataset.v; render(); },
   'sh-check': el => {
     const it = S.items.get(el.dataset.id);
     if (!it) return;
+    // la ligne se déplace après un cochage : un second toucher trop rapide ne doit pas la redécocher
+    if (shLast.id === it.id && Date.now() - shLast.t < 300) return;
+    shLast = { id: it.id, t: Date.now() };
     patch(it.id, { status: it.status === 'done' ? 'active' : 'done', completed_at: it.status === 'done' ? null : new Date().toISOString() });
     if (SH.mode === 'editor') renderEditor();
   },
@@ -125,7 +130,7 @@ registerModule({
   menu: () => [['#/foyer', 'Foyer et partage']],
   views, acts, forms, fab,
   prefs: { rcHave: [], rcAisles: {} },
-  ui: { rcQuery: '', rcFilter: 'all', rcSeason: null, rcSel: [], rcParts: {}, pnHave: {} },
+  ui: { rcQuery: '', rcFilter: 'all', rcSeason: null, rcSel: [], rcParts: {}, pnHave: {}, shSort: 'aisle' },
   editor: editorHTML,
   setField,
   row: it => (it.kind === 'shop_item' ? shopRow(it) : recipeRow(it)),
