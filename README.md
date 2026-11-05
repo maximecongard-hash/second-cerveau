@@ -186,13 +186,11 @@ Pour un lien, le raccourci demande « Titre ou note ? » : la première ligne de
 
 ### Widget Scriptable « Ma journée »
 
-En grand format : date, avancement, Top 3, grille horaire du jour, les tâches des 7 jours suivants (« À venir »), compteurs. En petit et moyen : liste courte, complétée par les tâches à venir s'il reste de la place. « À venir » demande le `schema.sql` à jour (schéma 21) : recolle-le dans le SQL Editor.
+Le widget met en avant ce qui compte : le créneau en cours (avec sa barre de progression) ou le suivant, puis, en grand format, le Top 3 sur une ligne, la grille horaire de la journée (tâches faites estompées avec ✓, tâches prévues, événements des autres calendriers, trait rouge pour l'heure) et les 2 prochaines tâches à venir. Le moyen format garde le créneau mis en avant et deux lignes de la journée (avec le nom du calendrier), le petit seulement le créneau. Il demande le `schema.sql` à jour (schéma 21) : recolle-le dans le SQL Editor.
 
 1. Installe l'app **Scriptable** (gratuite), crée un script « Brain » et colles-y le code : **Réglages > iPhone et Calendrier > Widget > Copier le code** (ou [`widget/Brain.js`](widget/Brain.js)).
 2. Lance-le dans Scriptable : il demande une clé d'accès et la garde dans le Trousseau.
 3. Écran d'accueil > ajoute un widget Scriptable > Script : Brain. iOS le rafraîchit toutes les 5 à 15 minutes (lui seul décide).
-4. Fond transparent (grand format) : fais une capture d'une page sans icône sous le widget, puis menu du script > « Configurer le fond transparent ». À refaire si tu changes de fond d'écran.
-
 ---
 
 ## 6. Calendrier Apple
