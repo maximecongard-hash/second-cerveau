@@ -119,8 +119,24 @@ views.actions = () => {
   const ctxs = [...new Set([...S.prefs.contexts, ...all.flatMap(t => t.contexts)])];
   const chips = `<div class="chips scroll">${chip('Toutes', ctx === 'all', 'ctx-filter', 'all', ` <small>${all.length}</small>`)}${ctxs.map(c => chip(esc(c), ctx === c, 'ctx-filter', c, ` <small>${count(c)}</small>`)).join('')}${chip('Sans contexte', ctx === 'none', 'ctx-filter', 'none')}</div>`;
   const t0 = today();
-  const rows = list.map(t => taskRow(t, { showSched: t.scheduled_date !== t0, extra: t.scheduled_date === t0 ? '<span class="today-tag">Auj.</span>' : `<button class="plan-btn" data-act="plan-today" data-id="${t.id}" aria-label="Prévoir aujourd'hui">${I.sun}</button>` })).join('');
-  return { title: 'Actions', html: chips + (rows ? `<div class="list">${rows}</div>` : empty('Aucune action ici', 'Trie ton Inbox ou ajoute une action avec +.')), fab: 'task' };
+  const row = t => taskRow(t, { showSched: t.scheduled_date !== t0, extra: t.scheduled_date === t0 ? '<span class="today-tag">Auj.</span>' : `<button class="plan-btn" data-act="plan-today" data-id="${t.id}" aria-label="Prévoir aujourd'hui">${I.sun}</button>` });
+  const grp = S.ui.group || 'none';
+  const groupBar = `<div class="chips scroll"><span class="muted small chips-label">Grouper</span>${[['none', 'Aucun'], ['project', 'Projet'], ['date', 'Date']].map(([v, l]) => chip(l, grp === v, 'group-set', v)).join('')}</div>`;
+  let body = '';
+  if (grp === 'none') body = list.length ? `<div class="list">${list.map(row).join('')}</div>` : '';
+  else {
+    const week = addDays(t0, 7);
+    const keyOf = grp === 'project'
+      ? t => { const p = t.parent_id && S.items.get(t.parent_id); return p && p.status !== 'trashed' ? p.title : 'Sans projet'; }
+      : t => !t.scheduled_date ? 'Sans date' : t.scheduled_date < t0 ? 'En retard' : t.scheduled_date === t0 ? "Aujourd'hui" : t.scheduled_date <= week ? 'Cette semaine' : 'Plus tard';
+    const order = grp === 'date' ? ['En retard', "Aujourd'hui", 'Cette semaine', 'Plus tard', 'Sans date'] : [];
+    const groups = new Map();
+    for (const t of list) { const k = keyOf(t); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
+    const keys = [...groups.keys()].sort((a, b) => grp === 'date' ? order.indexOf(a) - order.indexOf(b)
+      : (a === 'Sans projet') - (b === 'Sans projet') || a.localeCompare(b, 'fr'));
+    body = keys.map(k => sec(`${esc(k)} · ${groups.get(k).length}`, `<div class="list">${groups.get(k).map(row).join('')}</div>`)).join('');
+  }
+  return { title: 'Actions', html: chips + groupBar + (body || empty('Aucune action ici', 'Trie ton Inbox ou ajoute une action avec +.')), fab: 'task' };
 };
 
 views.projects = () => {

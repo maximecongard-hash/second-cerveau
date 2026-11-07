@@ -1,5 +1,5 @@
 import { LS_KEY, DEMO } from './config.js';
-import { uuid, nowIso } from './util.js';
+import { uuid, nowIso, ymd } from './util.js';
 import { scheduleSync } from './sync.js';
 import { queueRender, toast } from './ui.js';
 import { S, DEFAULT_PREFS, ITEM_DEFAULTS } from './state.js';
@@ -135,6 +135,10 @@ export function patch(id, p, opts) {
   const it = S.items.get(id);
   if (!it) return null;
   if (!canEdit(it)) { denied(); return it; }
+  // Report : une date prévue déjà échue repoussée plus tard compte pour un report (meta.postponed)
+  if (p.scheduled_date && it.scheduled_date && it.scheduled_date <= ymd(new Date()) && p.scheduled_date > it.scheduled_date && !('meta' in p)) {
+    p = { ...p, meta: { ...(it.meta || {}), postponed: (it.meta?.postponed | 0) + 1 } };
+  }
   Object.assign(it, p);
   return saveItem(it, { ...opts, fields: Object.keys(p) });
 }

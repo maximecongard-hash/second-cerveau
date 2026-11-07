@@ -18,6 +18,8 @@ export function taskRow(t, o = {}) {
   if (t.duration_min) meta.push(`<span>${fmtDur(t.duration_min)}</span>`);
   if (t.timer_started_at) meta.push(`<span class="m-timer" data-timer="${t.id}">${fmtClock(spentSec(t))}</span>`);
   else if (t.spent_sec > 0) meta.push(`<span class="m-timer paused">${fmtClock(t.spent_sec)}</span>`);
+  const pp = postponed(t);
+  if (!done && pp >= 2) meta.push(`<span class="m-post">${pp} reports</span>`);
   if (t.due_date) meta.push(`<span class="m-due ${t.due_date <= today() && !done ? 'late' : ''}">Échéance ${fmtDate(t.due_date).toLowerCase()}</span>`);
   if (t.recurrence) meta.push('<span>↻</span>');
   if (t.remind_at && !done && t.remind_at > new Date().toISOString()) meta.push(`<span class="m-bell" title="Rappel">${I.bell}</span>`);
@@ -27,12 +29,16 @@ export function taskRow(t, o = {}) {
   if (sm) meta.push(sm);
   const lm = linkMeta(t);
   if (lm) meta.push(lm);
-  return `<div class="row task ${done ? 'done' : ''}" data-act="edit" data-id="${t.id}">
+  const heat = done ? '' : pp >= 4 ? 'rp2' : pp >= 2 ? 'rp1' : '';
+  return `<div class="row task ${done ? 'done' : ''} ${heat}" data-act="edit" data-id="${t.id}">
     <button class="check" data-act="toggle" data-id="${t.id}" aria-label="${done ? 'Rouvrir' : 'Terminer'}"></button>
     <div class="row-main"><div class="row-title"><span class="rt">${esc(t.title) || '<i>Sans titre</i>'}</span></div>${meta.length ? `<div class="row-meta">${meta.join('')}</div>` : ''}</div>
-    ${o.extra || ''}${done ? '' : timerBtn(t)}
+    ${o.extra || ''}${done || !hasTimer(t) ? '' : timerBtn(t)}
   </div>`;
 }
+// Chrono : seulement pour une tâche placée dans l'Agenda (heure prévue), ou déjà lancée / chronométrée
+export const hasTimer = t => !!(t.scheduled_time || t.timer_started_at || t.spent_sec > 0);
+export const postponed = t => t.meta?.postponed | 0;
 const timerBtn = t => `<button class="timer-btn ${t.timer_started_at ? 'on' : ''}" data-act="timer-toggle" data-id="${t.id}" aria-label="${t.timer_started_at ? 'Pause du chrono' : 'Lancer le chrono'}">${t.timer_started_at ? I.pause : I.play}</button>`;
 const linkMeta = it => { const n = linkedIds(it.id).length; return n ? `<span class="m-link" title="Éléments liés">${I.link}${n}</span>` : ''; };
 export const starBtn = (t, day) => `<button class="star ${t.focus && t.scheduled_date === day ? 'on' : ''}" data-act="focus" data-id="${t.id}" aria-label="Top 3">${I.star}</button>`;

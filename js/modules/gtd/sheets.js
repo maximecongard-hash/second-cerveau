@@ -111,8 +111,8 @@ function summaryHTML(it) {
   return `<div class="ed-sum">
     ${p ? row('Projet', esc(p.title)) : ''}${when ? row('Prévu', when) : ''}${it.due_date ? row('Échéance', esc(fmtDate(it.due_date).toLowerCase())) : ''}
     ${it.recurrence ? row('Répète', esc(recText(it.recurrence).toLowerCase())) : ''}${by ? row('Statut', by) : ''}
-    <div class="ed-sum-row"><span>Chrono</span><span class="ed-timer"><span class="timer-val ${!run && s ? 'paused' : ''}" data-timer="${it.id}">${fmtClock(s)}</span>
-      <button class="chip ${run ? 'on' : ''}" data-act="${run ? 'timer-pause' : 'timer-start'}">${run ? 'Pause' : s ? 'Reprendre' : 'Démarrer'}</button>${s ? '<button class="chip" data-act="timer-reset">Remettre à zéro</button>' : ''}</span></div>
+    ${it.scheduled_time || run || s ? `<div class="ed-sum-row"><span>Chrono</span><span class="ed-timer"><span class="timer-val ${!run && s ? 'paused' : ''}" data-timer="${it.id}">${fmtClock(s)}</span>
+      <button class="chip ${run ? 'on' : ''}" data-act="${run ? 'timer-pause' : 'timer-start'}">${run ? 'Pause' : s ? 'Reprendre' : 'Démarrer'}</button>${s ? '<button class="chip" data-act="timer-reset">Remettre à zéro</button>' : ''}</span></div>` : ''}
   </div>`;
 }
 
