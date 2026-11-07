@@ -23,7 +23,9 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (5 novembre 2026)
 
-- Version **0.22.0** (branche `main`, non commitée), cache SW `sc-0.22.0`, schéma 22.
+- Version **0.24.0** (branche `feat/sport-import`, non commitée), cache SW `sc-0.24.0`, schéma 22 (inchangé).
+- **0.24.0** : Sport > Historique, bouton Importer : fichiers TCX/GPX exportés de l'app COROS, lus dans le navigateur (`js/modules/sport/import.js`, ni serveur ni schéma). Dédoublonnage par `meta.result.ext_id` (`file:<heure de départ>`), rapprochement avec la séance prévue du même jour et sport, `meta.result.source:'coros'`. **Strava abandonné** : API réservée aux abonnés ; le code serveur (route `strava`, table `strava_link`, schéma 23) est parqué dans `git stash` (« strava 0.24 parqué »). FIT non lu (le Training Hub n'exporte en lot qu'en FIT/TCX par e-mail).
+- **0.23.0** : Sport > Historique refait : barres en HTML (plus de SVG étiré), séances en cartes à 3 chiffres (distance/durée/FC ou durée/tonnage/RPE, résultat réel), filtre remis à zéro si vide. Import COROS prévu via Strava (étape suivante, route `strava` de `brain`).
 - **0.22.0** : chrono seulement sur les tâches placées dans l'Agenda (heure prévue) ou déjà chronométrées ; compteur de reports `meta.postponed` (incrémenté dans `patch` quand une date échue est repoussée), fond ocre dès 2 reports, rouge et titre gras dès 4 ; Actions : Grouper par Projet ou Date (`S.ui.group`).
 - **0.21.0** : Courses, onglet Semaine (recettes envoyées depuis le panier, à cocher quand faites, pref `rcWeek`, reset le lundi), objectif 18 portions affiché à la sélection, au panier et dans l'onglet ; champ Prix (€/kg) sur les produits.
 - **0.20.0** : Courses, un toucher coche un produit, appui long pour sa fiche, tri par rayon ou par magasin (schéma 21 : `widget_today` renvoie les jours à venir).

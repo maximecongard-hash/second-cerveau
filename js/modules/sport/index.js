@@ -10,6 +10,7 @@ import { weekAgg } from './stats.js';
 import { views, workoutRow, openNew, renderNew } from './views.js';
 import { editorHTML, setField as setWorkoutField, onChange as editorChange, editorActs, editorForms } from './editor.js';
 import { programEditor, programSetField, programChange, programActs, createProgram } from './programs.js';
+import { importFiles } from './import.js';
 import { liveViews, liveActs, liveForms, liveTick } from './live.js';
 
 // ---------------------------------------------------------------------------
@@ -49,6 +50,17 @@ const acts = {
     openEditor(it.id);
   },
   'sp-prog-new': () => createProgram(),
+  // Barre de l'historique : saute à la semaine ; filtre levé si le sport filtré n'y a rien
+  'sp-goweek': el => {
+    const go = () => {
+      const t = document.getElementById('sp-w-' + el.dataset.mon);
+      if (!t) return false;
+      t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      t.classList.add('flash'); setTimeout(() => t.classList.remove('flash'), 1400);
+      return true;
+    };
+    if (!go() && S.ui.spFilter) { S.ui.spFilter = ''; render(); go(); }
+  },
   'sp-filter': el => { S.ui.spFilter = el.dataset.v; render(); },
   'sp-sound': () => { S.prefs.sportSound = S.prefs.sportSound === false; savePrefs(); },
   'sp-lib-del': el => {
@@ -87,6 +99,7 @@ const forms = {
 };
 
 function onChange(t) {
+  if (t.id === 'sp-import-file') { importFiles(t); return true; }
   if (t.dataset.sppref) {
     S.prefs[t.dataset.sppref] = +t.value;
     savePrefs();
