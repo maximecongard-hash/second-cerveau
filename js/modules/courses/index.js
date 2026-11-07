@@ -11,6 +11,7 @@ import { addProduct } from './shop.js';
 import { panierActs } from './panier.js';
 import { STARTERS } from './starters.js';
 import { createFoyer, inFoyer } from './foyer.js';
+import { toggleDone, toggleWeek, clearDone } from './semaine.js';
 
 // ---------------------------------------------------------------------------
 // Module « Courses » : banque de recettes, panier, liste de courses, foyer partagé.
@@ -44,6 +45,9 @@ const acts = {
   },
   'fy-create': () => { createFoyer(); render(); toast('Foyer créé'); },
   // liste de courses
+  'wk-done': el => { toggleDone(el.dataset.id); render(); },
+  'wk-clear': () => { clearDone(); render(); },
+  'wk-toggle': el => { toggleWeek(el.dataset.id); renderEditor(); },
   'sh-sort': el => { S.ui.shSort = el.dataset.v; render(); },
   'sh-check': el => {
     const it = S.items.get(el.dataset.id);
@@ -123,13 +127,13 @@ registerModule({
   description: 'Banque de recettes, panier de la semaine et liste de courses, à partager avec ton foyer.',
   defaultOn: false,
   home: 'recettes',
-  tabs: [['recettes', 'Recettes', I.heart], ['courses', 'Liste', I.cart]],
+  tabs: [['recettes', 'Recettes', I.heart], ['semaine', 'Semaine', I.calendar], ['courses', 'Liste', I.cart]],
   kinds: KINDS,
   kindLabel: { recipe: 'Recette', shop_item: 'Produit', foyer: 'Foyer' },
   tabOf: { foyer: 'courses', panier: 'recettes' },
   menu: () => [['#/foyer', 'Foyer et partage']],
   views, acts, forms, fab,
-  prefs: { rcHave: [], rcAisles: {} },
+  prefs: { rcHave: [], rcAisles: {}, rcWeek: { w: '', l: [] } },
   ui: { rcQuery: '', rcFilter: 'all', rcSeason: null, rcSel: [], rcParts: {}, pnHave: {}, shSort: 'aisle' },
   editor: editorHTML,
   setField,

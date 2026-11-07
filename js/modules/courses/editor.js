@@ -3,6 +3,7 @@ import { S, newItem, saveItem, patch } from '../../core/store.js';
 import { SH, renderEditor, openEditor, sheetHead } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
 import { inFoyer, foyerEditor } from './foyer.js';
+import { inWeek } from './semaine.js';
 import { SEASONS, QUICK_TAGS, UNITS, metaOf, shopMeta, fmtQty, parseQty, parseIngredient, STORES } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -24,6 +25,7 @@ function shopEditor(it) {
     <input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Produit" autocomplete="off">
     <div class="fields">
       ${fRow('Quantité', `<div class="rc-ing" style="margin:0"><input class="rc-q" data-rc="shop" data-k="qty" value="${esc(fmtQty(m.qty))}" placeholder="Qté" inputmode="decimal" autocomplete="off"><input class="rc-u" data-rc="shop" data-k="unit" value="${esc(m.unit)}" placeholder="Unité" list="rc-units" autocomplete="off"></div><datalist id="rc-units">${UNITS.map(u => `<option value="${esc(u)}"></option>`).join('')}</datalist>`)}
+      ${fRow('Prix', `<div class="rc-ing" style="margin:0"><input class="rc-q" data-rc="shop" data-k="price" value="${esc(fmtQty(m.price))}" placeholder="0,00" inputmode="decimal" autocomplete="off" aria-label="Prix au kilo en euros"><span class="muted">€ / kg</span></div>`)}
       ${fRow('Magasin', `<select data-rc="shop" data-k="store"><option value="">—</option>${[...STORES, ...(m.store && !STORES.includes(m.store) ? [m.store] : [])].map(x => `<option ${x === m.store ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`)}
       ${fRow('Statut', `<button type="button" class="chip ${done ? 'on' : ''}" data-act="sh-check" data-id="${it.id}">${done ? 'Pris' : 'À prendre'}</button>`)}
     </div>`;
@@ -36,7 +38,8 @@ export function editorHTML(it) {
   const head = sheetHead('Recette');
   const title = `<input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="Nom de la recette" autocomplete="off">`;
   const tags = it.tags || [];
-  const fields = `${fRow('Favori', `<button type="button" class="chip ${it.pinned ? 'on' : ''}" data-act="rc-fav" data-id="${it.id}">${I.heart}${it.pinned ? 'Dans les favoris' : 'Mettre en favori'}</button>`)}
+  const fields = `${fRow('Semaine', `<button type="button" class="chip ${inWeek(it.id) ? 'on' : ''}" data-act="wk-toggle" data-id="${it.id}">${inWeek(it.id) ? 'Dans la semaine' : 'Ajouter à la semaine'}</button>`)}
+    ${fRow('Favori', `<button type="button" class="chip ${it.pinned ? 'on' : ''}" data-act="rc-fav" data-id="${it.id}">${I.heart}${it.pinned ? 'Dans les favoris' : 'Mettre en favori'}</button>`)}
     ${fRow('Pour', `<div class="rc-parts"><input type="number" min="1" max="99" inputmode="numeric" data-rc="servings" value="${m.servings}" aria-label="Nombre de parts"><span>parts</span></div>`)}
     ${fRow('Durée', `<select data-f="duration_min">${durOptions(it.duration_min).map(([v, l]) => `<option value="${v}" ${String(it.duration_min ?? '') === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
     ${fRow('Tags', `<div class="chips wrap">${QUICK_TAGS.map(t => chip(esc(t), tags.includes(t), 'rc-tag', t)).join('')}</div>
@@ -96,7 +99,7 @@ export function editorChange(t) {
   }
   if (t.dataset.rc === 'shop') {
     const k = t.dataset.k;
-    const num = k === 'qty';
+    const num = k === 'qty' || k === 'price';
     const it = S.items.get(SH.editingId);
     if (!it) return true;
     const m = structuredClone(shopMeta(it));

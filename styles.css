@@ -802,13 +802,13 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .fields .rc-ing input.rc-u { width: 76px; }
 .rc-ing .rc-n { flex: 1; }
 .rc-ing input:focus { border-color: var(--accent); outline: 0; }
-.sh-row, .rc-row, .pn-line { align-items: center; cursor: pointer; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
-.sh-row .sh-more, .rc-row .sh-more { flex: none; margin: -6px -8px -6px 0; color: var(--muted); }
+.sh-row, .rc-row, .pn-line, .wk-row { align-items: center; cursor: pointer; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.sh-row .sh-more, .rc-row .sh-more, .wk-row .sh-more { flex: none; margin: -6px -8px -6px 0; color: var(--muted); }
 .sh-promo { font: 500 12px var(--f-mono); color: var(--accent); margin-top: 2px; }
 .sh-store { margin-top: 22px; }
 .sh-store-h { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 4px; padding-bottom: 6px; font: 600 20px var(--f-serif, inherit); border-bottom: 2px solid var(--accent); }
 .sh-q { font: 500 13px var(--f-mono); color: var(--accent); margin-left: 4px; }
-.sh-row.done .row-title { color: var(--muted); text-decoration: line-through; }
+.wk-row.done .row-title, .sh-row.done .row-title { color: var(--muted); text-decoration: line-through; }
 .rc-bar { position: sticky; z-index: 10; bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom) + 10px); display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .rc-bar span { flex: 1; }
 .rc-bar .btn { white-space: nowrap; }
@@ -819,3 +819,6 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .pn-step { display: inline-flex; align-items: center; gap: 2px; font: 500 12px var(--f-mono); }
 .pn-step .icon-btn { width: 30px; height: 30px; font-size: 18px; }
 .pn-line .seg { flex: none; }
+
+.wk-head { margin: 0 0 6px; }
+.wk-ok { color: var(--accent); font-weight: 600; }
