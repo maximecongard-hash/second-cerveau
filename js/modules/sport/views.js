@@ -1,8 +1,8 @@
 import { esc, I, sec, empty, chip, today, addDays, parseYmd, fmtDate, fmtDur, cap, plural, FMT_DAY } from '../../core/util.js';
 import { S } from '../../core/store.js';
 import { SH, sheet, showSheet, sheetHead } from '../../core/ui.js';
-import { SPORTS, icon, label, summary, estimate, onDay, unplaced, missed, templates, programs, doneList, doneDay, monday, sortWhen, human } from './model.js';
-import { weekAgg, progressHTML } from './stats.js';
+import { SPORTS, icon, label, fmtKm, summary, estimate, onDay, unplaced, missed, templates, programs, doneList, doneDay, monday, sortWhen, human } from './model.js';
+import { weekAgg, progressHTML, secOf, distOf, tonnageOf } from './stats.js';
 
 // ---------------------------------------------------------------------------
 // Lignes et vues : Semaine, Modèles, Historique
@@ -45,6 +45,23 @@ export function renderNew() {
     ${sec('Partir d’un modèle', tpls.length ? `<div class="list">${tpls.map(t => `<button type="button" class="row link-pick" data-act="sp-create" data-tpl="${t.id}"><div class="row-icon">${icon(t)}</div><div class="row-main"><div class="row-title">${esc(t.title)}</div><div class="row-meta"><span>${esc(label(t))}</span>${summary(t) ? `<span>${esc(summary(t))}</span>` : ''}</div></div></button>`).join('')}</div>` : '<div class="muted small pad">Aucun modèle. Enregistre une séance comme modèle depuis son éditeur.</div>')}`;
 }
 
+// Carte d'une séance faite : trois chiffres, tirés du résultat saisi (ou importé) à défaut du prévu
+const histCard = w => {
+  const r = w.meta?.result || {}, end = SPORTS[w.meta?.sport]?.endurance;
+  const sec = secOf(w), dist = end ? distOf(w) : 0, ton = end ? 0 : tonnageOf(w);
+  const dur = sec ? fmtDur(Math.max(1, Math.round(sec / 60))) : '';
+  const cells = end
+    ? [dist && [fmtKm(dist), 'distance'], dur && [dur, 'durée'],
+       r.avg_hr ? [String(r.avg_hr), 'FC moy.'] : r.rpe ? [String(r.rpe), 'RPE'] : dist && sec ? [fmtPace(dist, sec), 'allure'] : null]
+    : [dur && [dur, 'durée'], ton && [Math.round(ton).toLocaleString('fr-FR'), 'kg soulevés'], r.rpe && [String(r.rpe), 'RPE']];
+  const c = cells.filter(Boolean);
+  const day = fmtDate(doneDay(w)), imp = r.source && r.source !== 'manual' ? ` · ${esc(cap(r.source))}` : '';
+  return `<div class="sp-hc" data-act="edit" data-id="${w.id}"><div class="sp-hc-h"><div class="row-title">${esc(w.title) || '<i>Sans titre</i>'}</div><span>${esc(day)}${imp}</span></div>
+    <div class="sp-hc-sub">${esc(label(w))}</div>
+    ${c.length ? `<div class="sp-hc-n" style="--n:${c.length}">${c.map(([v, l]) => `<div><b>${esc(v)}</b><span>${l}</span></div>`).join('')}</div>` : ''}</div>`;
+};
+const fmtPace = (m, s) => { const p = Math.round(s / (m / 1000)); return `${Math.floor(p / 60)}:${String(p % 60).padStart(2, '0')}/km`; };
+
 export const views = {};
 
 // ---- Semaine ---------------------------------------------------------------
@@ -86,13 +103,14 @@ views['sport-tpl'] = () => {
 
 // ---- Historique et progression ---------------------------------------------
 views['sport-hist'] = () => {
-  const f = S.ui.spFilter || '';
   const used = [...new Set(doneList().map(w => w.meta?.sport || 'other'))];
+  if (S.ui.spFilter && !used.includes(S.ui.spFilter)) S.ui.spFilter = '';
+  const f = S.ui.spFilter || '';
   const list = doneList().filter(w => !f || (w.meta?.sport || 'other') === f);
   const groups = new Map();
   for (const w of list) { const m = monday(doneDay(w)); (groups.get(m) || groups.set(m, []).get(m)).push(w); }
   const FMT_S = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' });
   const filters = used.length > 1 ? `<div class="chips scroll">${chip('Tout', !f, 'sp-filter', '')}${used.map(k => chip(SPORTS[k]?.label || k, f === k, 'sp-filter', k)).join('')}</div>` : '';
-  const body = [...groups].map(([m, ws]) => sec(`Semaine du ${FMT_S.format(parseYmd(m))}`, `<div class="list">${ws.sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || '')).map(w => workoutRow(w)).join('')}</div>`)).join('');
+  const body = [...groups].map(([m, ws]) => `<div class="sp-wk" id="sp-w-${m}">` + sec(`Semaine du ${FMT_S.format(parseYmd(m))}`, `<div class="sp-hcs">${ws.sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || '')).map(histCard).join('')}</div>`) + '</div>').join('');
   return { title: 'Historique', html: (doneList().length ? progressHTML() : '') + filters + (body || empty('Aucune séance terminée', 'Elles apparaissent ici, avec ta progression, dès la première.')) };
 };

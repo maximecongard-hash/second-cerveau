@@ -6,8 +6,8 @@ import { SPORTS, workouts, doneList, doneDay, monday, estimate, e1rm, setsOf, fm
 // Agrégats locaux : volume par semaine, série de semaines tenues, records, mini-graphes SVG
 // Les valeurs viennent du résultat saisi en fin de séance, à défaut du contenu prévu.
 // ---------------------------------------------------------------------------
-const secOf = w => (w.meta?.result?.dur_s ?? (w.spent_sec >= 60 ? w.spent_sec : 0)) || (w.duration_min || 0) * 60;
-const distOf = w => w.meta?.result?.dist_m ?? estimate(w).dist;
+export const secOf = w => (w.meta?.result?.dur_s ?? (w.spent_sec >= 60 ? w.spent_sec : 0)) || (w.duration_min || 0) * 60;
+export const distOf = w => w.meta?.result?.dist_m ?? estimate(w).dist;
 export function tonnageOf(w) {
   return (w.meta?.exercises || []).reduce((s, e) => s + setsOf(e).filter(x => x.done).reduce((a, x) => a + (x.reps || 0) * (x.w || 0), 0), 0);
 }
@@ -76,17 +76,16 @@ export function liftSeries(name) {
 // ---------------------------------------------------------------------------
 // Graphes
 // ---------------------------------------------------------------------------
-// Barres par semaine ; la dernière est la semaine en cours
+// Barres par semaine en HTML (pas de SVG étiré) : valeur au-dessus, jour du lundi dessous ; la dernière est la semaine en cours
 export function bars(weeks, pick, fmt) {
   const max = Math.max(1, ...weeks.map(pick));
-  const w = 100 / weeks.length;
-  const rects = weeks.map((x, i) => {
-    const v = pick(x), h = Math.round(v / max * 54);
-    return `<g><rect x="${i * w + w * 0.18}" y="${60 - h}" width="${w * 0.64}" height="${Math.max(h, v ? 2 : 0)}" rx="1.5" class="${i === weeks.length - 1 ? 'cur' : ''}"/>
-      <text x="${i * w + w / 2}" y="73" text-anchor="middle">${new Date(x.mon + 'T00:00').getDate()}</text></g>`;
+  const FMT = d => new Date(d + 'T00:00').getDate();
+  const cols = weeks.map((x, i) => {
+    const v = pick(x), h = v ? Math.max(3, Math.round(v / max * 62)) : 0, end = addDays(x.mon, 6);
+    const lbl = `${FMT(x.mon)}–${FMT(end)}`;
+    return `<button type="button" class="sp-bar-c ${i === weeks.length - 1 ? 'cur' : ''}" data-act="sp-goweek" data-mon="${x.mon}" aria-label="Semaine du ${esc(fmtDate(x.mon))} au ${esc(fmtDate(end))}, ${v ? esc(fmt(v)) : 'aucune séance'}"><em>${v ? esc(fmt(v)) : ''}</em><i style="height:${h}px"></i><u>${lbl}</u></button>`;
   }).join('');
-  const last = pick(weeks[weeks.length - 1]);
-  return `<svg class="sp-bars" viewBox="0 0 100 76" preserveAspectRatio="none" role="img" aria-label="Volume par semaine, dernière semaine : ${esc(fmt(last))}">${rects}</svg>`;
+  return `<div class="sp-bars">${cols}</div>`;
 }
 export function spark(points) {
   if (points.length < 2) return '';
@@ -111,7 +110,7 @@ export function progressHTML() {
     rec.heaviest && `<div class="sp-rec"><div class="sp-rec-main"><div class="row-title">Plus gros tonnage</div><div class="row-meta"><span>${Math.round(rec.heaviest.v).toLocaleString('fr-FR')} kg</span><span>${esc(fmtDate(rec.heaviest.day).toLowerCase())}</span></div></div></div>`
   ].filter(Boolean);
   return `<div class="ev-summary">${stat(cur.n + '/' + goal, 'cette semaine')}${stat(fmtDur(Math.round(cur.sec / 60)) || '0', 'de sport')}${stat(st, st > 1 ? 'semaines tenues' : 'semaine tenue')}</div>
-    <div class="sp-chart"><div class="sp-chart-t">Temps par semaine <small>8 dernières semaines</small></div>${bars(weeks, x => x.sec, v => fmtDur(Math.round(v / 60)))}</div>
-    <div class="sp-chart"><div class="sp-chart-t">Séances par semaine</div>${bars(weeks, x => x.n, v => plural(v, 'séance', 'séances'))}</div>
+    <div class="sp-chart"><div class="sp-chart-t">Heures par semaine <small>8 dernières semaines</small></div>${bars(weeks, x => x.sec, v => (v / 3600).toFixed(1).replace('.', ','))}</div>
+    <div class="sp-chart"><div class="sp-chart-t">Séances par semaine</div>${bars(weeks, x => x.n, v => String(v))}</div>
     ${rows.length || extra.length ? `<h2 class="sp-h">Records</h2><div class="sp-recs">${rows.join('')}${extra.join('')}</div>` : ''}`;
 }
