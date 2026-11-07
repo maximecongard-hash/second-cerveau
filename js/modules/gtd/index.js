@@ -105,7 +105,7 @@ registerModule({
     areasV2: false,
     endNotify: true
   },
-  ui: { day: today(), ctx: 'all', reorder: false, review: new Set() },
+  ui: { day: today(), ctx: 'all', group: 'none', reorder: false, review: new Set() },
   badge: () => inboxItems().length,
   menu: () => [
     ['#/evening', 'Revue du soir'],

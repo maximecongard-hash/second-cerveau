@@ -121,6 +121,7 @@ export const acts = {
     closeSheet();
   },
   'ctx-filter': el => { S.ui.ctx = el.dataset.v; render(); },
+  'group-set': el => { S.ui.group = el.dataset.v; render(); },
   activate: el => { patch(el.dataset.id, { status: 'active' }); toast('Activé'); },
   'proj-done': el => { patch(el.dataset.id, { status: 'done', completed_at: nowIso() }); toast('Projet terminé', () => patch(el.dataset.id, { status: 'active', completed_at: null })); },
   'review-check': el => { const k = el.dataset.v; S.ui.review.has(k) ? S.ui.review.delete(k) : S.ui.review.add(k); render(); },

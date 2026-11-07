@@ -184,6 +184,13 @@ main {
 .row-meta .m-tag { color: var(--accent); }
 .row-meta .m-wait { color: var(--warn); }
 .row-meta .late, .m-due.late { color: var(--danger); font-weight: 500; }
+/* Reports : le fond rougit à chaque report (2-3 : ocre, 4 et plus : rouge, titre en gras) */
+.row.rp1 { background: color-mix(in srgb, var(--warn) 9%, var(--surface)); }
+.row.rp2 { background: color-mix(in srgb, var(--danger) 16%, var(--surface)); }
+.row.rp2 .rt { font-weight: 600; }
+.row-meta .m-post { color: var(--warn); font-family: var(--f-mono); font-size: 12px; }
+.row.rp2 .m-post { color: var(--danger); }
+.chips-label { align-self: center; font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
 .row-meta .warn { color: var(--warn); font-weight: 500; }
 .row-icon { color: var(--muted); padding-top: 1px; }
 .row-icon svg { width: 20px; height: 20px; }
