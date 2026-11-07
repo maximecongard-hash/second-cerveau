@@ -219,6 +219,10 @@ Brain envoie lui-même une notification à l'heure choisie, même app fermée. S
 
 Dans une tâche, champ **Rappel** : date et heure, ou **Heure prévue**, **Dans 1 h**, **Demain 9 h**. Toucher la notification ouvre la tâche. Pour une tâche répétée, le rappel suit la répétition. **Réglages** > **Notifications** règle aussi la notification de fin de créneau.
 
+### Importer les séances de la montre COROS
+
+Dans **Sport** > **Historique**, bouton **Importer des séances**. Dans l'app COROS, ouvre une séance, exporte-la en **TCX** ou **GPX** (enregistre dans Fichiers), puis choisis le ou les fichiers dans Brain. Le fichier est lu sur l'iPhone, rien n'est envoyé ailleurs. Distance, durée et fréquence cardiaque sont reprises ; une séance prévue le même jour avec le même sport est complétée au lieu d'être dupliquée, et déposer deux fois le même fichier ne double rien. Pas besoin de Supabase pour cette fonction.
+
 ---
 
 ## 8. Au quotidien

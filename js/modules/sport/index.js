@@ -10,6 +10,7 @@ import { weekAgg } from './stats.js';
 import { views, workoutRow, openNew, renderNew } from './views.js';
 import { editorHTML, setField as setWorkoutField, onChange as editorChange, editorActs, editorForms } from './editor.js';
 import { programEditor, programSetField, programChange, programActs, createProgram } from './programs.js';
+import { importFiles } from './import.js';
 import { liveViews, liveActs, liveForms, liveTick } from './live.js';
 
 // ---------------------------------------------------------------------------
@@ -98,6 +99,7 @@ const forms = {
 };
 
 function onChange(t) {
+  if (t.id === 'sp-import-file') { importFiles(t); return true; }
   if (t.dataset.sppref) {
     S.prefs[t.dataset.sppref] = +t.value;
     savePrefs();

@@ -2,6 +2,7 @@ import { esc, I, sec, empty, chip, today, addDays, parseYmd, fmtDate, fmtDur, ca
 import { S } from '../../core/store.js';
 import { SH, sheet, showSheet, sheetHead } from '../../core/ui.js';
 import { SPORTS, icon, label, fmtKm, summary, estimate, onDay, unplaced, missed, templates, programs, doneList, doneDay, monday, sortWhen, human } from './model.js';
+import { importButton } from './import.js';
 import { weekAgg, progressHTML, secOf, distOf, tonnageOf } from './stats.js';
 
 // ---------------------------------------------------------------------------
@@ -55,7 +56,7 @@ const histCard = w => {
        r.avg_hr ? [String(r.avg_hr), 'FC moy.'] : r.rpe ? [String(r.rpe), 'RPE'] : dist && sec ? [fmtPace(dist, sec), 'allure'] : null]
     : [dur && [dur, 'durée'], ton && [Math.round(ton).toLocaleString('fr-FR'), 'kg soulevés'], r.rpe && [String(r.rpe), 'RPE']];
   const c = cells.filter(Boolean);
-  const day = fmtDate(doneDay(w)), imp = r.source && r.source !== 'manual' ? ` · ${esc(cap(r.source))}` : '';
+  const day = fmtDate(doneDay(w)), imp = r.source && r.source !== 'manual' ? ` · ${esc(r.source.toUpperCase())}` : '';
   return `<div class="sp-hc" data-act="edit" data-id="${w.id}"><div class="sp-hc-h"><div class="row-title">${esc(w.title) || '<i>Sans titre</i>'}</div><span>${esc(day)}${imp}</span></div>
     <div class="sp-hc-sub">${esc(label(w))}</div>
     ${c.length ? `<div class="sp-hc-n" style="--n:${c.length}">${c.map(([v, l]) => `<div><b>${esc(v)}</b><span>${l}</span></div>`).join('')}</div>` : ''}</div>`;
@@ -112,5 +113,5 @@ views['sport-hist'] = () => {
   const FMT_S = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' });
   const filters = used.length > 1 ? `<div class="chips scroll">${chip('Tout', !f, 'sp-filter', '')}${used.map(k => chip(SPORTS[k]?.label || k, f === k, 'sp-filter', k)).join('')}</div>` : '';
   const body = [...groups].map(([m, ws]) => `<div class="sp-wk" id="sp-w-${m}">` + sec(`Semaine du ${FMT_S.format(parseYmd(m))}`, `<div class="sp-hcs">${ws.sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || '')).map(histCard).join('')}</div>`) + '</div>').join('');
-  return { title: 'Historique', html: (doneList().length ? progressHTML() : '') + filters + (body || empty('Aucune séance terminée', 'Elles apparaissent ici, avec ta progression, dès la première.')) };
+  return { title: 'Historique', html: importButton() + (doneList().length ? progressHTML() : '') + filters + (body || empty('Aucune séance terminée', 'Elles apparaissent ici, avec ta progression, dès la première.')) };
 };
