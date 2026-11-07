@@ -3,13 +3,14 @@ import { S, savePrefs } from '../../core/store.js';
 import { render, toast } from '../../core/ui.js';
 import { AISLES, metaOf, fmtQty, guessAisle, productKey } from './model.js';
 import { addShop } from './shop.js';
+import { addToWeek, weekParts, partsLabel } from './semaine.js';
 
 // ---------------------------------------------------------------------------
 // Panier : les recettes cochées, leurs ingrédients fusionnés, puis le tri « déjà là / à acheter » avant la liste.
 // Les produits marqués « déjà là » sont retenus (S.prefs.rcHave) et pré-cochés la fois suivante.
 // ---------------------------------------------------------------------------
 export const selected = () => (S.ui.rcSel || []).map(id => S.items.get(id)).filter(r => r && r.status !== 'trashed');
-const partsOf = r => S.ui.rcParts[r.id] ?? metaOf(r).servings;
+export const partsOf = r => S.ui.rcParts[r.id] ?? metaOf(r).servings;
 
 export function basketLines() {
   const map = new Map();
@@ -42,7 +43,7 @@ export function panierView() {
   const groups = AISLES.map(a => [a, lines.filter(l => l.aisle === a)]).filter(([, l]) => l.length);
   return {
     title: 'Panier',
-    html: `<section class="sec"><div class="sec-head"><h2>Recettes</h2></div>${recipes.map(r => `<div class="pn-rec"><div class="row-main"><div class="row-title">${esc(r.title)}</div></div>
+    html: `<section class="sec"><div class="sec-head"><h2>Recettes</h2><span class="muted small">${partsLabel(weekParts(recipes.map(r => ({ id: r.id, parts: partsOf(r) }))))}</span></div>${recipes.map(r => `<div class="pn-rec"><div class="row-main"><div class="row-title">${esc(r.title)}</div></div>
         <span class="pn-step"><button type="button" class="icon-btn" data-act="pn-parts" data-id="${r.id}" data-d="-1" aria-label="Moins de parts">−</button><span>${partsOf(r)} parts</span><button type="button" class="icon-btn" data-act="pn-parts" data-id="${r.id}" data-d="1" aria-label="Plus de parts">+</button></span>
         <button type="button" class="link" data-act="rc-sel" data-id="${r.id}">Retirer</button></div>`).join('')}</section>
       <div class="muted small pad">Indique ce que tu as déjà : seul le reste ira dans la liste.</div>
@@ -69,6 +70,7 @@ export const panierActs = {
   'pn-set': el => { S.ui.pnHave[el.dataset.k] = el.dataset.v === '1'; render(); },
   'pn-send': () => {
     const have = new Set(S.prefs.rcHave || []);
+    addToWeek(selected().map(r => ({ id: r.id, parts: partsOf(r) })));
     let n = 0;
     for (const l of basketLines()) {
       const pk = productKey(l.name);

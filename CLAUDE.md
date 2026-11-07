@@ -23,7 +23,8 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (5 novembre 2026)
 
-- Version **0.20.3** (branche `feat/courses-appui-long`, non fusionnée), cache SW `sc-0.20.3`, schéma 22.
+- Version **0.21.0** (branche `feat/courses-semaine`, non fusionnée), cache SW `sc-0.21.0`, schéma 22.
+- **0.21.0** : Courses, onglet Semaine (recettes envoyées depuis le panier, à cocher quand faites, pref `rcWeek`, reset le lundi), objectif 18 portions affiché à la sélection, au panier et dans l'onglet ; champ Prix (€/kg) sur les produits.
 - **0.20.0** : Courses, un toucher coche un produit, appui long pour sa fiche, tri par rayon ou par magasin (schéma 21 : `widget_today` renvoie les jours à venir).
 - **0.20.3** : Courses, même logique que la liste pour les recettes (toucher = panier, appui long ou ⋯ = fiche) et pour les lignes du panier (toucher = Déjà là / Acheter).
 - **0.20.2** : Courses, magasin par produit (Inter, Lidl, Leclerc, `meta.store`, puces dans la fiche), tri Magasin = un bloc par magasin avec tous ses rayons ; plus de prix au kilo (inutile, retiré avant publication).

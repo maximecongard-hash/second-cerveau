@@ -1,7 +1,8 @@
 import { esc, I, empty, chip, fmtDur } from '../../core/util.js';
 import { S, ofKindAll } from '../../core/store.js';
 import { foyerView } from './foyer.js';
-import { panierView } from './panier.js';
+import { panierView, partsOf } from './panier.js';
+import { semaineView, weekParts, partsLabel, WEEK_GOAL } from './semaine.js';
 import { KINDS, AISLES, aisleFor, metaOf, seasonOf, seasonOrder, inSeason, shopMeta, fmtQty, STORES } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -58,7 +59,8 @@ function seasonChips() {
 
 function selBar() {
   const n = (S.ui.rcSel || []).length;
-  return n ? `<div class="rc-bar"><span class="muted small">${n} recette${n > 1 ? 's' : ''}</span><button class="link" data-act="rc-sel-clear">Vider</button><button class="btn primary" data-act="rc-prepare">Préparer les courses</button></div>` : '';
+  const parts = weekParts((S.ui.rcSel || []).map(id => S.items.get(id)).filter(Boolean).map(r => ({ id: r.id, parts: partsOf(r) })));
+  return n ? `<div class="rc-bar"><span class="muted small">${n} recette${n > 1 ? 's' : ''} · <span class="${parts >= WEEK_GOAL ? 'wk-ok' : ''}">${partsLabel(parts)}</span></span><button class="link" data-act="rc-sel-clear">Vider</button><button class="btn primary" data-act="rc-prepare">Préparer les courses</button></div>` : '';
 }
 export const views = {};
 views.recettes = () => ({
@@ -69,12 +71,13 @@ views.recettes = () => ({
   fab: (S.ui.rcSel || []).length ? undefined : 'recipe'
 });
 views.panier = panierView;
+views.semaine = semaineView;
 // ---------------------------------------------------------------------------
 // Liste de courses : produits par rayon, ajout libre, cocher en magasin
 // ---------------------------------------------------------------------------
 export function shopRow(it) {
   const m = shopMeta(it), done = it.status === 'done';
-  const q = [fmtQty(m.qty), m.unit].filter(Boolean).join(' '), promo = S.ui.shSort === 'store' ? '' : m.store;
+  const q = [fmtQty(m.qty), m.unit].filter(Boolean).join(' '), promo = [m.price > 0 ? `${fmtQty(m.price)} €/kg` : '', S.ui.shSort === 'store' ? '' : m.store].filter(Boolean).join(' · ');
   // toute la ligne coche ; la fiche s'ouvre par appui long ou par le bouton ⋯ (pas de zone morte entre les deux)
   return `<div class="row sh-row ${done ? 'done' : ''}" data-act="sh-check" data-long="edit" data-id="${it.id}">
     <button type="button" class="check ${done ? 'on' : ''}" aria-label="${done ? 'Remettre dans la liste' : 'Marquer comme pris'}"></button>

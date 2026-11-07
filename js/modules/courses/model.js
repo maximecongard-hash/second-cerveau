@@ -85,7 +85,7 @@ export function guessAisle(name) {
   const n = strip(name);
   return aisleFor(name, (AISLE_RULES.find(([, re]) => re.test(n)) || ['Autre'])[0]);
 }
-export const shopMeta = it => ({ qty: null, unit: '', aisle: 'Autre', stage: 'list', store: '', ...(it.meta || {}) });
+export const shopMeta = it => ({ qty: null, unit: '', aisle: 'Autre', stage: 'list', price: null, store: '', ...(it.meta || {}) });
 // Magasins proposés pour trier la liste par magasin
 export const STORES = ['Inter', 'Lidl', 'Leclerc'];
 // Champs d'un produit à partir d'un texte (« 2 l de lait », « sel »)
