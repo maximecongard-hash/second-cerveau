@@ -60,6 +60,15 @@ function seedDemo() {
   add({ kind: 'task', title: 'Choisir un thème pour le site', parent_id: p2.id, contexts: ['@ordi'], energy: 'high' });
   add({ kind: 'task', title: 'Devis du plombier', status: 'waiting', waiting_for: 'M. Durand', contexts: [] });
   add({ kind: 'task', title: 'Apprendre la guitare', status: 'someday' });
+  // sections, sous-sections et frise du projet de démo
+  const sc = saveItem(newItem({ kind: 'section', title: 'Transport', parent_id: p1.id }), { render: false });
+  const sl = saveItem(newItem({ kind: 'section', title: 'Logement', parent_id: p1.id }), { render: false });
+  const ss = saveItem(newItem({ kind: 'section', title: 'Trains', parent_id: p1.id, meta: { sup: sc.id } }), { render: false });
+  add({ kind: 'task', title: 'Réserver l’aller', parent_id: p1.id, meta: { sec: ss.id } });
+  add({ kind: 'task', title: 'Réserver le retour', parent_id: p1.id, status: 'done', completed_at: new Date().toISOString(), meta: { sec: ss.id } });
+  add({ kind: 'task', title: 'Louer un gîte', parent_id: p1.id, meta: { sec: sl.id } });
+  add({ kind: 'plog', title: 'Billets réservés', body: 'Aller et retour pris, il reste le logement.', parent_id: p1.id, meta: { types: ['feature'], date: addDays(t0, -1) } });
+  add({ kind: 'plog', title: 'Liste remise à plat', body: 'Tâches rangées par transport et logement.', parent_id: p1.id, meta: { types: ['code', 'design'], date: addDays(t0, -3), version: '0.2.0' } });
   // partage : un projet donné à Camille (lecture), un projet reçu d'elle (modification)
   const cam = { id: 'u-camille', email: 'camille@exemple.fr', name: 'Camille' };
   S.people[cam.id] = cam;
@@ -94,8 +103,8 @@ registerModule({
     ['projects', 'Projets', I.folder]
   ],
   tabOf: { clarify: 'inbox', project: 'projects', evening: 'today' },
-  kinds: ['inbox', 'task', 'project', 'area'],
-  kindLabel: { inbox: 'Inbox', task: 'Tâche', project: 'Projet', area: 'Domaine' },
+  kinds: ['inbox', 'task', 'project', 'area', 'section', 'plog'],
+  kindLabel: { inbox: 'Inbox', task: 'Tâche', project: 'Projet', area: 'Domaine', section: 'Section', plog: 'Frise' },
   views, acts, forms, fab,
   prefs: {
     contexts: ['@maison', '@bureau', '@ordi', '@tél', '@courses', '@dehors'],
@@ -117,7 +126,7 @@ registerModule({
   editor: editorHTML,
   setField,
   row: anyRow,
-  searchable: it => it.kind !== 'area',
+  searchable: it => !['area', 'section', 'plog'].includes(it.kind),
   settings,
   settingsMeta: 'Contextes · domaines',
   notifSettings,

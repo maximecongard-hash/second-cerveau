@@ -8,6 +8,7 @@ import { kindOwner } from '../../core/modules.js';
 import { spentSec, fmtClock, areas, nextActions, nextOrder, sortTasks, spawnNext, recOptions, recText, slotEnd, recDraftFor, WEEK_DAYS, NTH, toLocalInput, fromLocalInput } from './model.js';
 import { loadEvents, historyHTML } from './history.js';
 import { pushHint } from '../../core/push.js';
+import { sectionOptions, setMeta, sectionEditor, logEditor, sectionsOf } from './frise.js';
 
 // ---------------------------------------------------------------------------
 // Feuilles GTD : éditeur, capture rapide, sélection des tâches du jour
@@ -30,6 +31,9 @@ function editorHead(it) {
   return sheetHead('', { midHtml: mid });
 }
 export function editorHTML(it) {
+  if (it.kind === 'section' || it.kind === 'plog') {
+    return sheetHead('', { midHtml: `<span class="sheet-kind">${it.kind === 'section' ? 'Section' : 'Entrée de frise'}</span>` }) + (it.kind === 'section' ? sectionEditor(it) : logEditor(it));
+  }
   const head = editorHead(it);
   const title = ph => `<input class="title-input" data-f="title" id="f-title" value="${esc(it.title)}" placeholder="${ph}" autocomplete="off">`;
   const tagsF = fRow('Tags', `<input data-f="tags" value="${esc((it.tags || []).join(', '))}" placeholder="séparés par des virgules" autocomplete="off">`);
@@ -76,6 +80,7 @@ export function editorHTML(it) {
       ${fRow('Statut', seg('status', it.status, [['active', 'À faire'], ['waiting', 'En attente'], ['someday', 'Un jour'], ['done', 'Fait']]))}
       ${it.status === 'waiting' ? fRow('Attendu de', `<input data-f="waiting_for" id="f-waiting_for" value="${esc(it.waiting_for || '')}" placeholder="Personne, organisme…" autocomplete="off">`) : ''}
       ${fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}
+      ${it.parent_id && sectionsOf(it.parent_id).length ? fRow('Section', sel('sec', it.meta?.sec || '', sectionOptions(it.parent_id))) : ''}
       ${fRow('Contextes', `<div class="chips wrap">${ctxs.map(c => chip(esc(c), (it.contexts || []).includes(c), 'ctx', c)).join('')}</div>`)}
       ${fRow('Top 3', `<button class="chip ${it.focus ? 'on' : ''}" data-act="focus-ed">${I.star} ${it.focus ? `n° ${it.focus} · ${fmtDate(it.scheduled_date).toLowerCase()}` : `Ajouter (${fmtDate(it.scheduled_date || today()).toLowerCase()})`}</button>`)}
       ${fRow('Énergie', seg('energy', it.energy, [['low', 'Faible'], ['medium', 'Moyenne'], ['high', 'Forte']]))}`;
@@ -146,6 +151,9 @@ export function setField(id, f, v) {
     if (v === 'custom') { S.ui.recDraft = recDraftFor(it); return; }
     S.ui.recDraft = null;
   }
+  if (f === 'sec') { setMeta(id, 'sec', v || null); return; }
+  if (f === 'pl_date') { setMeta(id, 'date', v || null); return; }
+  if (f === 'pl_version') { setMeta(id, 'version', v.trim() || null); return; }
   if (f === 'energy' && it.energy === v) v = ''; // retoucher l'énergie choisie la retire
   if (f === 'timer_start') {
     const ms = Date.parse(fromLocalInput(v) || '');
