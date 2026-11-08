@@ -172,8 +172,26 @@ agenda_apple = workflow(
          WFNotificationActionSound=False)],
     [], [], questions=token_question(), glyph=59784, color=4292093695)
 
+# ---------- Importer séance : fichier FIT, TCX ou GPX partagé depuis COROS ----------
+# Le fichier part dans captures/inbox/<clé>/ puis son chemin est inscrit par capture_activity ;
+# Brain le lit à l'ouverture (Sport > Historique), l'importe et le supprime.
+tok, now, stamp, path, sent = uid(), uid(), uid(), uid(), uid()
+importer_seance = workflow(
+    [token_action(tok),
+     act('date', UUID=now, WFDateActionMode='Current Date'),
+     act('format.date', UUID=stamp, WFDateFormatStyle='Custom', WFDateFormat='yyyyMMdd-HHmmss',
+         WFDate=text(out(now, 'Date'))),
+     act('gettext', UUID=path, WFTextActionText=text('inbox/', out(tok, 'Jeton'), '/', out(stamp, 'Formatted Date'), '.act'), CustomOutputName='Chemin'),
+     act('downloadurl', WFURL=text(URL + '/storage/v1/object/captures/', out(path, 'Chemin')), WFHTTPMethod='POST',
+         ShowHeaders=True, WFHTTPHeaders=dictionary([('apikey', KEY), ('Content-Type', 'application/octet-stream')]),
+         WFHTTPBodyType='File', WFRequestVariable=var(INPUT)),
+     rpc_call('capture_activity', tok, [('p_path', text(out(path, 'Chemin')))], UUID=sent),
+     VIBRATE],
+    ['WFGenericFileContentItem'], ['ActionExtension'],
+    questions=token_question(), glyph=59448, color=4292093695)
+
 os.makedirs(os.path.join(HERE, 'src'), exist_ok=True)
-for name, w in [('Capturer', capturer), ('Capturer photo', capturer_photo), ('Agenda Apple', agenda_apple)]:
+for name, w in [('Capturer', capturer), ('Capturer photo', capturer_photo), ('Agenda Apple', agenda_apple), ('Importer séance', importer_seance)]:
     w['WFWorkflowName'] = name
     src = os.path.join(HERE, 'src', name + '.shortcut')
     with open(src, 'wb') as f:
