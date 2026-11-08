@@ -1,10 +1,12 @@
+import { DEMO, sb } from '../../core/config.js';
 import { ymd, pad, plural } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
 import { render, toast } from '../../core/ui.js';
 import { SPORTS, EXERCISE_SPORTS } from './model.js';
+import { isFit, parseFit } from './fit.js';
 
 // ---------------------------------------------------------------------------
-// Import de séances faites depuis un fichier TCX ou GPX (export de l'app COROS), lu dans l'appareil :
+// Import de séances faites depuis un fichier FIT, TCX ou GPX (export de l'app COROS), lu dans l'appareil :
 // rien n'est envoyé ailleurs qu'à la base de Brain, comme n'importe quelle séance saisie.
 // Chaque séance importée garde meta.result.ext_id (« file: » + heure de départ) : la déposer deux fois ne la double pas.
 // ---------------------------------------------------------------------------
@@ -69,7 +71,7 @@ export function parseActivities(xml) {
   const root = doc.documentElement.localName;
   if (root === 'TrainingCenterDatabase') return fromTcx(doc);
   if (root === 'gpx') return fromGpx(doc);
-  throw new Error('format non pris en charge (TCX ou GPX attendu)');
+  throw new Error('format non pris en charge (FIT, TCX ou GPX attendu)');
 }
 
 const doneWorkouts = () => [...S.items.values()].filter(i => i.kind === 'workout');
@@ -82,6 +84,10 @@ export function importActivity(a) {
   if (all.some(w => w.meta?.result?.ext_id === ext)) return 'dup';
   const endurance = !!SPORTS[a.sport]?.endurance;
   const result = { dur_s: a.dur_s || null, dist_m: endurance && a.dist_m ? a.dist_m : null, avg_hr: a.avg_hr || null, rpe: null, feeling: null, note: '', source: 'coros', ext_id: ext };
+  // Mesures en plus, présentes surtout dans un FIT
+  if (a.max_hr) result.max_hr = a.max_hr;
+  if (a.kcal) result.kcal = a.kcal;
+  if (a.asc_m) result.asc_m = a.asc_m;
   const day = ymd(a.start), time = `${pad(a.start.getHours())}:${pad(a.start.getMinutes())}`;
   const planned = all.filter(w => w.status === 'active' && w.scheduled_date === day && w.meta?.sport === a.sport)
     .sort((x, y) => (x.scheduled_time || '').localeCompare(y.scheduled_time || ''))[0];
@@ -98,23 +104,55 @@ export function importActivity(a) {
   return 'added';
 }
 
+// Contenu d'un fichier FIT, TCX ou GPX : les séances qu'il contient
+export const activitiesFromBytes = bytes => (isFit(bytes) ? parseFit(bytes) : parseActivities(new TextDecoder().decode(bytes)));
+
+const summary = n => {
+  const parts = [];
+  if (n.added) parts.push(plural(n.added, 'séance ajoutée', 'séances ajoutées'));
+  if (n.matched) parts.push(plural(n.matched, 'rapprochée d’une séance prévue', 'rapprochées de séances prévues'));
+  if (n.dup) parts.push(plural(n.dup, 'déjà importée', 'déjà importées'));
+  if (n.skip) parts.push(plural(n.skip, 'ignorée', 'ignorées'));
+  return parts.join(', ');
+};
+
+// Fichiers déposés par le raccourci « Importer séance » : lus, importés, puis supprimés.
+// Un échec réseau laisse le fichier pour la prochaine ouverture ; un fichier illisible est écarté.
+let polling = false, lastPoll = 0;
+export async function pullActivityInbox(client = sb) {
+  if ((DEMO && client === sb) || !client || polling || (client === sb && Date.now() - lastPoll < 15000)) return;
+  polling = true; lastPoll = Date.now();
+  try {
+    const { data: rows, error } = await client.from('activity_inbox').select('id,path').order('created_at').limit(20);
+    if (error || !rows?.length) return;
+    const n = { added: 0, matched: 0, dup: 0, skip: 0 };
+    let bad = 0;
+    for (const r of rows) {
+      const { data: blob, error: e } = await client.storage.from('captures').download(r.path);
+      if (e) continue;
+      try { for (const a of activitiesFromBytes(new Uint8Array(await blob.arrayBuffer()))) n[importActivity(a)]++; }
+      catch { bad++; }
+      await client.storage.from('captures').remove([r.path]);
+      await client.from('activity_inbox').delete().eq('id', r.id);
+    }
+    render();
+    toast(bad && !summary(n) ? 'Fichier de séance illisible' : summary(n) || 'Aucune séance trouvée');
+  } catch (e) { console.error('activity_inbox', e); }
+  finally { polling = false; }
+}
+
 // Champ fichier de l'Historique : un ou plusieurs fichiers d'un coup
 export async function importFiles(input) {
   const files = [...input.files];
   input.value = '';
   const n = { added: 0, matched: 0, dup: 0, skip: 0 }, errors = [];
   for (const f of files) {
-    try { for (const a of parseActivities(await f.text())) n[importActivity(a)]++; }
+    try { for (const a of activitiesFromBytes(new Uint8Array(await f.arrayBuffer()))) n[importActivity(a)]++; }
     catch (e) { errors.push(`${f.name} : ${e.message || e}`); }
   }
   render(); // les écritures ci-dessus sont sans rendu : un seul rendu à la fin
-  const parts = [];
-  if (n.added) parts.push(plural(n.added, 'séance ajoutée', 'séances ajoutées'));
-  if (n.matched) parts.push(plural(n.matched, 'rapprochée d’une séance prévue', 'rapprochées de séances prévues'));
-  if (n.dup) parts.push(plural(n.dup, 'déjà importée', 'déjà importées'));
-  if (n.skip) parts.push(plural(n.skip, 'ignorée', 'ignorées'));
-  toast(errors.length ? 'Erreur : ' + errors[0] : parts.join(', ') || 'Aucune séance trouvée');
+  toast(errors.length ? 'Erreur : ' + errors[0] : summary(n) || 'Aucune séance trouvée');
 }
 
 export const importButton = () => `<div class="sp-import"><label class="btn">Importer des séances<input type="file" id="sp-import-file" multiple hidden></label>
-  <div class="muted small">Dans l’app COROS, ouvre une séance, exporte-la en TCX ou GPX, puis choisis le fichier ici.</div></div>`;
+  <div class="muted small">Dans l’app COROS, ouvre une séance, exporte-la en FIT (le plus complet), TCX ou GPX, puis choisis le fichier ici.</div></div>`;

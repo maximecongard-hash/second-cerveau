@@ -56,9 +56,10 @@ const histCard = w => {
        r.avg_hr ? [String(r.avg_hr), 'FC moy.'] : r.rpe ? [String(r.rpe), 'RPE'] : dist && sec ? [fmtPace(dist, sec), 'allure'] : null]
     : [dur && [dur, 'durée'], ton && [Math.round(ton).toLocaleString('fr-FR'), 'kg soulevés'], r.rpe && [String(r.rpe), 'RPE']];
   const c = cells.filter(Boolean);
+  const extra = [r.asc_m && `D+ ${r.asc_m} m`, r.kcal && `${r.kcal} kcal`, r.max_hr && `FC max ${r.max_hr}`].filter(Boolean);
   const day = fmtDate(doneDay(w)), imp = r.source && r.source !== 'manual' ? ` · ${esc(r.source.toUpperCase())}` : '';
   return `<div class="sp-hc" data-act="edit" data-id="${w.id}"><div class="sp-hc-h"><div class="row-title">${esc(w.title) || '<i>Sans titre</i>'}</div><span>${esc(day)}${imp}</span></div>
-    <div class="sp-hc-sub">${esc(label(w))}</div>
+    <div class="sp-hc-sub">${esc(label(w))}${extra.map(x => ` · ${esc(x)}`).join('')}</div>
     ${c.length ? `<div class="sp-hc-n" style="--n:${c.length}">${c.map(([v, l]) => `<div><b>${esc(v)}</b><span>${l}</span></div>`).join('')}</div>` : ''}</div>`;
 };
 const fmtPace = (m, s) => { const p = Math.round(s / (m / 1000)); return `${Math.floor(p / 60)}:${String(p % 60).padStart(2, '0')}/km`; };

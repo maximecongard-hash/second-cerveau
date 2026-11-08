@@ -172,6 +172,7 @@ Dans le même groupe de Réglages, touche **Installer** sur l'iPhone, pour chacu
 | **Capturer** | idée (texte ou dictée) ou lien partagé, vers l'Inbox |
 | **Capturer photo** | photo prise ou partagée, avec légende, vers l'Inbox |
 | **Agenda Apple** | envoie tes prochains événements de Calendrier à Brain |
+| **Importer séance** | séance de la montre (FIT, TCX, GPX) partagée depuis COROS vers Sport > Historique |
 
 Safari demande de télécharger le fichier : touche l'icône de téléchargement dans la barre d'adresse, puis le fichier. Dans Raccourcis, **Configurer le raccourci**, colle ta clé, **Ajouter le raccourci**. Au premier lancement, l'iPhone demande l'accès à `supabase.co` : **Toujours autoriser**.
 
@@ -221,7 +222,9 @@ Dans une tâche, champ **Rappel** : date et heure, ou **Heure prévue**, **Dans 
 
 ### Importer les séances de la montre COROS
 
-Dans **Sport** > **Historique**, bouton **Importer des séances**. Dans l'app COROS, ouvre une séance, exporte-la en **TCX** ou **GPX** (enregistre dans Fichiers), puis choisis le ou les fichiers dans Brain. Le fichier est lu sur l'iPhone, rien n'est envoyé ailleurs. Distance, durée et fréquence cardiaque sont reprises ; une séance prévue le même jour avec le même sport est complétée au lieu d'être dupliquée, et déposer deux fois le même fichier ne double rien. Pas besoin de Supabase pour cette fonction.
+Dans **Sport** > **Historique**, bouton **Importer des séances**. Dans l'app COROS, ouvre une séance, exporte-la en **FIT** (le plus complet : vrai sport, durée en mouvement, FC max, calories, dénivelé), **TCX** ou **GPX** (enregistre dans Fichiers), puis choisis le ou les fichiers dans Brain. Le fichier est lu sur l'iPhone, rien n'est envoyé ailleurs. Distance, durée et fréquence cardiaque sont reprises ; une séance prévue le même jour avec le même sport est complétée au lieu d'être dupliquée, et déposer deux fois le même fichier ne double rien. Le bouton n'a pas besoin de Supabase.
+
+**Sans passer par Brain : le raccourci Importer séance.** Dans l'app COROS, exporte la séance (FIT de préférence) puis, dans la feuille de partage, choisis **Importer séance** (dernière ligne, **Plus** pour l'ajouter aux favoris). Le raccourci envoie le fichier dans ta base ; à la prochaine ouverture de Brain, la séance est ajoutée à l'Historique, ou complète la séance prévue du même jour, puis le fichier est supprimé. Il faut que le schéma 23 soit collé dans Supabase (partie 3) et le raccourci installé avec ta clé d'accès (partie 5).
 
 ---
 

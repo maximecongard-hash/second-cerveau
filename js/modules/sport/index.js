@@ -10,7 +10,7 @@ import { weekAgg } from './stats.js';
 import { views, workoutRow, openNew, renderNew } from './views.js';
 import { editorHTML, setField as setWorkoutField, onChange as editorChange, editorActs, editorForms } from './editor.js';
 import { programEditor, programSetField, programChange, programActs, createProgram } from './programs.js';
-import { importFiles } from './import.js';
+import { importFiles, pullActivityInbox } from './import.js';
 import { liveViews, liveActs, liveForms, liveTick } from './live.js';
 
 // ---------------------------------------------------------------------------
@@ -223,6 +223,7 @@ registerModule({
   searchable: () => true,
   settings,
   settingsMeta: 'Objectif · repos · exercices',
+  afterSync: () => { pullActivityInbox(); return false; },
   todayRows, reviewStep, eveningHtml,
   seedDemo,
   onChange

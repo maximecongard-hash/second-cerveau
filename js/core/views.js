@@ -71,13 +71,14 @@ const notifBody = () => pushSettings() + fromModules('notifSettings').join('');
 const SHORTCUTS = [
   ['Capturer', 'idée, dictée ou lien partagé vers l’Inbox'],
   ['Capturer photo', 'photo prise ou partagée vers l’Inbox'],
-  ['Agenda Apple', 'envoie tes prochains événements de Calendrier à Brain']
+  ['Agenda Apple', 'envoie tes prochains événements de Calendrier à Brain'],
+  ['Importer séance', 'séance de la montre (FIT, TCX, GPX) partagée depuis COROS vers le Sport']
 ];
 function tokensHtml() {
   if (DEMO) return '<div class="muted pad">Indisponible en mode démo.</div>';
   if (S.ui.tokens === undefined) { S.ui.tokens = null; loadTokens(); }
   if (S.ui.tokens === null) return '<div class="muted pad">Chargement…</div>';
-  const DOORS = { capture: 'capture', agenda: 'agenda', widget: 'widget' };
+  const DOORS = { capture: 'capture', agenda: 'agenda', widget: 'widget', activity: 'séances' };
   const useLine = t => {
     const u = t.uses || {};
     const parts = Object.entries(DOORS).filter(([k]) => u[k]).map(([k, l]) => `${u[k]} ${l}`);

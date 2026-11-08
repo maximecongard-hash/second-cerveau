@@ -250,6 +250,9 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('captures', 'captures', false, 10485760,
         array['image/jpeg','image/png','image/heic','image/webp','image/gif'])
 on conflict (id) do nothing;
+-- Les fichiers d'activité (FIT, TCX, GPX) déposés par le raccourci « Importer séance » arrivent en flux binaire
+update storage.buckets set allowed_mime_types = array['image/jpeg','image/png','image/heic','image/webp','image/gif','application/octet-stream']
+ where id = 'captures';
 
 -- Lecture des photos du raccourci : la clé du dossier est-elle à moi ? (security definer : la politique
 -- de stockage ne dépend plus des règles d'accès de capture_tokens)
@@ -282,6 +285,42 @@ create policy "captures_shortcut_upload" on storage.objects
     and (storage.foldername(name))[1] = 'inbox'
     and public.capture_token_valid((storage.foldername(name))[2])
   );
+
+-- ---------------------------------------------------------------------------
+-- 4 bis. Séances de la montre déposées par le raccourci « Importer séance »
+-- Le raccourci envoie le fichier dans captures/inbox/<clé>/ puis inscrit son chemin ici ; l'app lit le fichier à
+-- l'ouverture, l'importe dans l'Historique Sport, puis supprime la ligne et le fichier.
+-- ---------------------------------------------------------------------------
+create table if not exists public.activity_inbox (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  path       text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.activity_inbox enable row level security;
+drop policy if exists "activity_inbox_owner" on public.activity_inbox;
+create policy "activity_inbox_owner" on public.activity_inbox
+  for all to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+create or replace function public.capture_activity(p_token text, p_path text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_user uuid;
+  v_id   uuid;
+begin
+  v_user := public.use_token(p_token, 'activity');
+  if v_user is null then
+    raise exception 'Clé d''accès invalide' using errcode = '28000';
+  end if;
+  -- le fichier doit venir du dossier de cette clé
+  if p_path is null or p_path not like 'inbox/' || p_token || '/%' then
+    raise exception 'Fichier invalide';
+  end if;
+  insert into public.activity_inbox (user_id, path) values (v_user, p_path) returning id into v_id;
+  return v_id;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 5. Calendrier Apple, dans les deux sens et en lecture seule
@@ -744,7 +783,7 @@ create trigger items_log_event after insert or update or delete on public.items
 create or replace function public.brain_status() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'schema', 22, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'schema', 23, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
     'vapid', c.public_key is not null,
     'url', c.project_url,
     'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),
@@ -801,7 +840,7 @@ begin
   end loop;
   -- portes des raccourcis, du widget et de l'abonnement : ouvertes, protégées par une clé
   foreach f in array array[
-    'capture_token_valid(text)', 'capture(text, text, text, text)', 'calendar_feed(text)',
+    'capture_token_valid(text)', 'capture(text, text, text, text)', 'capture_activity(text, text)', 'calendar_feed(text)',
     'sync_events(text, text)', 'widget_today(text, date)'
   ] loop
     execute format('revoke all on function public.%s from public, anon, authenticated', f);
