@@ -134,7 +134,7 @@ views.actions = () => {
     const groups = new Map();
     for (const t of list) { const k = keyOf(t); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
     const keys = [...groups.keys()].sort((a, b) => grp === 'date' ? order.indexOf(a) - order.indexOf(b)
-      : (a === 'Sans projet') - (b === 'Sans projet') || a.localeCompare(b, 'fr'));
+      : (b === 'Sans projet') - (a === 'Sans projet') || a.localeCompare(b, 'fr'));
     body = keys.map(k => sec(`${esc(k)} · ${groups.get(k).length}`, `<div class="list">${groups.get(k).map(row).join('')}</div>`)).join('');
   }
   return { title: 'Actions', html: chips + groupBar + (body || empty('Aucune action ici', 'Trie ton Inbox ou ajoute une action avec +.')), fab: 'task' };
