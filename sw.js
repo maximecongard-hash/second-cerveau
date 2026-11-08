@@ -2,7 +2,7 @@
 // Les fichiers viennent du cache : sans nouvelle version, personne ne reçoit les changements.
 // À chaque version, changer CACHE ici (c'est ce qui déclenche la mise à jour) et VERSION dans js/core/config.js.
 // Tout nouveau fichier de js/ s'ajoute à SHELL. scripts/check.py vérifie les deux.
-const CACHE = 'sc-0.27.0';
+const CACHE = 'sc-0.28.0';
 const SHELL = [
   './',
   'index.html',
@@ -37,6 +37,7 @@ const SHELL = [
   'js/modules/courses/starters.js',
   'js/modules/courses/views.js',
   'js/modules/gtd/actions.js',
+  'js/modules/gtd/frise.js',
   'js/modules/gtd/history.js',
   'js/modules/gtd/index.js',
   'js/modules/gtd/model.js',

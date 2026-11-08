@@ -3,6 +3,7 @@ import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '.
 import { kindOwner, viewOwner, isEnabled, fromModules } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
 import { historyHTML } from './history.js';
+import { actionsHTML, friseHTML } from './frise.js';
 import { taskRow, starBtn, projectRow, projectCard, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
 import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
@@ -181,13 +182,12 @@ views.project = id => {
   if (!isMine(p)) html += `<div class="banner soft">Projet de ${esc(personName(p.user_id))}</div>`;
   if (p.status === 'clarify') html += `<div class="banner warn">À clarifier : précise le résultat attendu et la prochaine action, puis passe le projet en Actif. <button class="link" data-act="proj-activate" data-id="${p.id}">Activer</button></div>`;
   else if (p.status === 'active' && !active.length) html += `<div class="banner warn">Aucune prochaine action : quelle est la prochaine étape concrète ?</div>`;
-  html += sec('Actions', active.map(t => taskRow(t, { noProject: true, showSched: true })).join('') +
-    (ro ? '' : `<form class="inline-add" data-form="add-proj" data-id="${p.id}"><input id="add-proj" placeholder="+ Ajouter une action" enterkeyhint="done" autocomplete="off"></form>`));
+  html += actionsHTML(p, ts, ro);
   if (waiting.length) html += sec('En attente', waiting.map(t => taskRow(t, { noProject: true })).join(''));
   if (some.length) html += sec('Un jour / peut-être', some.map(t => taskRow(t, { noProject: true })).join(''));
   if (kindOwner('note')) html += sec('Notes', notes.map(itemRow).join('') || '<div class="muted pad">Aucune note.</div>', `<button class="link" data-act="new-note" data-id="${p.id}">+ Note</button>`);
   html += linkedSection(p, new Set([...ts, ...notes].map(x => x.id)));
-  if (done.length) html += `<details class="done-sec"><summary>${plural(done.length, 'action terminée', 'actions terminées')}</summary>${done.map(t => taskRow(t, { noProject: true })).join('')}</details>`;
+  html += friseHTML(p, ro);
   const hOpen = S.ui.histOpen?.[id];
   html += `<section class="sec"><div class="sec-head"><h2>Historique</h2><button class="link" data-act="hist-toggle" data-id="${id}">${hOpen ? 'Masquer' : 'Afficher'}</button></div>${hOpen ? historyHTML(id) : ''}</section>`;
   return { title: 'Projet', html, fab: ro ? undefined : 'proj-task:' + p.id };

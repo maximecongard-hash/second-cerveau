@@ -173,6 +173,7 @@ Identifiants dans `.env.local` à la racine (`BRAIN_AGENT_EMAIL`, `BRAIN_AGENT_P
 
 - **Lire** : `scripts/brain-read.sh [since ISO8601]` écrit en JSON tous les éléments partagés avec le compte agent (hors corbeille). Ex. lister les tâches d'un projet : filtrer sur `kind`, `status`, `parent_id`.
 - **Écrire** : `scripts/brain-write.sh [--dry] fichier.json` ajoute des recettes (ou des produits `shop_item`) dans le foyer. Format du fichier en tête du script. Toujours un `--dry` d'abord, montrer le résultat à l'utilisateur, puis écrire. Une recette au titre déjà présent est ignorée.
+- **Projets** : `brain-write.sh` ajoute aussi des actions, sections (`kind: section`, `sup`) et entrées de frise (`kind: plog`, `meta.types` parmi `feature | code | fix | design`) à un projet existant (`"project": "<titre>"`, partagé en « Peut modifier »), et coche des actions (`"done": "<titre>"`). Format en tête du script. Projet absent : il n'est pas créé, demander à l'utilisateur.
 - Fichiers temporaires (JSON de recette, sorties) dans le dossier scratchpad, pas dans le dépôt.
 - Les droits sont ceux du partage : lecture seule ou « Peut modifier », imposés par la base (RLS). Un refus veut dire que l'élément n'est pas partagé en écriture : le dire à l'utilisateur, ne pas contourner.
 - Ne jamais tester sur le compte réel de l'utilisateur ni modifier ses données sans demande ; pour l'interface, utiliser `?demo=1`.

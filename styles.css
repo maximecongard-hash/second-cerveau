@@ -849,3 +849,29 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 
 .wk-head { margin: 0 0 6px; }
 .wk-ok { color: var(--accent); font-weight: 600; }
+
+/* Projet : sections, interrupteur des terminées, frise (0.28) */
+.t-feature { --tc: var(--ok); } .t-code { --tc: var(--accent); } .t-fix { --tc: var(--danger); } .t-design { --tc: var(--warn); }
+.ptools { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 2px; }
+.psec { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 4px; }
+.psec.sub { margin-left: 14px; margin-top: 4px; }
+.psec-h { display: flex; align-items: center; gap: 4px; }
+.psec-t { flex: 1; display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 8px 2px; font: inherit; font-weight: 600; color: var(--text); text-align: left; cursor: pointer; min-width: 0; }
+.psec-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.psec-chev { width: 16px; height: 16px; flex: none; color: var(--muted); transition: transform .15s; }
+.psec-chev svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+.psec-chev.open { transform: rotate(90deg); }
+.psec-count { font-size: 12px; font-weight: 400; color: var(--muted); }
+.psec-edit { background: none; border: 0; color: var(--muted); font-size: 18px; padding: 4px 8px; cursor: pointer; }
+.psec-bar { height: 3px; background: var(--line); border-radius: 2px; margin: 0 0 4px 24px; }
+.psec-bar i { display: block; height: 3px; background: var(--muted); border-radius: 2px; }
+.psec-body { padding-left: 18px; }
+.pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--tc, var(--muted)); }
+.chip.t-feature, .chip.t-code, .chip.t-fix, .chip.t-design { display: inline-flex; align-items: center; gap: 6px; }
+.chip.on.t-feature, .chip.on.t-code, .chip.on.t-fix, .chip.on.t-design { color: var(--tc); border-color: var(--tc); }
+.ptag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 8px; margin: 2px 6px 0 0; color: var(--tc); border: 1px solid var(--tc); }
+.ftl { position: relative; padding-left: 22px; margin-top: 8px; }
+.ftl::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--line); }
+.fev { position: relative; padding: 0 0 14px; cursor: pointer; }
+.fev .pdot.big { position: absolute; left: -22px; top: 5px; width: 11px; height: 11px; border: 2px solid var(--bg); box-sizing: content-box; margin-left: -1px; }
+.fev-p { margin: 3px 0 4px; font-size: 14px; color: var(--muted); line-height: 1.5; }

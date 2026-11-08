@@ -3,6 +3,7 @@ import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
 import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset, refreshEndAt, recRuleOf } from './model.js';
 import { loadEvents } from './history.js';
+import { setMeta } from './frise.js';
 import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,22 @@ export const acts = {
     open[el.dataset.id] = !open[el.dataset.id];
     if (open[el.dataset.id]) loadEvents(el.dataset.id);
     queueRender();
+  },
+  'sec-toggle': el => { const o = (S.ui.secOpen ??= {}); o[el.dataset.id] = o[el.dataset.id] === false; queueRender(); },
+  'sec-all': el => {
+    const ss = ofKind('section').filter(s => s.parent_id === el.dataset.id), o = (S.ui.secOpen ??= {});
+    const anyOpen = ss.some(s => o[s.id] !== false);
+    ss.forEach(s => { o[s.id] = !anyOpen; });
+    queueRender();
+  },
+  'done-show': el => { const o = (S.ui.showDone ??= {}); o[el.dataset.v] = !o[el.dataset.v]; queueRender(); },
+  'frise-f': el => { (S.ui.friseF ??= {})[el.dataset.id] = el.dataset.v; queueRender(); },
+  'plog-new': el => createAndEdit({ kind: 'plog', parent_id: el.dataset.id, meta: { types: ['feature'], date: today() } }),
+  'plog-type': el => {
+    const it = S.items.get(SH.editingId), cur = it.meta?.types || [];
+    const next = cur.includes(el.dataset.v) ? cur.filter(x => x !== el.dataset.v) : [...cur, el.dataset.v];
+    setMeta(it.id, 'types', next.length ? next : [el.dataset.v]);
+    renderEditor();
   },
   'timer-toggle': el => {
     const t = S.items.get(el.dataset.id);
@@ -145,9 +162,15 @@ export const forms = {
   'add-proj': f => {
     const input = f.querySelector('input'), v = input.value.trim();
     if (!v) return;
-    saveItem(newItem({ kind: 'task', title: v, parent_id: f.dataset.id }));
+    saveItem(newItem({ kind: 'task', title: v, parent_id: f.dataset.id, ...(f.dataset.sec ? { meta: { sec: f.dataset.sec } } : {}) }));
     input.value = '';
     if (SH.mode === 'editor') { renderEditor(); $('#ed-next')?.focus(); }
+  },
+  'add-sec': f => {
+    const input = f.querySelector('input'), v = input.value.trim();
+    if (!v) return;
+    saveItem(newItem({ kind: 'section', title: v, parent_id: f.dataset.id, ...(f.dataset.sup ? { meta: { sup: f.dataset.sup } } : {}) }));
+    input.value = '';
   },
   'ctx-add': f => {
     const input = f.querySelector('input');
