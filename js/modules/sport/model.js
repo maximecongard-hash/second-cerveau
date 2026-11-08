@@ -243,7 +243,7 @@ export function mutate(id, fn) {
   fn(meta);
   const p = { meta };
   const probe = { ...it, meta };
-  if (!meta.manualDur && it.kind !== 'program') { const e = estimate(probe); p.duration_min = e.sec ? Math.max(5, Math.round(e.sec / 300) * 5) : it.duration_min; }
+  if (!meta.manualDur && it.kind !== 'program' && it.kind !== 'workout_log') { const e = estimate(probe); p.duration_min = e.sec ? Math.max(5, Math.round(e.sec / 300) * 5) : it.duration_min; }
   patch(id, p);
 }
 
@@ -279,11 +279,35 @@ export const workouts = () => ofKind('workout');
 export const templates = () => ofKind('workout_tpl').sort((a, b) => a.title.localeCompare(b.title, 'fr'));
 export const programs = () => ofKind('program').sort((a, b) => a.title.localeCompare(b.title, 'fr'));
 export const sortWhen = (a, b) => (a.scheduled_date || '9999').localeCompare(b.scheduled_date || '9999') || (a.scheduled_time || '99').localeCompare(b.scheduled_time || '99') || a.created_at.localeCompare(b.created_at);
-export const onDay = d => workouts().filter(w => w.scheduled_date === d && w.status !== 'someday').sort(sortWhen);
-export const doneList = () => workouts().filter(w => w.status === 'done').sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
+// Historique : des objets figés (workout_log), jamais les séances prévues. Une séance faite garde sa trace dans la Semaine par son log.
+export const logs = () => ofKind('workout_log');
+export const onDay = d => [...workouts().filter(w => w.status !== 'someday' && w.status !== 'done'), ...logs()].filter(w => w.scheduled_date === d).sort(sortWhen);
+export const doneList = () => logs().sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
 export const doneDay = w => (w.completed_at ? ymd(new Date(w.completed_at)) : w.scheduled_date) || today();
 export const unplaced = () => workouts().filter(w => w.status === 'active' && !w.scheduled_date).sort((a, b) => a.created_at.localeCompare(b.created_at));
 export const missed = () => workouts().filter(w => w.status === 'active' && w.scheduled_date && w.scheduled_date < today()).sort(sortWhen);
+// Identifiant du log d'une séance : le même sur tous les appareils, donc jamais de doublon si deux appareils le créent
+export const logIdOf = id => id.slice(0, 14) + '5' + id.slice(15);
+
+// Fige une séance faite : copie du contenu tel qu'il a été fait et du résultat, sans lien vers le modèle,
+// la semaine type ni la séance prévue. Idempotent. Les écritures ne redessinent pas : l'appelant le fait.
+export function logWorkout(w) {
+  const id = logIdOf(w.id);
+  if (S.items.has(id)) return S.items.get(id);
+  const meta = clone(w.meta) || defaultMeta();
+  delete meta.tpl; delete meta.manualDur;
+  return saveItem(newItem({
+    id, kind: 'workout_log', status: 'done', title: w.title, scheduled_date: doneDay(w), scheduled_time: w.scheduled_time,
+    duration_min: w.duration_min, completed_at: w.completed_at, spent_sec: w.spent_sec || 0, source: w.source || 'app', meta
+  }), { render: false });
+}
+// Une seule fois par séance : les séances déjà faites avant ce changement deviennent des logs
+export function migrateLogs() {
+  let n = 0;
+  for (const w of workouts().filter(x => x.status === 'done')) if (!S.items.has(logIdOf(w.id))) { logWorkout(w); n++; }
+  return n > 0;
+}
+
 // Dernières séries faites d'un exercice (hors séance donnée)
 export function lastPerf(name, exceptId) {
   const k = name.trim().toLowerCase();

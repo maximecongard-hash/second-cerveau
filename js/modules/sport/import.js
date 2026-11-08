@@ -2,7 +2,7 @@ import { DEMO, sb } from '../../core/config.js';
 import { ymd, pad, plural } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
 import { render, toast } from '../../core/ui.js';
-import { SPORTS, EXERCISE_SPORTS } from './model.js';
+import { SPORTS, EXERCISE_SPORTS, workouts, logs, logWorkout } from './model.js';
 import { isFit, parseFit } from './fit.js';
 
 // ---------------------------------------------------------------------------
@@ -74,14 +74,13 @@ export function parseActivities(xml) {
   throw new Error('format non pris en charge (FIT, TCX ou GPX attendu)');
 }
 
-const doneWorkouts = () => [...S.items.values()].filter(i => i.kind === 'workout');
 
 // Range une activité : complète la séance prévue du même jour et du même sport, sinon crée une séance faite
 export function importActivity(a) {
   if (isNaN(a.start) || (a.dur_s < 60 && !a.dist_m)) return 'skip';
   const ext = 'file:' + a.start.toISOString();
-  const all = doneWorkouts();
-  if (all.some(w => w.meta?.result?.ext_id === ext)) return 'dup';
+  const all = workouts();
+  if ([...all, ...logs()].some(w => w.meta?.result?.ext_id === ext)) return 'dup';
   const endurance = !!SPORTS[a.sport]?.endurance;
   const result = { dur_s: a.dur_s || null, dist_m: endurance && a.dist_m ? a.dist_m : null, avg_hr: a.avg_hr || null, rpe: null, feeling: null, note: '', source: 'coros', ext_id: ext };
   // Mesures en plus, présentes surtout dans un FIT
@@ -93,12 +92,14 @@ export function importActivity(a) {
     .sort((x, y) => (x.scheduled_time || '').localeCompare(y.scheduled_time || ''))[0];
   if (planned) {
     patch(planned.id, { status: 'done', completed_at: a.start.toISOString(), meta: { ...planned.meta, result } }, { render: false });
+    logWorkout(S.items.get(planned.id)); // l'historique garde un objet figé, la séance prévue reste à part
     return 'matched';
   }
   const meta = { sport: a.sport, goal: '', result };
   if (EXERCISE_SPORTS.includes(a.sport)) meta.exercises = []; else meta.blocks = [];
+  // Séance non prévue : seulement un objet figé dans l'historique, pas de séance
   saveItem(newItem({
-    kind: 'workout', status: 'done', title: a.name || SPORTS[a.sport].label, scheduled_date: day, scheduled_time: time,
+    kind: 'workout_log', status: 'done', title: a.name || SPORTS[a.sport].label, scheduled_date: day, scheduled_time: time,
     duration_min: Math.max(1, Math.round((a.dur_s || 60) / 60)), completed_at: a.start.toISOString(), source: 'import', meta
   }), { render: false });
   return 'added';

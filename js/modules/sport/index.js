@@ -4,11 +4,11 @@ import { registerModule } from '../../core/modules.js';
 import { SH, sheet, showSheet, closeSheet, render, toast, openEditor, sheetHead } from '../../core/ui.js';
 import { DEFAULT_EXERCISES, GROUPS, TIMED_GROUPS, library, restFor } from './exercises.js';
 import {
-  SPORTS, PRESETS, createWorkout, freshMeta, monday, onDay, templates, newExercise, defaultMeta, doneDay, label
+  SPORTS, PRESETS, createWorkout, freshMeta, monday, onDay, templates, newExercise, defaultMeta, doneDay, label, migrateLogs
 } from './model.js';
 import { weekAgg } from './stats.js';
 import { views, workoutRow, openNew, renderNew } from './views.js';
-import { editorHTML, setField as setWorkoutField, onChange as editorChange, editorActs, editorForms } from './editor.js';
+import { editorHTML, logEditorHTML, setField as setWorkoutField, onChange as editorChange, editorActs, editorForms } from './editor.js';
 import { programEditor, programSetField, programChange, programActs, createProgram } from './programs.js';
 import { importFiles, pullActivityInbox } from './import.js';
 import { liveViews, liveActs, liveForms, liveTick } from './live.js';
@@ -20,7 +20,7 @@ import { liveViews, liveActs, liveForms, liveTick } from './live.js';
 // Le contenu d'une séance vit dans la colonne `meta` (voir model.js). L'Agenda place les séances
 // comme des tâches grâce à `schedulable` ; la notification de fin de créneau vient de `endNotify`.
 // ---------------------------------------------------------------------------
-const KINDS = ['workout', 'workout_tpl', 'program'];
+const KINDS = ['workout', 'workout_log', 'workout_tpl', 'program'];
 
 const acts = {
   ...editorActs, ...programActs, ...liveActs,
@@ -197,6 +197,7 @@ function seedDemo() {
   make(frac, addDays(mon, 4) < t0 ? addDays(t0, 1) : addDays(mon, 4), '18:30', false, 0);
   make(sl, addDays(mon, 5) < t0 ? addDays(t0, 2) : addDays(mon, 5), '09:30', false, 0);
   make(jambes, addDays(mon, 8), '12:15', false, 0);
+  migrateLogs(); // l'historique de la démo : des objets figés, comme dans l'app
 }
 
 registerModule({
@@ -209,7 +210,7 @@ registerModule({
   tabs: [['sport', 'Semaine', I.calendar], ['sport-tpl', 'Modèles', I.list], ['sport-hist', 'Historique', I.trophy]],
   tabOf: { 'sport-live': 'sport' },
   kinds: KINDS,
-  kindLabel: { workout: 'Séance', workout_tpl: 'Modèle', program: 'Semaine type' },
+  kindLabel: { workout: 'Séance', workout_log: 'Séance faite', workout_tpl: 'Modèle', program: 'Semaine type' },
   views: { ...views, ...liveViews },
   acts, forms, fab,
   prefs: { sportGoal: 3, sportRest: 90, sportSound: true, sportExercises: null },
@@ -217,13 +218,13 @@ registerModule({
   schedulable: ['workout'],
   endNotify: ['workout'],
   createAt: (kind, day, t) => openNew({ day, time: t }),
-  editor: it => (it.kind === 'program' ? programEditor(it) : editorHTML(it)),
+  editor: it => (it.kind === 'program' ? programEditor(it) : it.kind === 'workout_log' ? logEditorHTML(it) : editorHTML(it)),
   setField: (id, f, v) => (S.items.get(id)?.kind === 'program' ? programSetField(id, f, v) : setWorkoutField(id, f, v)),
   row: it => workoutRow(it),
   searchable: () => true,
   settings,
   settingsMeta: 'Objectif · repos · exercices',
-  afterSync: () => { pullActivityInbox(); return false; },
+  afterSync: () => { pullActivityInbox(); return migrateLogs(); },
   todayRows, reviewStep, eveningHtml,
   seedDemo,
   onChange

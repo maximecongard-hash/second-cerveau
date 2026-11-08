@@ -6,8 +6,8 @@ import { pushHint } from '../../core/push.js';
 import { library, restFor, GROUPS_BY } from './exercises.js';
 import {
   SPORTS, BLOCK_TYPES, PRESETS, PRESET_KEYS, EX_PRESETS, exPreset, isGenericTitle, targetsFor, distIn, parseDist, distUnit, usesExercises, sportOf, isEndurance, estimate, summary, human, clock, parseClock, fmtKm, targetInput, parseTargetVal,
-  defaultMeta, newBlock, newSet, newExercise, findBlock, findEx, mutate, clone, setsOf, lastPerf, perfText, fmtW, createWorkout, duplicate, saveAsTemplate,
-  toLocalInput, fromLocalInput, remindPreset, exportText, icon, label
+  defaultMeta, newBlock, newSet, newExercise, findBlock, findEx, mutate, clone, setsOf, lastPerf, perfText, fmtW, createWorkout, duplicate, saveAsTemplate, freshMeta,
+  toLocalInput, fromLocalInput, remindPreset, exportText, icon, label, logWorkout, doneDay
 } from './model.js';
 
 // ---------------------------------------------------------------------------
@@ -123,13 +123,7 @@ export function editorHTML(it) {
       <div class="quick">${[['before30', '30 min avant'], ['before60', '1 h avant'], ['eve', 'La veille 20 h'], ['clear', 'Effacer']].map(([v, l]) => `<button type="button" class="chip" data-act="sp-remind" data-v="${v}">${l}</button>`).join('')}</div>${it.remind_at ? pushHint() : ''}`)}`;
 
   const contenu = usesExercises(it) ? strengthContent(it) : enduranceContent(it);
-  const r = m.result || {};
-  const resultat = `
-    ${fRow('Durée réelle', `<input data-sp="res" data-k="dur" inputmode="numeric" value="${r.dur_s ? clock(r.dur_s) : ''}" placeholder="mm:ss">`)}
-    ${isEndurance(it) ? fRow(`Distance (${distUnit(m.sport)})`, `<input data-sp="res" data-k="dist" inputmode="decimal" value="${distIn(r.dist_m, m.sport)}">`) + fRow('FC moyenne', `<input data-sp="res" data-k="hr" inputmode="numeric" value="${r.avg_hr || ''}" placeholder="bpm">`) : ''}
-    ${fRow('Effort (RPE)', sel('res_rpe', r.rpe, [['', '—'], ...Array.from({ length: 10 }, (_, i) => [i + 1, String(i + 1)])]))}
-    ${fRow('Ressenti', sel('res_feeling', r.feeling, [['', '—'], [1, '1 · Pénible'], [2, '2 · Moyen'], [3, '3 · Correct'], [4, '4 · Bien'], [5, '5 · Excellent']]))}
-    ${fRow('Note', `<input data-sp="res" data-k="note" value="${esc(r.note || '')}" placeholder="Sensations, météo…" autocomplete="off">`)}`;
+  const resultat = resultFields(it);
   const plus = `<div class="fields">
       ${fRow('Statut', tpl ? '<span class="muted">Modèle</span>' : seg('status', it.status, [['active', 'Prévue'], ['done', 'Faite']]))}
       ${tpl ? '' : fRow('Projet', sel('parent_id', it.parent_id, projectOptions(it.parent_id)))}
@@ -147,6 +141,30 @@ export function editorHTML(it) {
     (done || m.result ? edSec('resultat', 'Résultat', resultat, '') : '') +
     edSec('plus', 'Plus', plus, '', true);
 }
+// Champs du résultat, communs à la séance et au log
+function resultFields(it) {
+  const m = it.meta || {}, r = m.result || {};
+  return `
+    ${fRow('Durée réelle', `<input data-sp="res" data-k="dur" inputmode="numeric" value="${r.dur_s ? clock(r.dur_s) : ''}" placeholder="mm:ss">`)}
+    ${isEndurance(it) ? fRow(`Distance (${distUnit(m.sport)})`, `<input data-sp="res" data-k="dist" inputmode="decimal" value="${distIn(r.dist_m, m.sport)}">`) + fRow('FC moyenne', `<input data-sp="res" data-k="hr" inputmode="numeric" value="${r.avg_hr || ''}" placeholder="bpm">`) : ''}
+    ${fRow('Effort (RPE)', sel('res_rpe', r.rpe, [['', '—'], ...Array.from({ length: 10 }, (_, i) => [i + 1, String(i + 1)])]))}
+    ${fRow('Ressenti', sel('res_feeling', r.feeling, [['', '—'], [1, '1 · Pénible'], [2, '2 · Moyen'], [3, '3 · Correct'], [4, '4 · Bien'], [5, '5 · Excellent']]))}
+    ${fRow('Note', `<input data-sp="res" data-k="note" value="${esc(r.note || '')}" placeholder="Sensations, météo…" autocomplete="off">`)}`;
+}
+
+// Séance faite (log) : contenu figé en lecture seule ; seuls la date, le résultat et la note se corrigent
+export function logEditorHTML(it) {
+  const r = it.meta?.result || {}, src = r.source && r.source !== 'manual' ? ` · ${esc(r.source.toUpperCase())}` : '';
+  return sheetHead('Séance faite') + `<div class="title-static">${esc(it.title) || 'Séance'}</div>
+    <div class="ed-sum">
+      <div class="ed-sum-row"><span>Sport</span><span>${esc(label(it))}${src}</span></div>
+      <div class="ed-sum-row"><span>Fait le</span><span><input type="date" data-f="log_date" value="${doneDay(it)}"></span></div>
+    </div>
+    <pre class="sp-snap">${esc(exportText({ ...it, title: '', scheduled_date: null, scheduled_time: null, body: '' }).replace(/^\n+/, '').replace(/\nDurée estimée :.*$/m, ''))}</pre>
+    <div class="fields">${resultFields(it)}</div>
+    <div class="sp-actions"><button type="button" class="btn" data-act="sp-redo" data-id="${it.id}">Refaire cette séance</button></div>`;
+}
+
 const estimateHint = it => { const e = estimate(it); return e.sec ? human(e.sec) : ''; };
 
 // ---------------------------------------------------------------------------
@@ -155,6 +173,13 @@ const estimateHint = it => { const e = estimate(it); return e.sec ? human(e.sec)
 export function setField(id, f, v) {
   const it = S.items.get(id);
   if (!it) return;
+  if (f === 'log_date') {
+    if (!v) return;
+    const t = it.completed_at ? new Date(it.completed_at) : new Date(), [y, mo, d] = v.split('-').map(Number);
+    t.setFullYear(y, mo - 1, d);
+    patch(id, { scheduled_date: v, completed_at: t.toISOString() });
+    return;
+  }
   if (f === 'goal') { mutate(id, m => { m.goal = v; }); return; }
   if (f === 'rpeTarget') { mutate(id, m => { m.rpeTarget = parseInt(v, 10) || null; }); return; }
   if (f === 'res_rpe' || f === 'res_feeling') { mutate(id, m => { (m.result ??= {})[f === 'res_rpe' ? 'rpe' : 'feeling'] = parseInt(v, 10) || null; }); return; }
@@ -177,6 +202,7 @@ export function setField(id, f, v) {
     if (val === 'done' && !it.scheduled_date) p.scheduled_date = today();
   }
   patch(id, p);
+  if (f === 'status' && val === 'done' && it.kind === 'workout') logWorkout(S.items.get(id));
 }
 
 // ---------------------------------------------------------------------------
@@ -361,6 +387,15 @@ export const editorActs = {
     const c = duplicate(el.dataset.id);
     if (!c) return;
     toast('Séance dupliquée', () => patch(c.id, { status: 'trashed' }));
+    closeSheet();
+    openEditor(c.id);
+  },
+  // Refaire une séance de l'historique : une nouvelle séance prévue, copiée du contenu figé
+  'sp-redo': el => {
+    const src = S.items.get(el.dataset.id);
+    if (!src) return;
+    const c = saveItem(newItem({ kind: 'workout', title: src.title, meta: freshMeta(src.meta), duration_min: src.duration_min }));
+    toast('Séance prévue', () => patch(c.id, { status: 'trashed' }));
     closeSheet();
     openEditor(c.id);
   },
