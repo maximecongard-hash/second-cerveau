@@ -779,6 +779,8 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .sp-wk.flash { animation: spflash 1.4s ease-out; }
 @keyframes spflash { from { background: var(--hl); } to { background: transparent; } }
 .sp-import { margin: 10px 0 4px; display: grid; gap: 6px; justify-items: start; }
+.title-static { font: 400 24px/1.2 var(--f-display); margin: 6px 0 10px; overflow-wrap: anywhere; }
+.sp-snap { margin: 10px 0; padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius); font: 12.5px/1.5 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 .sp-hcs { display: grid; gap: 8px; margin-top: 8px; }
 .sp-hc { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .sp-hc:active { background: var(--surface-2); }

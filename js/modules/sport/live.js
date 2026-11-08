@@ -3,7 +3,7 @@ import { S, patch } from '../../core/store.js';
 import { SH, sheet, showSheet, closeSheet, render, renderEditor, route, toast, sheetHead } from '../../core/ui.js';
 import { restFor } from './exercises.js';
 import {
-  usesExercises, distIn, parseDist, distUnit, estimate, human, clock, parseClock, fmtKm, fmtTarget, BLOCK_TYPES, setsOf, findEx, mutate, clone, lastPerf, perfText, fmtW, isEndurance, icon
+  usesExercises, distIn, parseDist, distUnit, estimate, human, clock, parseClock, fmtKm, fmtTarget, BLOCK_TYPES, setsOf, findEx, mutate, clone, lastPerf, perfText, fmtW, isEndurance, icon, logWorkout
 } from './model.js';
 import { setInputs } from './editor.js';
 
@@ -203,6 +203,7 @@ function saveFinish() {
   // séance de renfo marquée faite sans avoir coché de série : on la compte comme réalisée telle que prévue
   if (usesExercises(it) && !(meta.exercises || []).some(e => setsOf(e).some(s => s.done))) (meta.exercises || []).forEach(e => setsOf(e).forEach(s => { s.done = true; }));
   patch(it.id, { meta, status: 'done', completed_at: nowIso(), spent_sec: f.dur || spent(it), timer_started_at: null, scheduled_date: it.scheduled_date || today() }, { render: false });
+  logWorkout(S.items.get(it.id)); // l'historique garde un objet figé
   S.ui.spRest = null; S.ui.spLive = null; S.ui.spFin = null;
   closeSheet();
   if (route().name === 'sport-live') location.hash = '#/sport';
