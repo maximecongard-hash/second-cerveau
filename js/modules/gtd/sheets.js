@@ -112,7 +112,9 @@ function summaryHTML(it) {
     ${p ? row('Projet', esc(p.title)) : ''}${when ? row('Prévu', when) : ''}${it.due_date ? row('Échéance', esc(fmtDate(it.due_date).toLowerCase())) : ''}
     ${it.recurrence ? row('Répète', esc(recText(it.recurrence).toLowerCase())) : ''}${by ? row('Statut', by) : ''}
     ${it.scheduled_time || run || s ? `<div class="ed-sum-row"><span>Chrono</span><span class="ed-timer"><span class="timer-val ${!run && s ? 'paused' : ''}" data-timer="${it.id}">${fmtClock(s)}</span>
-      <button class="chip ${run ? 'on' : ''}" data-act="${run ? 'timer-pause' : 'timer-start'}">${run ? 'Pause' : s ? 'Reprendre' : 'Démarrer'}</button>${s ? '<button class="chip" data-act="timer-reset">Remettre à zéro</button>' : ''}</span></div>` : ''}
+      <button class="chip ${run ? 'on' : ''}" data-act="${run ? 'timer-pause' : 'timer-start'}">${run ? 'Pause' : s ? 'Reprendre' : 'Démarrer'}</button>${s ? '<button class="chip" data-act="timer-reset">Remettre à zéro</button>' : ''}</span></div>
+    ${run ? row('Début', `<input type="datetime-local" data-f="timer_start" value="${toLocalInput(it.timer_started_at)}" max="${toLocalInput(nowIso())}" aria-label="Début du chrono">`) : ''}
+    ${run || s ? row('Déjà cumulé', `<input type="number" inputmode="numeric" min="0" step="1" data-f="timer_base" value="${Math.round((it.spent_sec || 0) / 60)}" aria-label="Minutes déjà cumulées" style="width:4.5rem"> min`) : ''}` : ''}
   </div>`;
 }
 
@@ -145,6 +147,16 @@ export function setField(id, f, v) {
     S.ui.recDraft = null;
   }
   if (f === 'energy' && it.energy === v) v = ''; // retoucher l'énergie choisie la retire
+  if (f === 'timer_start') {
+    const ms = Date.parse(fromLocalInput(v) || '');
+    if (it.timer_started_at && !isNaN(ms)) patch(id, { timer_started_at: new Date(Math.min(ms, Date.now())).toISOString() });
+    return;
+  }
+  if (f === 'timer_base') {
+    const m = parseInt(v, 10);
+    if (!isNaN(m)) patch(id, { spent_sec: Math.max(0, m) * 60 });
+    return;
+  }
   let val = v;
   if (f === 'tags') val = v.split(',').map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (f === 'duration_min') val = v ? parseInt(v, 10) : null;
