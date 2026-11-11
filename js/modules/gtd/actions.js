@@ -4,7 +4,7 @@ import { SH, render, queueRender, route, openEditor, renderEditor, setField, clo
 import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset, refreshEndAt, recRuleOf } from './model.js';
 import { loadEvents } from './history.js';
 import { setMeta } from './frise.js';
-import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
+import { openMove, createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
 // Actions GTD (data-act) et formulaires (data-form)
@@ -93,6 +93,14 @@ export const acts = {
   'timer-pause': () => { timerPause(SH.editingId); renderEditor(); },
   'timer-reset': () => { timerReset(SH.editingId); renderEditor(); },
   'new-note': el => createAndEdit({ kind: 'note', parent_id: el.dataset.id }),
+  'move-open': el => openMove(el.dataset.id),
+  'move-to': el => {
+    const id = el.dataset.id, t = S.items.get(id), prev = t?.meta?.sec || null, v = el.dataset.v || null;
+    if (!t || v === prev) { closeSheet(); return; }
+    setMeta(id, 'sec', v);
+    closeSheet();
+    toast('Action déplacée', () => setMeta(id, 'sec', prev));
+  },
   clar: el => clarify(el.dataset.id, el.dataset.v),
   'clarify-one': el => { location.hash = '#/clarify/' + el.dataset.id; },
   day: el => {
@@ -192,6 +200,8 @@ export const forms = {
 // Saisies propres au module (renvoient true si traitées)
 export function onChange(t) {
   if (t.dataset.rec && S.ui.recDraft) { S.ui.recDraft[t.dataset.rec] = +t.value; return true; }
+  if (t.dataset.clar === 'proj') { patch(t.dataset.id, { parent_id: t.value || null, meta: { ...(S.items.get(t.dataset.id)?.meta || {}), sec: null } }); return true; }
+  if (t.dataset.clar === 'sec') { setMeta(t.dataset.id, 'sec', t.value || null); return true; }
   if (t.id === 'cap-file') { $('#cap-file-name').textContent = t.files[0] ? t.files[0].name : ''; return true; }
   if (t.dataset.evdate && t.value) { patch(t.dataset.evdate, { scheduled_date: t.value, day_order: nextOrder(t.value), focus: null }); toast(`Prévu ${fmtDate(t.value).toLowerCase()}`); return true; }
   return false;

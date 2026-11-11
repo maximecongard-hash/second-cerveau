@@ -198,7 +198,7 @@ export function clarify(id, v) {
     case 'today': patch(id, { kind: 'task', status: 'active', scheduled_date: today(), day_order: nextOrder(today()) }); openEditor(id); break;
     case 'task': patch(id, { kind: 'task', status: 'active' }); openEditor(id); break;
     case 'waiting': patch(id, { kind: 'task', status: 'waiting' }); openEditor(id, { focus: 'waiting_for' }); break;
-    case 'project': patch(id, { kind: 'project', status: 'active' }); openEditor(id); document.getElementById('ed-next')?.focus(); break;
+    case 'project': patch(id, { kind: 'project', status: 'active', parent_id: null, meta: { ...(it.meta || {}), sec: null } }); openEditor(id); document.getElementById('ed-next')?.focus(); break;
     case 'note': patch(id, { kind: 'note', status: 'active' }); openEditor(id); break;
     // un titre qui n'est que l'adresse est vidé : le signet affiche le domaine en attendant un vrai titre
     case 'bookmark': patch(id, { kind: 'bookmark', status: 'active', title: it.url && it.title.trim() === it.url ? '' : it.title }); openEditor(id); break;

@@ -12,6 +12,12 @@
 #     frise   {"project":"P","kind":"plog","title":"…","body":"recap","meta":{"types":["feature","fix"],"date":"2026-11-08","version":"0.28.0"}}
 #             types : feature | code | fix | design (plusieurs possibles)
 #     cocher  {"project":"P","done":"titre exact de l'action"}
+#     ranger  {"project":"P","move":"titre exact de l'action","section":"Section"}   (section "" = sans section ; sections créées dans le même fichier OK)
+#   Tout le reste (compte agent avec statut « agent », schéma 24) : champ "op" ; l'agent modifie tout sauf supprimer pour de bon.
+#     créer      {"op":"create","kind":"note","title":"…","body":"…","parent":"titre du parent (option)","meta":{…}, + n'importe quelle colonne}
+#     modifier   {"op":"update","id":"uuid"} ou {"op":"update","kind":"task","match":"titre exact","set":{"title":"…","status":"done","body":"…","meta":{"clé":"valeur"}}}
+#                (meta est fusionné clé par clé ; colonnes id, user_id, created_at, updated_at, completed_by refusées)
+#     corbeille  {"op":"trash","kind":"task","match":"titre exact"}   (ou "id") : status trashed, récupérable dans Brain
 #   --dry : affiche ce qui serait ajouté, sans rien écrire.
 set -euo pipefail
 
@@ -31,9 +37,10 @@ jwt=$(printf '%s' "$login" | python3 -c 'import json,sys;print(json.load(sys.std
 uid=$(printf '%s' "$login" | python3 -c 'import json,sys;print(json.load(sys.stdin)["user"]["id"])')
 
 api() { curl -sS "$URL/rest/v1/$1" -H "apikey: $KEY" -H "Authorization: Bearer $jwt" "${@:2}"; }
-existing=$(api "items?select=id,kind,title,parent_id,user_id,status,meta&status=neq.trashed&kind=in.(foyer,recipe,shop_item,project,task,section,plog)&limit=5000")
+existing=$(api "items?select=*&status=neq.trashed&limit=5000")
 
-rows=$(EXISTING="$existing" UID_AGENT="$uid" python3 - "$FILE" <<'PY'
+owner=$(api "agent_grants?select=owner_id" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d[0]["owner_id"] if isinstance(d,list) and d else "")')
+rows=$(EXISTING="$existing" OWNER_ID="$owner" UID_AGENT="$uid" python3 - "$FILE" <<'PY'
 import json, os, sys, uuid
 ex = json.loads(os.environ["EXISTING"])
 items = json.load(open(sys.argv[1]))
@@ -42,10 +49,45 @@ foyers = [i for i in ex if i["kind"] == "foyer"]
 foyer = foyers[0]["id"] if foyers else None
 have = {(i["kind"], low(i["title"]), i.get("parent_id")) for i in ex}
 projects = {low(i["title"]): i for i in ex if i["kind"] == "project"}
-out, skipped, done, errors = [], [], [], []
+out, skipped, done, errors, moved, updates = [], [], [], [], [], []
+BLOCK = {"id", "user_id", "created_at", "updated_at", "completed_by"}
+def find(r, what):
+    if r.get("id"):
+        m = [i for i in ex if i["id"] == r["id"]]
+    else:
+        m = [i for i in ex if i.get("kind") == r.get("kind") and low(i.get("title")) == low(r.get("match"))]
+    if len(m) != 1: errors.append(f"{what} : {len(m)} élément(s) trouvé(s) pour {r.get('id') or r.get('match')}, préciser avec id"); return None
+    return m[0]
 now = __import__("datetime").datetime.utcnow().isoformat() + "Z"
 for r in items:
     r = dict(r)
+    op = r.pop("op", None)
+    if op in ("update", "trash"):
+        t = find(r, op)
+        if not t: continue
+        st = {"status": "trashed"} if op == "trash" else dict(r.get("set") or {})
+        bad = [k for k in st if k in BLOCK]
+        if bad: errors.append(f"Colonnes refusées : {bad}"); continue
+        if "meta" in st: st["meta"] = {**(t.get("meta") or {}), **st["meta"]}
+        updates.append({"id": t["id"], "title": t["title"], "set": st})
+        continue
+    if op == "create":
+        owner = os.environ.get("OWNER_ID") or os.environ["UID_AGENT"]
+        par = r.pop("parent", None)
+        if par:
+            pm = [i for i in ex if low(i.get("title")) == low(par)]
+            if len(pm) != 1: errors.append(f"Parent « {par} » : {len(pm)} trouvé(s)"); continue
+            r["parent_id"] = pm[0]["id"]
+        bad = [k for k in r if k in BLOCK]
+        if bad: errors.append(f"Colonnes refusées : {bad}"); continue
+        title = (r.get("title") or "").strip()
+        k = r.get("kind")
+        if not k: errors.append("create sans kind"); continue
+        if not title and k not in ("inbox",): skipped.append("(sans titre)"); continue
+        if title and (k, low(title), r.get("parent_id")) in have: skipped.append(title); continue
+        have.add((k, low(title), r.get("parent_id")))
+        out.append({"id": str(uuid.uuid4()), "user_id": owner, "status": "active", "source": "agent", **r})
+        continue
     pname = r.pop("project", None)
     title = r.get("title", "").strip()
     if pname:  # projet, actions, sections, frise : rattachés à un projet existant
@@ -58,6 +100,18 @@ for r in items:
             m = [i for i in ex if i["kind"] == "task" and i.get("parent_id") == proj["id"] and low(i["title"]) == low(tgt)]
             if m: done.append({"id": m[0]["id"], "title": m[0]["title"]})
             else: skipped.append(f"action à cocher introuvable : {tgt}")
+            continue
+        mv = r.pop("move", None)
+        if mv is not None:  # ranger une action existante dans une section
+            m = [i for i in ex if i["kind"] == "task" and i.get("parent_id") == proj["id"] and low(i["title"]) == low(mv)]
+            if not m: skipped.append(f"action à ranger introuvable : {mv}"); continue
+            name = r.get("section") or ""
+            sid = None
+            if name:
+                sm = [i for i in ex if i["kind"] == "section" and i.get("parent_id") == proj["id"] and low(i["title"]) == low(name)]
+                if not sm: errors.append(f"Section introuvable dans « {pname} » : {name}"); continue
+                sid = sm[0]["id"]
+            moved.append({"id": m[0]["id"], "title": m[0]["title"], "section": name or "(aucune)", "meta": {**(m[0].get("meta") or {}), "sec": sid}})
             continue
         kind = r.get("kind", "task")
         meta = dict(r.get("meta") or {})
@@ -86,20 +140,24 @@ for r in items:
     if kind == "section":
         ex.append({"id": row["id"], "kind": "section", "title": title, "parent_id": parent})
     out.append(row)
-print(json.dumps({"rows": out, "skipped": skipped, "done": done, "errors": errors}))
+keys = set().union(*[r.keys() for r in out]) if out else set()
+out = [{k: r.get(k) for k in keys} for r in out]  # PostgREST exige les mêmes clés partout
+print(json.dumps({"rows": out, "skipped": skipped, "done": done, "moved": moved, "updates": updates, "errors": errors}))
 PY
 )
 errs=$(printf '%s' "$rows" | python3 -c 'import json,sys;print("\n".join(json.load(sys.stdin)["errors"]))')
 [ -n "$errs" ] && echo "$errs" >&2
 n=$(printf '%s' "$rows" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(len(d["rows"]))')
+nm=$(printf '%s' "$rows" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["moved"]))')
+nu=$(printf '%s' "$rows" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["updates"]))')
 nd=$(printf '%s' "$rows" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(len(d["done"]))')
 skipped=$(printf '%s' "$rows" | python3 -c 'import json,sys;print(", ".join(json.load(sys.stdin)["skipped"]))')
 [ -n "$skipped" ] && echo "Ignorés (déjà là, introuvables ou sans titre) : $skipped" >&2
 if [ "$DRY" = 1 ]; then
-  printf '%s' "$rows" | python3 -c 'import json,sys;d=json.load(sys.stdin);[print("-", r["kind"], r["title"]) for r in d["rows"]];[print("- cocher", x["title"]) for x in d["done"]]'
-  echo "$n à ajouter, $nd à cocher (--dry : rien écrit)"; exit 0
+  printf '%s' "$rows" | python3 -c 'import json,sys;d=json.load(sys.stdin);[print("-", r["kind"], r["title"]) for r in d["rows"]];[print("- cocher", x["title"]) for x in d["done"]];[print("- ranger", x["title"], "->", x["section"]) for x in d["moved"]];[print("- modifier", x["title"], ":", json.dumps(x["set"], ensure_ascii=False)) for x in d["updates"]]'
+  echo "$n à ajouter, $nd à cocher, $nm à ranger, $nu à modifier (--dry : rien écrit)"; exit 0
 fi
-[ "$n" -gt 0 ] || [ "$nd" -gt 0 ] || { echo "Rien à faire"; exit 0; }
+[ "$n" -gt 0 ] || [ "$nd" -gt 0 ] || [ "$nm" -gt 0 ] || [ "$nu" -gt 0 ] || { echo "Rien à faire"; exit 0; }
 if [ "$n" -gt 0 ]; then
   printf '%s' "$rows" | python3 -c 'import json,sys;print(json.dumps(json.load(sys.stdin)["rows"]))' \
     | api items -X POST -H "Content-Type: application/json" -H "Prefer: return=minimal" -d @-
@@ -109,4 +167,12 @@ if [ "$nd" -gt 0 ]; then
   api "items?id=in.($ids)" -X PATCH -H "Content-Type: application/json" -H "Prefer: return=minimal" \
     -d "{\"status\":\"done\",\"completed_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"completed_by\":\"$uid\"}"
 fi
-echo "$n ajouté(s), $nd coché(s)"
+if [ "$nm" -gt 0 ]; then
+  printf '%s' "$rows" | python3 -c 'import json,sys;[print(x["id"], json.dumps({"meta": x["meta"]})) for x in json.load(sys.stdin)["moved"]]' \
+    | while read -r mid body; do api "items?id=eq.$mid" -X PATCH -H "Content-Type: application/json" -H "Prefer: return=minimal" -d "$body"; done
+fi
+if [ "$nu" -gt 0 ]; then
+  printf '%s' "$rows" | python3 -c 'import json,sys;[print(x["id"], json.dumps(x["set"])) for x in json.load(sys.stdin)["updates"]]' \
+    | while read -r uid2 body; do api "items?id=eq.$uid2" -X PATCH -H "Content-Type: application/json" -H "Prefer: return=minimal" -d "$body"; done
+fi
+echo "$n ajouté(s), $nd coché(s), $nm rangé(s), $nu modifié(s)"

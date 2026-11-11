@@ -3,7 +3,7 @@ import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '.
 import { kindOwner, viewOwner, isEnabled, fromModules } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
 import { historyHTML } from './history.js';
-import { actionsHTML, friseHTML } from './frise.js';
+import { actionsHTML, friseHTML, sectionOptions } from './frise.js';
 import { taskRow, starBtn, projectRow, projectCard, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
 import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
@@ -26,6 +26,17 @@ views.inbox = () => {
   return { title: 'Inbox', html, fab: 'capture' };
 };
 
+// Ranger dès l'Inbox : projet puis section (appliqués si l'élément devient une action, une note ou un signet)
+function clarPlace(it) {
+  const ps = ofKind('project').filter(p => ['active', 'clarify'].includes(p.status) || p.id === it.parent_id).sort(byTitle);
+  if (!ps.length) return '';
+  const opt = (v, l, cur) => `<option value="${esc(v)}" ${cur === v ? 'selected' : ''}>${esc(l)}</option>`;
+  const secs = it.parent_id ? sectionOptions(it.parent_id) : [];
+  return `<div class="clar-place">
+    <label>Projet<select data-clar="proj" data-id="${it.id}">${opt('', 'Aucun', it.parent_id || '')}${ps.map(p => opt(p.id, p.title, it.parent_id)).join('')}</select></label>
+    ${secs.length > 1 ? `<label>Section<select data-clar="sec" data-id="${it.id}">${secs.map(([v, l]) => opt(v, l, it.meta?.sec || '')).join('')}</select></label>` : ''}
+  </div>`;
+}
 views.clarify = arg => {
   const list = inboxItems();
   if (!list.length) return { title: 'Trier', html: empty('Tout est trié', '<a class="btn primary" href="#/today">Planifier ma journée</a>') };
@@ -42,6 +53,7 @@ views.clarify = arg => {
         ${it.image_path ? `<img class="cap-img" data-img="${esc(it.image_path)}" alt="">` : ''}
         <div class="muted small">Capturé ${fmtAgo(it.created_at)}${it.source === 'shortcut' ? ' · raccourci' : ''}</div>
       </div>
+      ${clarPlace(it)}
       <h3 class="q">Qu'est-ce que c'est ?</h3>
       <div class="clar-grid">
         ${btn('done', 'Fait', 'moins de 2 min, fais-le')}

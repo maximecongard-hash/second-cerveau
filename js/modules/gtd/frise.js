@@ -39,6 +39,7 @@ export function actionsHTML(p, tasks, ro) {
     const own = tasks.filter(t => (t.status === 'active' || t.status === 'done') && secOf(t, ids) === sid);
     return subsOf(pid, sid).reduce((a, s) => { const c = count(s.id); return [a[0] + c[0], a[1] + c[1]]; }, [own.length, own.filter(t => t.status === 'done').length]);
   };
+  const row = t => taskRow(t, { noProject: true, showSched: true, extra: ro || t.status === 'done' || !ids.size ? '' : `<button class="mv-btn" data-act="move-open" data-id="${t.id}" aria-label="Déplacer vers une section">⇄</button>` });
   const form = (sid, ph) => ro ? '' : `<form class="inline-add" data-form="add-proj" data-id="${pid}" data-sec="${sid || ''}"><input placeholder="${ph}" enterkeyhint="done" autocomplete="off"></form>`;
   const node = (s, depth) => {
     const [n, d] = count(s.id), open = S.ui.secOpen?.[s.id] !== false;
@@ -46,7 +47,7 @@ export function actionsHTML(p, tasks, ro) {
     return `<div class="psec ${depth ? 'sub' : ''}">
       <div class="psec-h"><button class="psec-t" data-act="sec-toggle" data-id="${s.id}" aria-expanded="${open}"><span class="psec-chev ${open ? 'open' : ''}">${I.right}</span><span class="psec-name">${esc(s.title) || '<i>Sans titre</i>'}</span><span class="psec-count">${d} / ${n}</span></button>${ro ? '' : `<button class="psec-edit" data-act="edit" data-id="${s.id}" aria-label="Modifier la section">⋯</button>`}</div>
       <div class="psec-bar"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div>
-      ${open ? `<div class="psec-body">${mine.map(t => taskRow(t, { noProject: true, showSched: true })).join('')}${subsOf(pid, s.id).map(x => node(x, depth + 1)).join('')}${form(s.id, '+ Action')}${ro ? '' : `<form class="inline-add" data-form="add-sec" data-id="${pid}" data-sup="${s.id}"><input placeholder="+ Sous-section" enterkeyhint="done" autocomplete="off"></form>`}</div>` : ''}
+      ${open ? `<div class="psec-body">${mine.map(row).join('')}${subsOf(pid, s.id).map(x => node(x, depth + 1)).join('')}${form(s.id, '+ Action')}${ro ? '' : `<form class="inline-add" data-form="add-sec" data-id="${pid}" data-sup="${s.id}"><input placeholder="+ Sous-section" enterkeyhint="done" autocomplete="off"></form>`}</div>` : ''}
     </div>`;
   };
   const loose = shown.filter(t => !secOf(t, ids)).sort((a, b) => (a.status === 'done') - (b.status === 'done'));
@@ -56,7 +57,7 @@ export function actionsHTML(p, tasks, ro) {
   const tools = `<div class="ptools"><span class="muted small">${plural(tasks.filter(t => t.status === 'active').length, 'action ouverte', 'actions ouvertes')}${top.length ? ` · ${plural(sectionsOf(pid).length, 'section', 'sections')}` : ''}</span>
     ${top.length ? `<button class="link" data-act="sec-all" data-id="${pid}">Tout replier / déplier</button>` : ''}</div>
     ${doneN ? `<div class="ptools"><span class="muted small">Afficher les terminées (${doneN})</span>${switchBtn(showDone, 'done-show', 'Afficher les terminées', pid)}</div>` : ''}`;
-  return sec('Actions', tools + bar + loose.map(t => taskRow(t, { noProject: true, showSched: true })).join('') + top.map(s => node(s, 0)).join('') +
+  return sec('Actions', tools + bar + loose.map(row).join('') + top.map(s => node(s, 0)).join('') +
     form(null, '+ Ajouter une action') +
     (ro ? '' : `<form class="inline-add" data-form="add-sec" data-id="${pid}" data-sup=""><input placeholder="+ Nouvelle section" enterkeyhint="done" autocomplete="off"></form>`));
 }
