@@ -15,4 +15,6 @@ export function addShop({ title, meta, from = [] }) {
   if (meta.qty != null && tm.qty != null || mf.length !== (tm.from || []).length) patch(twin.id, { meta: { ...tm, qty, from: mf } }, { render: false });
   else toast('Déjà dans la liste');
 }
+// Produit déjà à prendre sous ce nom (toute unité) : sert à ouvrir sa fiche plutôt que d'ajouter un doublon
+export const findOnList = text => { const n = shopFields(text).title; return ofKindAll('shop_item').find(i => i.status !== 'done' && sameProduct(i.title, n)); };
 export const addProduct = text => addShop(shopFields(text));
