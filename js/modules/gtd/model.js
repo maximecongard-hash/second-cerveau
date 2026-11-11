@@ -17,7 +17,10 @@ function projectBlocked(t) {
   const p = t.parent_id && S.items.get(t.parent_id);
   return !!p && p.kind === 'project' && ['someday', 'done', 'trashed'].includes(p.status);
 }
-export const nextActions = () => ofKind('task').filter(t => t.status === 'active' && !projectBlocked(t));
+// Une tâche répétée dont la prochaine date est à plus d'une semaine reste cachée des listes (visible dans l'Agenda et le projet)
+export const REPEAT_HIDE_DAYS = 7;
+export const hiddenRepeat = t => !!t.recurrence && t.status === 'active' && (t.scheduled_date || t.due_date || '') > addDays(today(), REPEAT_HIDE_DAYS);
+export const nextActions = () => ofKind('task').filter(t => t.status === 'active' && !projectBlocked(t) && !hiddenRepeat(t));
 export const hasNextAction = p => ofKindAll('task').some(t => t.parent_id === p.id && t.status === 'active');
 export function nextOrder(day) {
   const os = ofKind('task').filter(t => t.scheduled_date === day && t.day_order != null).map(t => t.day_order);

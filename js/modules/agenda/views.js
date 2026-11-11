@@ -92,6 +92,7 @@ function block(i, a, compact) {
       style="top:${(i._s - a) * PX_MIN + 1}px;height:${h}px;left:calc(${(i.col / i.n) * 100}% + 1px);width:calc(${100 / i.n}% - 2px)">
     <span class="ag-time">${i.scheduled_time}${!compact && i.duration_min ? ` · ${fmtDur(i.duration_min)}` : ''}</span>
     <span class="ag-title">${label}${esc(i.title) || '<i>Sans titre</i>'}</span>
+    ${i.kind === 'task' && !done ? `<span class="ag-acts"><span class="ag-act ${i.timer_started_at ? 'on' : ''}" role="button" data-act="timer-toggle" data-id="${i.id}" aria-label="${i.timer_started_at ? 'Pause du chrono' : 'Lancer le chrono'}">${i.timer_started_at ? I.pause : I.play}</span><span class="ag-act" role="button" data-act="toggle" data-id="${i.id}" aria-label="Terminer">${I.check}</span></span>` : ''}
     <span class="ag-rs" aria-hidden="true"></span>
   </button>`;
 }
