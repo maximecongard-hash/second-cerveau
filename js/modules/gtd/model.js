@@ -1,5 +1,5 @@
 import { uuid, today, parseYmd, addDays, daysBetween, ymd, nowIso, fmtDate } from '../../core/util.js';
-import { DEMO, sb } from '../../core/config.js';
+import { sb } from '../../core/config.js';
 import { S, meId, endAt, sameInstant, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
 import { toast, route, openEditor } from '../../core/ui.js';
 import { notifiesEnd } from '../../core/modules.js';
@@ -17,7 +17,10 @@ function projectBlocked(t) {
   const p = t.parent_id && S.items.get(t.parent_id);
   return !!p && p.kind === 'project' && ['someday', 'done', 'trashed'].includes(p.status);
 }
-export const nextActions = () => ofKind('task').filter(t => t.status === 'active' && !projectBlocked(t));
+// Une tâche répétée dont la prochaine date est à plus d'une semaine reste cachée des listes (visible dans l'Agenda et le projet)
+export const REPEAT_HIDE_DAYS = 7;
+export const hiddenRepeat = t => !!t.recurrence && t.status === 'active' && (t.scheduled_date || t.due_date || '') > addDays(today(), REPEAT_HIDE_DAYS);
+export const nextActions = () => ofKind('task').filter(t => t.status === 'active' && !projectBlocked(t) && !hiddenRepeat(t));
 export const hasNextAction = p => ofKindAll('task').some(t => t.parent_id === p.id && t.status === 'active');
 export function nextOrder(day) {
   const os = ofKind('task').filter(t => t.scheduled_date === day && t.day_order != null).map(t => t.day_order);
@@ -151,7 +154,7 @@ export function refreshEndAt() {
     const e = endAt(t);
     if (sameInstant(t.end_at, e)) continue;
     t.end_at = e;
-    if (sb && !DEMO && !S.dirty.has(t.id)) sb.from('items').update({ end_at: e }).eq('id', t.id).then(() => {}, () => {});
+    if (sb && !S.dirty.has(t.id)) sb.from('items').update({ end_at: e }).eq('id', t.id).then(() => {}, () => {});
   }
 }
 // Chronomètre : spent_sec cumule les temps passés, timer_started_at marque le départ en cours
@@ -198,7 +201,7 @@ export function clarify(id, v) {
     case 'today': patch(id, { kind: 'task', status: 'active', scheduled_date: today(), day_order: nextOrder(today()) }); openEditor(id); break;
     case 'task': patch(id, { kind: 'task', status: 'active' }); openEditor(id); break;
     case 'waiting': patch(id, { kind: 'task', status: 'waiting' }); openEditor(id, { focus: 'waiting_for' }); break;
-    case 'project': patch(id, { kind: 'project', status: 'active' }); openEditor(id); document.getElementById('ed-next')?.focus(); break;
+    case 'project': patch(id, { kind: 'project', status: 'active', parent_id: null, meta: { ...(it.meta || {}), sec: null } }); openEditor(id); document.getElementById('ed-next')?.focus(); break;
     case 'note': patch(id, { kind: 'note', status: 'active' }); openEditor(id); break;
     // un titre qui n'est que l'adresse est vidé : le signet affiche le domaine en attendant un vrai titre
     case 'bookmark': patch(id, { kind: 'bookmark', status: 'active', title: it.url && it.title.trim() === it.url ? '' : it.title }); openEditor(id); break;

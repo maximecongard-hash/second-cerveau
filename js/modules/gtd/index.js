@@ -42,45 +42,6 @@ function afterSync() {
   return changed;
 }
 
-function seedDemo() {
-  const t0 = today();
-  const a = DEFAULT_AREAS.map(t => saveItem(newItem({ kind: 'area', title: t }), { render: false }));
-  const p1 = saveItem(newItem({ kind: 'project', title: 'Préparer les vacances de Noël', parent_id: a[7].id, outcome: 'Billets et logement réservés avant le 15/11.' }), { render: false });
-  const p2 = saveItem(newItem({ kind: 'project', title: 'Refaire le site perso', parent_id: a[2].id, review_date: t0 }), { render: false });
-  saveItem(newItem({ kind: 'project', title: 'Changer de mutuelle', status: 'clarify', parent_id: a[4].id }), { render: false });
-  const add = f => saveItem(newItem(f), { render: false });
-  add({ kind: 'inbox', title: 'Idée : podcast sur la productivité', source: 'shortcut' });
-  add({ kind: 'inbox', title: 'https://example.com/article-gtd', url: 'https://example.com/article-gtd', source: 'shortcut' });
-  add({ kind: 'inbox', title: 'Appeler le garagiste pour le contrôle technique' });
-  add({ kind: 'task', title: 'Comparer les prix des billets de train', parent_id: p1.id, contexts: ['@ordi'], duration_min: 30, scheduled_date: t0, day_order: 1, focus: 1 });
-  add({ kind: 'task', title: 'Trier les mails de la semaine', status: 'done', completed_at: new Date().toISOString(), duration_min: 30, spent_sec: 2700 });
-  add({ kind: 'task', title: 'Courses pour le dîner', contexts: ['@courses'], scheduled_date: t0, scheduled_time: '18:30', duration_min: 45 });
-  add({ kind: 'task', title: 'Répondre au mail de Julie', contexts: ['@ordi'], scheduled_date: t0, day_order: 2, duration_min: 15 });
-  add({ kind: 'task', title: 'Payer la facture d’électricité', contexts: ['@ordi'], due_date: addDays(t0, 2), recurrence: 'monthly' });
-  add({ kind: 'task', title: 'Choisir un thème pour le site', parent_id: p2.id, contexts: ['@ordi'], energy: 'high' });
-  add({ kind: 'task', title: 'Devis du plombier', status: 'waiting', waiting_for: 'M. Durand', contexts: [] });
-  add({ kind: 'task', title: 'Apprendre la guitare', status: 'someday' });
-  // sections, sous-sections et frise du projet de démo
-  const sc = saveItem(newItem({ kind: 'section', title: 'Transport', parent_id: p1.id }), { render: false });
-  const sl = saveItem(newItem({ kind: 'section', title: 'Logement', parent_id: p1.id }), { render: false });
-  const ss = saveItem(newItem({ kind: 'section', title: 'Trains', parent_id: p1.id, meta: { sup: sc.id } }), { render: false });
-  add({ kind: 'task', title: 'Réserver l’aller', parent_id: p1.id, meta: { sec: ss.id } });
-  add({ kind: 'task', title: 'Réserver le retour', parent_id: p1.id, status: 'done', completed_at: new Date().toISOString(), meta: { sec: ss.id } });
-  add({ kind: 'task', title: 'Louer un gîte', parent_id: p1.id, meta: { sec: sl.id } });
-  add({ kind: 'plog', title: 'Billets réservés', body: 'Aller et retour pris, il reste le logement.', parent_id: p1.id, meta: { types: ['feature'], date: addDays(t0, -1) } });
-  add({ kind: 'plog', title: 'Liste remise à plat', body: 'Tâches rangées par transport et logement.', parent_id: p1.id, meta: { types: ['code', 'design'], date: addDays(t0, -3), version: '0.2.0' } });
-  // partage : un projet donné à Camille (lecture), un projet reçu d'elle (modification)
-  const cam = { id: 'u-camille', email: 'camille@exemple.fr', name: 'Camille' };
-  S.people[cam.id] = cam;
-  S.shares.push({ id: 'demo-s1', item_id: p1.id, owner_id: S.user.id, user_id: cam.id, role: 'view' });
-  const p3 = add({ kind: 'project', title: 'Organiser l’anniversaire de Léa', user_id: cam.id, outcome: 'Fête réussie le 14/11, tout le monde est prévenu.' });
-  S.shares.push({ id: 'demo-s2', item_id: p3.id, owner_id: cam.id, user_id: S.user.id, role: 'edit' });
-  add({ kind: 'task', title: 'Réserver la salle', parent_id: p3.id, user_id: cam.id });
-  add({ kind: 'task', title: 'Commander le gâteau', parent_id: p3.id, user_id: cam.id, status: 'done', completed_at: new Date().toISOString(), completed_by: cam.id });
-  S.prefs.seeded = true;
-  S.prefs.areasV2 = true;
-}
-
 // Chronomètres affichés (lignes et éditeur) : mis à jour chaque seconde
 setInterval(() => {
   for (const el of document.querySelectorAll('[data-timer]')) {
@@ -121,6 +82,7 @@ registerModule({
     ['#/waiting', 'En attente', ofKind('task').filter(t => t.status === 'waiting').length],
     ['#/someday', 'Un jour / peut-être', somedayItems().length],
     ['#/review', 'Revue hebdo'],
+    ['#/recap', 'Récap d’activité'],
     ['#/logbook', 'Terminé']
   ],
   editor: editorHTML,
@@ -131,7 +93,6 @@ registerModule({
   settingsMeta: 'Contextes · domaines',
   notifSettings,
   afterSync,
-  seedDemo,
   onChange,
   onResume: () => { if (S.ui.day < today() && route().name === 'today') { S.ui.day = today(); queueRender(); } }
 });

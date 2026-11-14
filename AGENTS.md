@@ -52,14 +52,13 @@ python3 -m http.server 5173
 
 Puis ouvrir :
 
-- `http://localhost:5173/?demo=1` : **mode démo**, données fictives en localStorage (`seedDemo()` de chaque module),
-  sans Supabase. C'est le mode à utiliser pour tester l'interface. Ne jamais se connecter au compte réel pour tester.
+- Le mode démo (`?demo=1`) a été supprimé (0.36.0) : il n'était plus à jour. Tester avec le compte agent (voir « Accès de l'agent aux données ») : lectures libres, écritures de test seulement sur des éléments marqués « TEST agent », mis à la corbeille ensuite. Ne jamais saisir le mot de passe de l'agent dans le navigateur : l'utilisateur se connecte lui-même dans le volet.
 - `http://localhost:5173/` : mode normal, demande une connexion Supabase.
 
 Le service worker ne s'enregistre qu'en HTTPS : en local, pas de cache à vider.
 
 Avant un commit : `python3 scripts/check.py` (`SHELL`, imports et noms exportés, syntaxe, version, numéro de schéma).
-Il n'y a pas de tests automatisés de l'interface : vérifier à la main dans le navigateur (mode démo), en largeur
+Il n'y a pas de tests automatisés de l'interface : vérifier à la main dans le navigateur (compte agent), en largeur
 mobile (~390 px) et en mode sombre, puis regarder la console (une erreur d'import casse toute l'app).
 
 ## Fichiers
@@ -95,7 +94,7 @@ mobile (~390 px) et en mode sombre, puis regarder la console (une erreur d'impor
 | `links.js` | liens entre éléments de tous les modules : bloc « Liés » des éditeurs, section de page, feuille « Lier à… », `[[wikiliens]]`, épingle |
 | `share.js` | partage : feuille « Partager », `shareBlock()` (éditeur), `shareMeta()` (lignes), `sharedWithMe()`, quitter un partage ; simulé en mode démo |
 | `users.js` | Réglages > Compte (prénom, mot de passe) et > Utilisateurs (ajout par l'administrateur) |
-| `boot.js` | `init()` : restauration, mode démo ou session Supabase, premier rendu |
+| `boot.js` | `init()` : restauration, session Supabase, premier rendu |
 
 ## Architecture
 
@@ -145,7 +144,7 @@ mobile (~390 px) et en mode sombre, puis regarder la console (une erreur d'impor
    (`model.js`, `views.js`, `rows.js`, `sheets.js`, `actions.js`).
 2. L'importer dans `js/main.js` (sa position fixe l'ordre par défaut dans la barre).
 3. Ajouter **chaque** nouveau fichier à `SHELL` dans `sw.js` et changer `CACHE`.
-4. Fournir `seedDemo()` pour que le mode démo montre le module rempli.
+4. Ajouter le module à la liste des tests manuels (pas de données d'exemple).
 5. Si le module stocke de nouveaux champs, suivre la section suivante.
 
 ## Changer le modèle de données
@@ -174,9 +173,11 @@ Identifiants dans `.env.local` à la racine (`BRAIN_AGENT_EMAIL`, `BRAIN_AGENT_P
 - **Lire** : `scripts/brain-read.sh [since ISO8601]` écrit en JSON tous les éléments partagés avec le compte agent (hors corbeille). Ex. lister les tâches d'un projet : filtrer sur `kind`, `status`, `parent_id`.
 - **Écrire** : `scripts/brain-write.sh [--dry] fichier.json` ajoute des recettes (ou des produits `shop_item`) dans le foyer. Format du fichier en tête du script. Toujours un `--dry` d'abord, montrer le résultat à l'utilisateur, puis écrire. Une recette au titre déjà présent est ignorée.
 - **Projets** : `brain-write.sh` ajoute aussi des actions, sections (`kind: section`, `sup`) et entrées de frise (`kind: plog`, `meta.types` parmi `feature | code | fix | design`) à un projet existant (`"project": "<titre>"`, partagé en « Peut modifier »), et coche des actions (`"done": "<titre>"`). Format en tête du script. Projet absent : il n'est pas créé, demander à l'utilisateur.
+- **Statut agent (schéma 24)** : table `agent_grants` (un seul compte agent par propriétaire). Une fois désigné dans le SQL Editor (requête en commentaire dans `schema.sql`, section 7), `row_role` lui donne le droit `edit` sur tous les éléments du propriétaire : lecture et écriture partout, pas de suppression définitive (corbeille seulement), ni réglages, clés ou abonnements. Retirable à tout moment (`delete from agent_grants`). `brain-write.sh` sait aussi ranger une action existante (`"move"` + `"section"`). Les droits par partage restent valables en plus.
+- **Tout modifier** : `brain-write.sh` accepte aussi `{"op":"create"|"update"|"trash", …}` sur n'importe quel `kind` (note, signet, séance, tâche, projet…) : créer, modifier des champs (`set`, `meta` fusionné), mettre à la corbeille (jamais de suppression définitive). Format en tête du script ; toujours `--dry` d'abord.
 - Fichiers temporaires (JSON de recette, sorties) dans le dossier scratchpad, pas dans le dépôt.
 - Les droits sont ceux du partage : lecture seule ou « Peut modifier », imposés par la base (RLS). Un refus veut dire que l'élément n'est pas partagé en écriture : le dire à l'utilisateur, ne pas contourner.
-- Ne jamais tester sur le compte réel de l'utilisateur ni modifier ses données sans demande ; pour l'interface, utiliser `?demo=1`.
+- Ne jamais tester sur le compte réel de l'utilisateur ni modifier ses données sans demande ; pour l'interface, voir « Tester » plus haut (compte agent, éléments marqués « TEST agent »).
 
 ## Sécurité
 
@@ -208,7 +209,7 @@ Règle de l'utilisateur, non négociable. Elle vaut pour tout ce qui change ce q
 3. **Forme de la preview** : maquette visible (aperçu intégré à la conversation ou page HTML dans le scratchpad, ouverte dans le navigateur), en largeur iPhone (~390 px), avec les couleurs et polices de la DA « carnet » (voir plus bas), en clair et en sombre si le rendu change. Données réalistes, en français.
 4. **Présenter simplement** : ce que chaque idée change pour l'utilisateur, pas comment elle sera codée. Donner une recommandation.
 5. **Boucle** : l'utilisateur choisit, demande des retouches, la preview est refaite. Le code ne commence qu'après un « je valide » clair sur un modèle précis.
-6. Après le code, vérifier que le résultat ressemble au modèle validé (mode démo, ~390 px, mode sombre).
+6. Après le code, vérifier que le résultat ressemble au modèle validé (compte agent, ~390 px, mode sombre).
 
 ## Direction artistique
 

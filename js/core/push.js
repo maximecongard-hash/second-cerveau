@@ -1,4 +1,4 @@
-import { DEMO, sb } from './config.js';
+import { sb } from './config.js';
 import { I } from './util.js';
 import { S } from './store.js';
 import { ACTS } from './modules.js';
@@ -76,8 +76,7 @@ export async function clearShown() {
 
 export function pushSettings() {
   let body;
-  if (DEMO) body = '<div class="muted pad">Indisponible en mode démo.</div>';
-  else if (!supported()) body = `<div class="muted small pad">${installed() ? 'Cet appareil ne prend pas en charge les notifications (iOS 16.4 ou plus requis).' : 'Pour recevoir les notifications, installe d’abord l’app : Safari > Partager > Sur l’écran d’accueil, puis ouvre-la depuis son icône.'}</div>`;
+  if (!supported()) body = `<div class="muted small pad">${installed() ? 'Cet appareil ne prend pas en charge les notifications (iOS 16.4 ou plus requis).' : 'Pour recevoir les notifications, installe d’abord l’app : Safari > Partager > Sur l’écran d’accueil, puis ouvre-la depuis son icône.'}</div>`;
   else {
     if (S.ui.pushSub === undefined) { S.ui.pushSub = null; checkSub(); }
     const on = pushOn();
@@ -99,7 +98,7 @@ Object.assign(ACTS, {
 
 // Petite ligne sous le champ Rappel quand cet appareil ne recevra pas la notification
 export function pushHint() {
-  if (DEMO || !supported()) return '';
+  if (!supported()) return '';
   if (S.ui.pushSub === undefined) { S.ui.pushSub = null; checkSub(); }
   if (S.ui.pushSub === null || pushOn()) return '';
   return '<div class="muted small">Notifications désactivées sur cet appareil : <a href="#/settings/notif" data-act="close-go">les activer</a>.</div>';

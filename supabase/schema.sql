@@ -451,20 +451,20 @@ begin
     'tasks', coalesce((
       select jsonb_agg(jsonb_build_object(
         'title', i.title, 'time', to_char(i.scheduled_time, 'HH24:MI'), 'duration', i.duration_min,
-        'focus', i.focus, 'done', i.status = 'done')
+        'focus', i.focus, 'done', i.status = 'done', 'sport', i.kind = 'workout')
         order by i.scheduled_time nulls last, i.day_order nulls last, i.created_at)
       from public.items i
-      where i.user_id = v_user and i.kind = 'task' and i.scheduled_date = p_day
+      where i.user_id = v_user and i.kind in ('task', 'workout') and i.scheduled_date = p_day
         and i.status in ('active', 'waiting', 'done')), '[]'::jsonb),
     -- à venir : les 7 jours suivants, dans l'ordre
     'upcoming', coalesce((
       select jsonb_agg(jsonb_build_object(
         'title', u.title, 'date', u.scheduled_date, 'time', to_char(u.scheduled_time, 'HH24:MI'),
-        'focus', u.focus) order by u.scheduled_date, u.scheduled_time nulls last, u.day_order nulls last)
+        'focus', u.focus, 'sport', u.kind = 'workout') order by u.scheduled_date, u.scheduled_time nulls last, u.day_order nulls last)
       from (
-        select i.title, i.scheduled_date, i.scheduled_time, i.focus, i.day_order
+        select i.title, i.scheduled_date, i.scheduled_time, i.focus, i.day_order, i.kind
         from public.items i
-        where i.user_id = v_user and i.kind = 'task' and i.status in ('active', 'waiting')
+        where i.user_id = v_user and i.kind in ('task', 'workout') and i.status in ('active', 'waiting')
           and i.scheduled_date > p_day and i.scheduled_date <= p_day + 7
         order by i.scheduled_date, i.scheduled_time nulls last, i.day_order nulls last
         limit 20) u), '[]'::jsonb),
@@ -620,12 +620,37 @@ drop policy if exists "shares_delete" on public.shares;
 create policy "shares_delete" on public.shares
   for delete to authenticated using (owner_id = auth.uid() or user_id = auth.uid());
 
+-- Compte agent : un seul compte, désigné par le propriétaire, qui lit et modifie TOUS ses éléments
+-- (droit « edit » : jamais de suppression définitive, un élément se met à la corbeille donc se récupère).
+-- Rien d'autre n'est ouvert : ni réglages, ni clés, ni abonnements. Le propriétaire le retire à tout moment.
+-- La désignation se fait dans le SQL Editor, jamais depuis l'app (aucune règle d'insertion : un compte ne peut pas se l'accorder).
+--   insert into public.agent_grants (owner_id, agent_id)
+--   select o.id, a.id from auth.users o, auth.users a
+--   where lower(o.email) = lower('EMAIL DU PROPRIÉTAIRE') and lower(a.email) = lower('EMAIL DE L''AGENT')
+--   on conflict (owner_id) do update set agent_id = excluded.agent_id;
+-- Retirer : delete from public.agent_grants where owner_id = (select id from auth.users where lower(email) = lower('EMAIL DU PROPRIÉTAIRE'));
+create table if not exists public.agent_grants (
+  owner_id   uuid primary key references auth.users(id) on delete cascade,
+  agent_id   uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  check (owner_id <> agent_id)
+);
+alter table public.agent_grants enable row level security;
+drop policy if exists "agent_grants_read" on public.agent_grants;
+create policy "agent_grants_read" on public.agent_grants
+  for select to authenticated using (owner_id = auth.uid() or agent_id = auth.uid());
+drop policy if exists "agent_grants_delete" on public.agent_grants;
+create policy "agent_grants_delete" on public.agent_grants
+  for delete to authenticated using (owner_id = auth.uid());
+revoke insert, update on public.agent_grants from authenticated, anon;
+
 -- Droit de l'utilisateur courant sur une ligne : 'owner', 'edit', 'view' ou null
 create or replace function public.row_role(p_id uuid, p_parent uuid, p_user uuid)
 returns text language sql stable security definer set search_path = public as $$
   select case
     when p_user = auth.uid() then 'owner'
     else coalesce(
+      (select 'edit' from public.agent_grants g where g.owner_id = p_user and g.agent_id = auth.uid()),
       (select s.role from public.shares s
         where s.user_id = auth.uid() and s.item_id in (p_id, p_parent)
         order by (s.role = 'edit') desc limit 1),
@@ -783,7 +808,7 @@ create trigger items_log_event after insert or update or delete on public.items
 create or replace function public.brain_status() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'schema', 23, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'schema', 25, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
     'vapid', c.public_key is not null,
     'url', c.project_url,
     'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),

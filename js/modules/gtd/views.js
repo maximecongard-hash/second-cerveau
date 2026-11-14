@@ -3,7 +3,7 @@ import { S, live, liveAll, ofKind, ofKindAll, byTitle, canEdit, isMine } from '.
 import { kindOwner, viewOwner, isEnabled, fromModules } from '../../core/modules.js';
 import { inboxItems, areas, projectsBy, nextActions, hasNextAction, topOf, sortTasks, timeStats } from './model.js';
 import { historyHTML } from './history.js';
-import { actionsHTML, friseHTML } from './frise.js';
+import { actionsHTML, friseHTML, sectionOptions } from './frise.js';
 import { taskRow, starBtn, projectRow, projectCard, planBtn } from './rows.js';
 import { linkedSection, itemRow } from '../../core/links.js';
 import { sharedWithMe, shareMeta, personName } from '../../core/share.js';
@@ -26,6 +26,17 @@ views.inbox = () => {
   return { title: 'Inbox', html, fab: 'capture' };
 };
 
+// Ranger dès l'Inbox : projet puis section (appliqués si l'élément devient une action, une note ou un signet)
+function clarPlace(it) {
+  const ps = ofKind('project').filter(p => ['active', 'clarify'].includes(p.status) || p.id === it.parent_id).sort(byTitle);
+  if (!ps.length) return '';
+  const opt = (v, l, cur) => `<option value="${esc(v)}" ${cur === v ? 'selected' : ''}>${esc(l)}</option>`;
+  const secs = it.parent_id ? sectionOptions(it.parent_id) : [];
+  return `<div class="clar-place">
+    <label>Projet<select data-clar="proj" data-id="${it.id}">${opt('', 'Aucun', it.parent_id || '')}${ps.map(p => opt(p.id, p.title, it.parent_id)).join('')}</select></label>
+    ${secs.length > 1 ? `<label>Section<select data-clar="sec" data-id="${it.id}">${secs.map(([v, l]) => opt(v, l, it.meta?.sec || '')).join('')}</select></label>` : ''}
+  </div>`;
+}
 views.clarify = arg => {
   const list = inboxItems();
   if (!list.length) return { title: 'Trier', html: empty('Tout est trié', '<a class="btn primary" href="#/today">Planifier ma journée</a>') };
@@ -42,6 +53,7 @@ views.clarify = arg => {
         ${it.image_path ? `<img class="cap-img" data-img="${esc(it.image_path)}" alt="">` : ''}
         <div class="muted small">Capturé ${fmtAgo(it.created_at)}${it.source === 'shortcut' ? ' · raccourci' : ''}</div>
       </div>
+      ${clarPlace(it)}
       <h3 class="q">Qu'est-ce que c'est ?</h3>
       <div class="clar-grid">
         ${btn('done', 'Fait', 'moins de 2 min, fais-le')}
@@ -134,7 +146,7 @@ views.actions = () => {
     const groups = new Map();
     for (const t of list) { const k = keyOf(t); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
     const keys = [...groups.keys()].sort((a, b) => grp === 'date' ? order.indexOf(a) - order.indexOf(b)
-      : (a === 'Sans projet') - (b === 'Sans projet') || a.localeCompare(b, 'fr'));
+      : (b === 'Sans projet') - (a === 'Sans projet') || a.localeCompare(b, 'fr'));
     body = keys.map(k => sec(`${esc(k)} · ${groups.get(k).length}`, `<div class="list">${groups.get(k).map(row).join('')}</div>`)).join('');
   }
   return { title: 'Actions', html: chips + groupBar + (body || empty('Aucune action ici', 'Trie ton Inbox ou ajoute une action avec +.')), fab: 'task' };
@@ -205,6 +217,32 @@ views.someday = () => {
   return {
     title: 'Un jour / peut-être',
     html: list.length ? `<div class="list">${list.map(it => it.kind === 'task' ? taskRow(it, { extra: act(it) }) : `<div class="row-wrap">${projectRow(it)}${act(it)}</div>`).join('')}</div>` : empty('Liste vide', 'Les envies et idées « plus tard » arriveront ici.')
+  };
+};
+
+// Récap d'activité : les 7 derniers jours (tâches terminées, temps chronométré, séances) et les projets du moment
+views.recap = () => {
+  const t0 = today(), days = Array.from({ length: 7 }, (_, k) => addDays(t0, k - 6));
+  const doneOn = d => ofKindAll('task').filter(t => t.status === 'done' && t.completed_at && ymd(new Date(t.completed_at)) === d);
+  const per = days.map(d => { const ts = doneOn(d); return { d, n: ts.length, sec: ts.reduce((a, t) => a + (t.spent_sec || 0), 0), ts }; });
+  const logs = ofKindAll('workout_log').filter(w => w.status !== 'trashed' && days.includes(w.scheduled_date));
+  const nTasks = per.reduce((a, x) => a + x.n, 0), totalSec = per.reduce((a, x) => a + x.sec, 0);
+  const byProj = {};
+  per.forEach(x => x.ts.forEach(t => { const k = (t.parent_id && S.items.get(t.parent_id)?.title) || 'Sans projet'; byProj[k] = (byProj[k] || 0) + 1; }));
+  const projs = Object.entries(byProj).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const late = ofKind('task').filter(t => t.status === 'active' && ((t.due_date && t.due_date < t0) || (t.scheduled_date && t.scheduled_date < t0))).length;
+  const max = Math.max(1, ...per.map(x => x.n));
+  const fmtSec = v => (v >= 3600 ? `${Math.floor(v / 3600)} h ${String(Math.floor(v % 3600 / 60)).padStart(2, '0')}` : `${Math.round(v / 60)} min`);
+  const stat = (v, l) => `<div><b>${v}</b><span>${l}</span></div>`;
+  const dayName = d => cap(new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(parseYmd(d)).replace('.', ''));
+  const chart = `<div class="act-bars">${per.map(x => `<div class="act-bar ${x.d === t0 ? 'today' : ''}"><span class="act-n">${x.n || ''}</span><i style="height:${Math.round(x.n / max * 100)}%"></i><small>${dayName(x.d)}</small></div>`).join('')}</div>`;
+  return {
+    title: 'Récap',
+    html: `<div class="muted small pad">Les 7 derniers jours, jusqu'à aujourd'hui.</div>
+      <div class="ev-summary">${stat(nTasks, plural(nTasks, 'tâche faite', 'tâches faites').replace(/^\d+ /, ''))}${stat(totalSec ? fmtSec(totalSec) : '0', 'chronométrées')}${stat(logs.length, logs.length > 1 ? 'séances' : 'séance')}</div>` +
+      sec('Tâches terminées par jour', chart) +
+      sec('Projets les plus avancés', projs.length ? `<div class="list">${projs.map(([k, n]) => `<div class="row"><div class="row-main"><div class="row-title">${esc(k)}</div></div><span class="muted small">${plural(n, 'tâche', 'tâches')}</span></div>`).join('')}</div>` : `<div class="muted pad">Aucune tâche terminée cette semaine.</div>`) +
+      (late ? sec('À surveiller', `<div class="muted pad">${plural(late, 'tâche en retard', 'tâches en retard')}. <a href="#/actions">Voir les actions</a></div>`) : '')
   };
 };
 

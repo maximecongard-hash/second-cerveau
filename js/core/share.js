@@ -1,4 +1,4 @@
-import { DEMO, sb } from './config.js';
+import { sb } from './config.js';
 import { esc, I, uuid, empty, chip } from './util.js';
 import { S, isMine, roleOf, persist } from './store.js';
 import { ACTS } from './modules.js';
@@ -76,11 +76,6 @@ const refresh = () => { if (SH.mode === 'share') shareSheet(SH.shareId); queueRe
 
 // Appel serveur, ou simulation locale en mode démo
 async function addShare(id, email, role) {
-  if (DEMO) {
-    let p = Object.values(S.people).find(x => x.email === email);
-    if (!p) { p = { id: 'u-' + email, email, name: email.split('@')[0] }; S.people[p.id] = p; }
-    return { id: uuid(), item_id: id, owner_id: meId(), user_id: p.id, role };
-  }
   const { data, error } = await sb.rpc('share_item', { p_item: id, p_email: email, p_role: role });
   if (error) throw new Error(error.message);
   S.people[data.user_id] = { ...S.people[data.user_id], id: data.user_id, email: data.email, name: data.name };
@@ -101,7 +96,7 @@ Object.assign(ACTS, {
   'share-del': async el => {
     const s = S.shares.find(x => x.id === el.dataset.id);
     if (!s) return;
-    if (!DEMO) {
+    {
       const { error } = await sb.from('shares').delete().eq('id', s.id);
       if (error) { toast('Erreur : ' + error.message); return; }
     }
@@ -113,7 +108,7 @@ Object.assign(ACTS, {
     const it = S.items.get(el.dataset.id);
     const s = S.shares.find(x => x.item_id === el.dataset.id && x.user_id === meId());
     if (!it || !s || !confirm(`Quitter « ${it.title || 'ce partage'} » ? Il disparaîtra de ton compte, sans être supprimé chez ${personName(it.user_id)}.`)) return;
-    if (!DEMO) {
+    {
       const { error } = await sb.from('shares').delete().eq('id', s.id);
       if (error) { toast('Erreur : ' + error.message); return; }
     }

@@ -1,13 +1,13 @@
 import { $, I, esc, sec } from '../../core/util.js';
 import { S, newItem, saveItem, patch, ofKindAll, savePrefs } from '../../core/store.js';
 import { registerModule } from '../../core/modules.js';
-import { SH, render, renderEditor, toast } from '../../core/ui.js';
+import { SH, render, renderEditor, toast, openEditor } from '../../core/ui.js';
 import { KINDS, views, recipesList, recipeRow, shopRow } from './views.js';
 import { editorHTML, setField, createAndEdit, toggleIn, addIngredient, delIngredient, editorChange } from './editor.js';
 
 const aisleOpts = cur => AISLES.map(a => `<option ${a === cur ? 'selected' : ''}>${esc(a)}</option>`).join('');
 import { parseIngredient, AISLES, productKey } from './model.js';
-import { addProduct } from './shop.js';
+import { addProduct, findOnList } from './shop.js';
 import { panierActs } from './panier.js';
 import { STARTERS } from './starters.js';
 import { createFoyer, inFoyer } from './foyer.js';
@@ -86,8 +86,10 @@ const forms = {
   'sh-add': f => {
     const input = f.querySelector('input'), v = input.value.trim();
     if (!v) return;
-    addProduct(v);
+    const twin = findOnList(v);
     input.value = '';
+    if (twin) { toast('Déjà dans la liste : fiche ouverte'); openEditor(twin.id); return; }
+    addProduct(v);
     render();
   }
 };
@@ -111,15 +113,6 @@ function onInput(t) {
 }
 const fab = () => createAndEdit(S.ui.rcFilter.startsWith('tag:') ? { tags: [S.ui.rcFilter.slice(4)] } : {});
 
-// Démo : la banque de départ (quelques favoris) et une liste en cours
-function seedDemo() {
-  for (const [title, min, tags, seasons, ings, body] of STARTERS) {
-    saveItem(newItem({ kind: 'recipe', ...inFoyer(), title, duration_min: min, tags, body, meta: { servings: 4, seasons, ingredients: ings.map(parseIngredient) } }), { render: false });
-  }
-  for (const r of ofKindAll('recipe')) if (['Lasagnes maison', 'Poulet curry coco', 'Chili sin carne'].includes(r.title)) patch(r.id, { pinned: true }, { render: false });
-  for (const t of ['2 l de lait', '6 œufs', '1 kg de pommes de terre', 'pain', '400 g de bœuf haché', 'papier toilette']) addProduct(t);
-}
-
 registerModule({
   id: 'courses',
   label: 'Courses',
@@ -142,7 +135,6 @@ registerModule({
   keepKinds: ['foyer'],
   settings,
   settingsMeta: 'Foyer · rayons · placard',
-  seedDemo,
   onInput,
   onChange: t => {
     if (t.dataset.rc === 'aisle-map') {

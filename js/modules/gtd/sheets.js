@@ -235,3 +235,21 @@ export function renderPicker() {
       <div class="row-main"><div class="row-title">${esc(t.title)}</div><div class="row-meta">${t.parent_id && S.items.get(t.parent_id) ? `<span class="m-proj">${esc(S.items.get(t.parent_id).title)}</span>` : ''}${t.contexts.map(c => `<span class="m-ctx">${esc(c)}</span>`).join('')}${t.duration_min ? `<span>${fmtDur(t.duration_min)}</span>` : ''}${t.scheduled_date ? `<span>Prévu ${fmtDate(t.scheduled_date).toLowerCase()}</span>` : ''}${t.due_date ? `<span class="m-due">Échéance ${fmtDate(t.due_date).toLowerCase()}</span>` : ''}</div></div>
     </div>`).join('')}</div>` : empty('Aucune prochaine action disponible')}`;
 }
+
+// ---------------------------------------------------------------------------
+// « Déplacer vers » : choisir la section d'une action du projet
+// ---------------------------------------------------------------------------
+export function openMove(id) {
+  SH.mode = 'move'; SH.moveId = id;
+  renderMove();
+  showSheet();
+}
+export function renderMove() {
+  const t = S.items.get(SH.moveId);
+  if (!t) return;
+  const cur = t.meta?.sec || '';
+  const opts = [['', 'Sans section'], ...sectionOptions(t.parent_id).slice(1)];
+  sheet.innerHTML = `${sheetHead('Déplacer vers', { ok: 'Fermer' })}
+    <div class="muted small pad">${esc(t.title)}</div>
+    <div class="list">${opts.map(([v, l]) => `<button class="row mv-opt ${v === cur ? 'on' : ''}" data-act="move-to" data-id="${t.id}" data-v="${esc(v)}"><div class="row-main"><div class="row-title">${esc(l)}</div></div>${v === cur ? '<span class="muted small">ici</span>' : ''}</button>`).join('')}</div>`;
+}

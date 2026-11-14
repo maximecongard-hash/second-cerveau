@@ -114,7 +114,6 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .sync.busy { background: var(--warn); animation: pulse 1s infinite alternate; }
 .sync.off { background: var(--muted); }
 .sync.err { background: var(--danger); }
-.sync.demo { background: var(--proj); }
 @keyframes pulse { to { opacity: .35; } }
 
 main {
@@ -875,3 +874,32 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .fev { position: relative; padding: 0 0 14px; cursor: pointer; }
 .fev .pdot.big { position: absolute; left: -22px; top: 5px; width: 11px; height: 11px; border: 2px solid var(--bg); box-sizing: content-box; margin-left: -1px; }
 .fev-p { margin: 3px 0 4px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+/* Déplacer une action vers une section, rangement dès l'Inbox */
+.mv-btn { flex: none; background: none; border: 0; color: var(--muted); font-size: 18px; padding: 4px 8px; cursor: pointer; }
+.mv-opt { width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); }
+.mv-opt.on { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.clar-place { display: grid; gap: 8px; margin: 12px 0 4px; }
+.clar-place label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.clar-place select { font-size: 16px; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--card, transparent); color: inherit; }
+
+/* Agenda : chrono et validation directement sur le créneau */
+.ag-acts { position: absolute; top: 2px; right: 3px; display: flex; gap: 2px; }
+.ag-act { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); cursor: pointer; }
+.ag-act svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ag-act:first-child svg { fill: currentColor; }
+.ag-act.on { color: var(--accent); }
+.ag-ev.short .ag-acts { top: 0; }
+.ag-ev .ag-title { padding-right: 48px; }
+
+.ag-side .chips { margin: 4px 0 6px; }
+.ag-grp { margin-top: 10px; }
+.ag-grp small { color: var(--muted); font-weight: 400; }
+
+/* Récap d'activité */
+.act-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 140px; padding: 8px 0 0; }
+.act-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; position: relative; }
+.act-bar i { display: block; width: 100%; max-width: 28px; min-height: 2px; background: var(--muted); border-radius: 3px 3px 0 0; }
+.act-bar.today i { background: var(--accent); }
+.act-bar small, .act-n { font-size: 11px; color: var(--muted); }
+.act-bar.today small { color: var(--accent); font-weight: 500; }

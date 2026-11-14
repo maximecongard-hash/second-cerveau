@@ -1,4 +1,4 @@
-import { DEMO, sb } from './config.js';
+import { sb } from './config.js';
 import { empty, applyIcon } from './util.js';
 import { S, restore, resetLocal, persist, persistNow } from './store.js';
 import { sync } from './sync.js';
@@ -17,14 +17,6 @@ export async function init() {
   registerSW();
   clearShown();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') clearShown(); });
-  if (DEMO) {
-    S.user = { id: 'demo', email: 'Mode démo (données locales)' };
-    if (!S.items.size) MODULES.forEach(m => m.seedDemo?.());
-    MODULES.forEach(m => m.afterSync?.());
-    persist();
-    render();
-    return;
-  }
   // Compte connu sur cet appareil : ses données s'affichent tout de suite, la session se vérifie ensuite.
   // Hors ligne, cette vérification échoue après une longue attente : ce n'est pas une raison de demander le mot de passe.
   const cached = !!S.uid;

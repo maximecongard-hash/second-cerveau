@@ -1,4 +1,4 @@
-import { LS_KEY, DEMO } from './config.js';
+import { LS_KEY } from './config.js';
 import { uuid, nowIso, ymd } from './util.js';
 import { scheduleSync } from './sync.js';
 import { queueRender, toast } from './ui.js';
@@ -17,7 +17,7 @@ export function persist() {
 export function persistNow() {
   try {
     const json = JSON.stringify({
-      uid: S.uid, email: S.email, items: [...S.items.values()], shares: S.shares, people: S.people, prefs: S.prefs,
+      uid: S.uid, email: S.email, items: [...S.items.values()], shares: S.shares, grants: S.grants, people: S.people, prefs: S.prefs,
       dirty: [...S.dirty].map(([id, f]) => [id, f ? [...f] : null]),
       prefsDirty: S.prefsDirty, prefsBase: S.prefsBase, cursor: S.cursor, lastFullRead: S.lastFullRead, lastSync: S.lastSync
     });
@@ -39,6 +39,7 @@ export function restore() {
     S.email = d.email || null;
     S.items = new Map((d.items || []).map(i => [i.id, i]));
     S.shares = d.shares || [];
+    S.grants = d.grants || [];
     S.people = d.people || {};
     S.prefs = { ...DEFAULT_PREFS, ...(d.prefs || {}) };
     // ancien format : simple liste d'id, à envoyer en entier
@@ -51,7 +52,7 @@ export function restore() {
   } catch (e) { console.warn('restore', e); }
 }
 export function resetLocal() {
-  S.items = new Map(); S.shares = []; S.people = {}; S.dirty = new Map(); S.stuck = new Map(); S.prefs = { ...DEFAULT_PREFS };
+  S.items = new Map(); S.shares = []; S.grants = []; S.people = {}; S.dirty = new Map(); S.stuck = new Map(); S.prefs = { ...DEFAULT_PREFS };
   S.prefsDirty = false; S.prefsBase = null; S.cursor = null; S.lastFullRead = null; S.lastSync = null;
 }
 
@@ -66,7 +67,8 @@ export function newItem(fields = {}) {
 // Partage : mes éléments, ceux des autres qui m'ont été partagés, et mon droit sur chacun
 // ---------------------------------------------------------------------------
 export const meId = () => S.user?.id || S.uid;
-export const isMine = it => !it.user_id || it.user_id === meId();
+// Compte agent : les éléments du propriétaire qui m'a désigné comptent comme les miens (je les vois et les modifie partout)
+export const isMine = it => !it.user_id || it.user_id === meId() || S.grants.includes(it.user_id);
 // 'owner' (à moi, ou tâche d'un invité dans mon projet), 'edit', 'view' ou null
 export function roleOf(it) {
   if (isMine(it)) return 'owner';
@@ -87,23 +89,6 @@ export function endAt(it) {
 }
 export const sameInstant = (a, b) => (a ? +new Date(a) : null) === (b ? +new Date(b) : null);
 
-// Mode démo : petit journal local, comme le trigger log_item_event du serveur
-const snaps = new Map();
-function demoLog(it, known) {
-  if (!DEMO || !['task', 'project'].includes(it.kind)) return;
-  const prev = snaps.get(it.id);
-  snaps.set(it.id, { status: it.status, title: it.title, parent_id: it.parent_id });
-  const proj = it.kind === 'project' ? it.id : it.parent_id;
-  const add = (project_id, action, detail = '') => project_id && action && (S.ui.demoEvents ??= []).unshift({ id: uuid(), project_id, item_id: it.id, kind: it.kind, actor: meId(), action, title: it.title, detail, at: nowIso() });
-  if (!prev) { if (!known) add(proj, 'created'); return; }
-  if (prev.status !== it.status) add(proj, it.status === 'trashed' ? 'trashed' : prev.status === 'trashed' ? 'restored' : it.status === 'done' ? 'done' : prev.status === 'done' ? 'reopened' : null);
-  if (prev.title !== it.title && prev.title) add(proj, 'renamed', prev.title);
-  if (it.kind === 'task' && prev.parent_id !== it.parent_id) {
-    add(it.parent_id, 'moved_in', S.items.get(prev.parent_id)?.title || '');
-    add(prev.parent_id, 'moved_out', S.items.get(it.parent_id)?.title || '');
-  }
-}
-
 // Note ce qu'il faut envoyer : seuls les champs modifiés, pour ne pas écraser ce qu'un autre appareil a changé ailleurs.
 // Sans liste (élément neuf, ou appel sans précision), la ligne entière part.
 function markDirty(id, fields) {
@@ -121,7 +106,6 @@ export function saveItem(it, { render = true, fields = null } = {}) {
     if (fields && !sameInstant(it.end_at, end)) fields = [...fields, 'end_at'];
     it.end_at = end;
   }
-  demoLog(it, known);
   it.updated_at = nowIso();
   S.items.set(it.id, it);
   markDirty(it.id, known ? fields : null);
