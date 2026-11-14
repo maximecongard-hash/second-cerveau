@@ -91,7 +91,7 @@ function plan(d, now) {
   for (const t of d.tasks) {
     if (!t.time) continue;
     const s = toMin(t.time);
-    items.push({ title: t.title, s, e: s + (t.duration || 30), task: true, star: !!t.focus, done: t.done });
+    items.push({ title: t.title, s, e: s + (t.duration || 30), task: true, sport: !!t.sport, star: !!t.focus, done: t.done });
   }
   for (const e of d.events) {
     if (e.allDay) continue;
@@ -160,7 +160,7 @@ function itemRow(w, it) {
   line.spacing = 6;
   const past = it.state === 'past', now = it.state === 'now';
   const color = past ? C.faint : C.text;
-  txt(line, it.done ? '✓' : it.task ? (it.star ? '★' : '•') : '◦', 11, it.done ? C.ok : it.star && !past ? C.star : past ? C.faint : C.muted);
+  txt(line, it.done ? '✓' : it.sport ? '♥' : it.task ? (it.star ? '★' : '•') : '◦', 11, it.done ? C.ok : it.star && !past ? C.star : past ? C.faint : C.muted);
   txt(line, hm(it.s), 11, now ? C.accent : past ? C.faint : C.muted, 'mono');
   const title = txt(line, it.title || 'Sans titre', 12, now ? C.accent : color);
   title.lineLimit = 1;
@@ -170,15 +170,16 @@ function itemRow(w, it) {
 
 // Grille horaire dessinée en une image : blocs en colonnes quand ils se chevauchent, passé estompé, trait rouge pour maintenant
 function layout(items) {
+  // le bloc dessiné est au moins aussi haut qu'une ligne de texte : il occupe la place jusqu'à `le`, sinon deux créneaux proches se recouvrent
   let cluster = [], end = -1;
   const flush = () => { const n = Math.max(1, ...cluster.map(x => x.lane + 1)); cluster.forEach(x => x.lanes = n); cluster = []; };
   for (const it of items) {
     if (cluster.length && it.s >= end) { flush(); end = -1; }
-    const used = cluster.filter(x => x.e > it.s).map(x => x.lane);
+    const used = cluster.filter(x => x.le > it.s).map(x => x.lane);
     it.lane = 0;
     while (used.includes(it.lane)) it.lane++;
     cluster.push(it);
-    end = Math.max(end, it.e);
+    end = Math.max(end, it.le);
   }
   flush();
 }
@@ -186,16 +187,17 @@ function layout(items) {
 function drawTimeline(p, W, H) {
   const dark = Device.isUsingDarkAppearance();
   const K = dark
-    ? { text: '#e6e7e1', muted: '#8d93a3', faint: '#565c6b', accent: '#93a9e6', danger: '#e08a7c' }
-    : { text: '#1a2132', muted: '#676d7e', faint: '#a3a7b3', accent: '#2c4c9e', danger: '#a9463a' };
+    ? { text: '#e6e7e1', muted: '#8d93a3', faint: '#565c6b', accent: '#93a9e6', danger: '#e08a7c', ok: '#8fb197' }
+    : { text: '#1a2132', muted: '#676d7e', faint: '#a3a7b3', accent: '#2c4c9e', danger: '#a9463a', ok: '#4f7a5a' };
   const items = p.items;
-  layout(items);
   const first = Math.min(9 * 60, ...items.map(i => i.s), p.nowMin - 30);
   const last = Math.max(18 * 60, ...items.map(i => i.e));
   const h0 = Math.max(0, Math.floor(first / 60)), h1 = Math.min(24, Math.ceil(last / 60));
   const pxh = H / (h1 - h0);
   const y = min => (min - h0 * 60) / 60 * pxh;
   const LW = 26;
+  items.forEach(i => { i.le = Math.max(i.e, i.s + 17 * 60 / pxh); });
+  layout(items);
 
   const ctx = new DrawContext();
   ctx.size = new Size(W, H);
@@ -213,7 +215,7 @@ function drawTimeline(p, W, H) {
   for (const it of items) {
     const top = y(it.s) + 1, h = Math.max(15, y(it.e) - y(it.s) - 2);
     const lw = BW / it.lanes, x = LW + 4 + it.lane * lw;
-    const past = it.state === 'past', base = it.task ? K.accent : K.muted;
+    const past = it.state === 'past', base = it.sport ? K.ok : it.task ? K.accent : K.muted;
     ctx.setFillColor(new Color(base, past ? 0.1 : it.state === 'now' ? 0.4 : 0.24));
     const path = new Path();
     path.addRoundedRect(new Rect(x, top, lw - 2, h), 4, 4);
@@ -248,7 +250,7 @@ async function build(family) {
   const d = await load();
   const w = new ListWidget();
   w.backgroundColor = C.bg;
-  w.url = APP_URL;
+  w.url = APP_URL + '#/today';
   w.setPadding(12, 14, 12, 14);
   w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000); // iOS décide du rythme réel (souvent 5 à 15 min)
 
@@ -328,7 +330,7 @@ async function build(family) {
   const foot = w.addStack();
   foot.spacing = 10;
   if (d.overdue) txt(foot, `${d.overdue} en retard`, 10, C.danger, 'mono');
-  if (d.inbox) txt(foot, `Inbox ${d.inbox}`, 10, C.accent, 'mono');
+  if (d.inbox) { const ib = foot.addStack(); ib.url = APP_URL + '#/inbox'; txt(ib, `Inbox ${d.inbox}`, 10, C.accent, 'mono'); }
   if (d.stale) txt(foot, 'hors ligne', 10, C.muted, 'mono');
   return w;
 }
