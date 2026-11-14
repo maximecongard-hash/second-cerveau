@@ -140,8 +140,6 @@ for r in items:
     if kind == "section":
         ex.append({"id": row["id"], "kind": "section", "title": title, "parent_id": parent})
     out.append(row)
-keys = set().union(*[r.keys() for r in out]) if out else set()
-out = [{k: r.get(k) for k in keys} for r in out]  # PostgREST exige les mêmes clés partout
 print(json.dumps({"rows": out, "skipped": skipped, "done": done, "moved": moved, "updates": updates, "errors": errors}))
 PY
 )
@@ -159,8 +157,15 @@ if [ "$DRY" = 1 ]; then
 fi
 [ "$n" -gt 0 ] || [ "$nd" -gt 0 ] || [ "$nm" -gt 0 ] || [ "$nu" -gt 0 ] || { echo "Rien à faire"; exit 0; }
 if [ "$n" -gt 0 ]; then
-  printf '%s' "$rows" | python3 -c 'import json,sys;print(json.dumps(json.load(sys.stdin)["rows"]))' \
-    | api items -X POST -H "Content-Type: application/json" -H "Prefer: return=minimal" -d @-
+  # PostgREST exige les mêmes clés dans un envoi groupé : un envoi par forme de ligne (les colonnes absentes gardent leur valeur par défaut)
+  printf '%s' "$rows" | python3 -c '
+import json, sys
+g = {}
+for r in json.load(sys.stdin)["rows"]: g.setdefault(tuple(sorted(r)), []).append(r)
+for b in g.values(): print(json.dumps(b))' | while read -r batch; do
+    res=$(printf '%s' "$batch" | api items -X POST -H "Content-Type: application/json" -H "Prefer: return=minimal" -d @-)
+    [ -z "$res" ] || { echo "Écriture refusée : $res" >&2; exit 1; }
+  done
 fi
 if [ "$nd" -gt 0 ]; then
   ids=$(printf '%s' "$rows" | python3 -c 'import json,sys;print(",".join(x["id"] for x in json.load(sys.stdin)["done"]))')

@@ -43,7 +43,7 @@ export function actionsHTML(p, tasks, ro) {
   const row = t => taskRow(t, { noProject: true, showSched: true, extra: ro || t.status === 'done' || !ids.size ? '' : `<button class="mv-btn" data-act="move-open" data-id="${t.id}" aria-label="Déplacer vers une section">⇄</button>` });
   const form = (sid, ph) => ro ? '' : `<form class="inline-add" data-form="add-proj" data-id="${pid}" data-sec="${sid || ''}"><input placeholder="${ph}" enterkeyhint="done" autocomplete="off"></form>`;
   const node = (s, depth) => {
-    const [n, d] = count(s.id), open = S.ui.secOpen?.[s.id] !== false;
+    const [n, d] = count(s.id), open = S.ui.secOpen?.[s.id] ?? !big;
     const mine = shown.filter(t => secOf(t, ids) === s.id).sort((a, b) => (a.status === 'done') - (b.status === 'done'));
     return `<div class="psec ${depth ? 'sub' : ''}">
       <div class="psec-h"><button class="psec-t" data-act="sec-toggle" data-id="${s.id}" data-open="${open}" aria-expanded="${open}"><span class="psec-chev ${open ? 'open' : ''}">${I.right}</span><span class="psec-name">${esc(s.title) || '<i>Sans titre</i>'}</span><span class="psec-count">${d} / ${n}</span></button>${ro ? '' : `<button class="psec-edit" data-act="edit" data-id="${s.id}" aria-label="Modifier la section">⋯</button>`}</div>

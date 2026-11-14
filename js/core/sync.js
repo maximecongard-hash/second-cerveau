@@ -185,10 +185,12 @@ async function pullItems() {
 }
 // Partages et comptes connus. Sans erreur si le serveur ne répond pas : l'app reste utilisable seule
 async function pullSharing() {
-  const [sh, pe] = await Promise.all([sb.from('shares').select('*').order('id'), sb.from('profiles').select('id, email, name, is_admin')]);
+  const [sh, pe, gr] = await Promise.all([sb.from('shares').select('*').order('id'), sb.from('profiles').select('id, email, name, is_admin'), sb.from('agent_grants').select('owner_id').eq('agent_id', S.user.id)]);
   if (sh.error || pe.error) return false;
   const people = Object.fromEntries(pe.data.map(p => [p.id, p]));
-  const changed = !same(sh.data, S.shares) || !same(people, S.people);
+  const grants = gr.error ? [] : gr.data.map(g => g.owner_id); // table absente (schéma ancien) : aucun droit d'agent
+  const changed = !same(sh.data, S.shares) || !same(people, S.people) || !same(grants, S.grants);
+  S.grants = grants;
   S.shares = sh.data;
   S.people = people;
   return changed;

@@ -17,7 +17,7 @@ export function persist() {
 export function persistNow() {
   try {
     const json = JSON.stringify({
-      uid: S.uid, email: S.email, items: [...S.items.values()], shares: S.shares, people: S.people, prefs: S.prefs,
+      uid: S.uid, email: S.email, items: [...S.items.values()], shares: S.shares, grants: S.grants, people: S.people, prefs: S.prefs,
       dirty: [...S.dirty].map(([id, f]) => [id, f ? [...f] : null]),
       prefsDirty: S.prefsDirty, prefsBase: S.prefsBase, cursor: S.cursor, lastFullRead: S.lastFullRead, lastSync: S.lastSync
     });
@@ -39,6 +39,7 @@ export function restore() {
     S.email = d.email || null;
     S.items = new Map((d.items || []).map(i => [i.id, i]));
     S.shares = d.shares || [];
+    S.grants = d.grants || [];
     S.people = d.people || {};
     S.prefs = { ...DEFAULT_PREFS, ...(d.prefs || {}) };
     // ancien format : simple liste d'id, à envoyer en entier
@@ -51,7 +52,7 @@ export function restore() {
   } catch (e) { console.warn('restore', e); }
 }
 export function resetLocal() {
-  S.items = new Map(); S.shares = []; S.people = {}; S.dirty = new Map(); S.stuck = new Map(); S.prefs = { ...DEFAULT_PREFS };
+  S.items = new Map(); S.shares = []; S.grants = []; S.people = {}; S.dirty = new Map(); S.stuck = new Map(); S.prefs = { ...DEFAULT_PREFS };
   S.prefsDirty = false; S.prefsBase = null; S.cursor = null; S.lastFullRead = null; S.lastSync = null;
 }
 
@@ -66,7 +67,8 @@ export function newItem(fields = {}) {
 // Partage : mes éléments, ceux des autres qui m'ont été partagés, et mon droit sur chacun
 // ---------------------------------------------------------------------------
 export const meId = () => S.user?.id || S.uid;
-export const isMine = it => !it.user_id || it.user_id === meId();
+// Compte agent : les éléments du propriétaire qui m'a désigné comptent comme les miens (je les vois et les modifie partout)
+export const isMine = it => !it.user_id || it.user_id === meId() || S.grants.includes(it.user_id);
 // 'owner' (à moi, ou tâche d'un invité dans mon projet), 'edit', 'view' ou null
 export function roleOf(it) {
   if (isMine(it)) return 'owner';
