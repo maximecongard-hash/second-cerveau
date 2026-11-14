@@ -4,6 +4,10 @@
 // tâches prévues, événements des autres calendriers) et les jours à venir. Lancé dans l'app Scriptable : aperçu.
 
 const APP_URL = 'https://maximecongard-hash.github.io/second-cerveau/';
+// iOS ouvre toujours une adresse web dans Safari, même si Brain est installée à l'écran d'accueil.
+// Pour ouvrir l'app installée : créer un raccourci nommé « Ouvrir Brain » (action « Ouvrir l'app » > Brain), puis mettre OPEN_SHORTCUT à true.
+const OPEN_SHORTCUT = false;
+const open = path => (OPEN_SHORTCUT ? 'shortcuts://run-shortcut?name=' + encodeURIComponent('Ouvrir Brain') : APP_URL + path);
 const API = 'https://zqdvtbkjvfzkjqtaffbb.supabase.co';
 const KEY = 'sb_publishable_JXRFdwQ2rHPpIWDs-fx2Pw_LLnUKoIp';
 const TOKEN_KEY = 'brain.capture.token';
@@ -250,7 +254,7 @@ async function build(family) {
   const d = await load();
   const w = new ListWidget();
   w.backgroundColor = C.bg;
-  w.url = APP_URL + '#/today';
+  w.url = open('#/today');
   w.setPadding(12, 14, 12, 14);
   w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000); // iOS décide du rythme réel (souvent 5 à 15 min)
 
@@ -330,7 +334,7 @@ async function build(family) {
   const foot = w.addStack();
   foot.spacing = 10;
   if (d.overdue) txt(foot, `${d.overdue} en retard`, 10, C.danger, 'mono');
-  if (d.inbox) { const ib = foot.addStack(); ib.url = APP_URL + '#/inbox'; txt(ib, `Inbox ${d.inbox}`, 10, C.accent, 'mono'); }
+  if (d.inbox) { const ib = foot.addStack(); ib.url = open('#/inbox'); txt(ib, `Inbox ${d.inbox}`, 10, C.accent, 'mono'); }
   if (d.stale) txt(foot, 'hors ligne', 10, C.muted, 'mono');
   return w;
 }
