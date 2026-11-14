@@ -137,14 +137,22 @@ function card(i) {
   const meta = [i.duration_min ? fmtDur(i.duration_min) : '', i.due_date ? `éch. ${fmtDate(i.due_date).toLowerCase()}` : '', ...(i.contexts || [])].filter(Boolean).map(esc).join(' · ');
   return `<div class="ag-task ${i.focus ? 'top' : ''}" data-drag data-act="edit" data-id="${i.id}"><div class="ag-task-title">${esc(i.title) || '<i>Sans titre</i>'}</div>${meta ? `<div class="ag-task-meta">${meta}</div>` : ''}</div>`;
 }
+const GROUPS = [['due', 'Échéance'], ['project', 'Projet'], ['ctx', 'Contexte']];
+const dueKey = i => (i.due_date ? (i.due_date <= today() ? 'En retard ou aujourd’hui' : i.due_date <= addDays(today(), 7) ? 'Cette semaine' : 'Plus tard') : 'Sans échéance');
+const DUE_ORDER = ['En retard ou aujourd’hui', 'Cette semaine', 'Plus tard', 'Sans échéance'];
+const groupKey = (i, g) => g === 'project' ? (S.items.get(i.parent_id)?.title || 'Sans projet') : g === 'ctx' ? ((i.contexts || [])[0] || 'Sans contexte') : dueKey(i);
 function panel(day) {
   const here = day ? untimedOn(day) : [], ids = new Set(here.map(i => i.id));
   const rest = planned().filter(i => !ids.has(i.id) && !i.scheduled_date)
     .sort((x, y) => (x.due_date || '9999').localeCompare(y.due_date || '9999') || x.created_at.localeCompare(y.created_at)).slice(0, 80);
+  const g = S.ui.agGroup || 'due', groups = {};
+  rest.forEach(i => (groups[groupKey(i, g)] ||= []).push(i));
+  const keys = Object.keys(groups).sort((a, b) => g === 'due' ? DUE_ORDER.indexOf(a) - DUE_ORDER.indexOf(b) : a.localeCompare(b, 'fr'));
+  const bar = `<div class="chips">${GROUPS.map(([v, l]) => `<button class="chip ${g === v ? 'on' : ''}" data-act="ag-group" data-v="${v}">${l}</button>`).join('')}</div>`;
   return `<aside class="ag-side" aria-label="Tâches à placer"><div class="ag-side-title">Tâches et séances à placer</div>
     <div class="ag-side-hint">Glisse un élément sur la grille. Tire le bas d'un créneau pour changer sa durée, dépose-le ici pour retirer l'heure.</div>
     ${here.length ? `<div class="ag-side-sub">Prévues ce jour</div>${here.map(card).join('')}` : ''}
-    <div class="ag-side-sub">Prochaines actions</div>${rest.length ? rest.map(card).join('') : '<div class="muted small">Aucune action sans date.</div>'}</aside>`;
+    <div class="ag-side-sub">Prochaines actions</div>${bar}${keys.length ? keys.map(k => `<div class="ag-side-sub ag-grp">${esc(k)} <small>${groups[k].length}</small></div>${groups[k].map(card).join('')}`).join('') : '<div class="muted small">Aucune action sans date.</div>'}</aside>`;
 }
 
 function nav(label, sub) {

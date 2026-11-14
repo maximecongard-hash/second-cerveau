@@ -35,6 +35,7 @@ export function actionsHTML(p, tasks, ro) {
   const showDone = !!S.ui.showDone?.[pid];
   const shown = tasks.filter(t => t.status === 'active' || (showDone && t.status === 'done'));
   const doneN = tasks.filter(t => t.status === 'done').length;
+  const big = shown.length > 14; // gros projet : sections repliées au départ, pour rester lisible
   const count = sid => {
     const own = tasks.filter(t => (t.status === 'active' || t.status === 'done') && secOf(t, ids) === sid);
     return subsOf(pid, sid).reduce((a, s) => { const c = count(s.id); return [a[0] + c[0], a[1] + c[1]]; }, [own.length, own.filter(t => t.status === 'done').length]);
@@ -45,7 +46,7 @@ export function actionsHTML(p, tasks, ro) {
     const [n, d] = count(s.id), open = S.ui.secOpen?.[s.id] !== false;
     const mine = shown.filter(t => secOf(t, ids) === s.id).sort((a, b) => (a.status === 'done') - (b.status === 'done'));
     return `<div class="psec ${depth ? 'sub' : ''}">
-      <div class="psec-h"><button class="psec-t" data-act="sec-toggle" data-id="${s.id}" aria-expanded="${open}"><span class="psec-chev ${open ? 'open' : ''}">${I.right}</span><span class="psec-name">${esc(s.title) || '<i>Sans titre</i>'}</span><span class="psec-count">${d} / ${n}</span></button>${ro ? '' : `<button class="psec-edit" data-act="edit" data-id="${s.id}" aria-label="Modifier la section">⋯</button>`}</div>
+      <div class="psec-h"><button class="psec-t" data-act="sec-toggle" data-id="${s.id}" data-open="${open}" aria-expanded="${open}"><span class="psec-chev ${open ? 'open' : ''}">${I.right}</span><span class="psec-name">${esc(s.title) || '<i>Sans titre</i>'}</span><span class="psec-count">${d} / ${n}</span></button>${ro ? '' : `<button class="psec-edit" data-act="edit" data-id="${s.id}" aria-label="Modifier la section">⋯</button>`}</div>
       <div class="psec-bar"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div>
       ${open ? `<div class="psec-body">${mine.map(row).join('')}${subsOf(pid, s.id).map(x => node(x, depth + 1)).join('')}${form(s.id, '+ Action')}${ro ? '' : `<form class="inline-add" data-form="add-sec" data-id="${pid}" data-sup="${s.id}"><input placeholder="+ Sous-section" enterkeyhint="done" autocomplete="off"></form>`}</div>` : ''}
     </div>`;
@@ -55,7 +56,7 @@ export function actionsHTML(p, tasks, ro) {
   const [total, done] = [tasks.filter(t => t.status === 'active' || t.status === 'done').length, doneN];
   const bar = total ? `<div class="pcard-bar" aria-hidden="true"><i style="width:${Math.round(done / total * 100)}%"></i></div>` : '';
   const tools = `<div class="ptools"><span class="muted small">${plural(tasks.filter(t => t.status === 'active').length, 'action ouverte', 'actions ouvertes')}${top.length ? ` · ${plural(sectionsOf(pid).length, 'section', 'sections')}` : ''}</span>
-    ${top.length ? `<button class="link" data-act="sec-all" data-id="${pid}">Tout replier / déplier</button>` : ''}</div>
+    ${top.length ? `<button class="link" data-act="sec-all" data-id="${pid}" data-any="${top.some(x => (S.ui.secOpen?.[x.id] ?? !big))}">Tout replier / déplier</button>` : ''}</div>
     ${doneN ? `<div class="ptools"><span class="muted small">Afficher les terminées (${doneN})</span>${switchBtn(showDone, 'done-show', 'Afficher les terminées', pid)}</div>` : ''}`;
   return sec('Actions', tools + bar + loose.map(row).join('') + top.map(s => node(s, 0)).join('') +
     form(null, '+ Ajouter une action') +

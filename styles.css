@@ -892,3 +892,7 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .ag-act.on { color: var(--accent); }
 .ag-ev.short .ag-acts { top: 0; }
 .ag-ev .ag-title { padding-right: 48px; }
+
+.ag-side .chips { margin: 4px 0 6px; }
+.ag-grp { margin-top: 10px; }
+.ag-grp small { color: var(--muted); font-weight: 400; }

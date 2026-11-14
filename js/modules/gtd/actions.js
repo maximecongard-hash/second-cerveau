@@ -69,10 +69,10 @@ export const acts = {
     if (open[el.dataset.id]) loadEvents(el.dataset.id);
     queueRender();
   },
-  'sec-toggle': el => { const o = (S.ui.secOpen ??= {}); o[el.dataset.id] = o[el.dataset.id] === false; queueRender(); },
+  'sec-toggle': el => { const o = (S.ui.secOpen ??= {}); o[el.dataset.id] = el.dataset.open !== 'true'; queueRender(); },
   'sec-all': el => {
     const ss = ofKind('section').filter(s => s.parent_id === el.dataset.id), o = (S.ui.secOpen ??= {});
-    const anyOpen = ss.some(s => o[s.id] !== false);
+    const anyOpen = el.dataset.any === 'true';
     ss.forEach(s => { o[s.id] = !anyOpen; });
     queueRender();
   },

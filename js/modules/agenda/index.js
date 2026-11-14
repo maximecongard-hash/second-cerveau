@@ -54,6 +54,7 @@ const acts = {
     S.ui.agDay = d === 0 ? today() : addDays(S.ui.agDay, d * step);
     render();
   },
+  'ag-group': el => { S.ui.agGroup = el.dataset.v; render(); },
   'ag-open': el => { S.ui.agDay = el.dataset.d; location.hash = '#/agenda'; },
   'ag-slot': el => openSlot(el.dataset.d, el.dataset.t),
   'ag-place': el => {
