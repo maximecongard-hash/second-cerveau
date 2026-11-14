@@ -235,7 +235,7 @@ views.recap = () => {
   const fmtSec = v => (v >= 3600 ? `${Math.floor(v / 3600)} h ${String(Math.floor(v % 3600 / 60)).padStart(2, '0')}` : `${Math.round(v / 60)} min`);
   const stat = (v, l) => `<div><b>${v}</b><span>${l}</span></div>`;
   const dayName = d => cap(new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(parseYmd(d)).replace('.', ''));
-  const chart = `<div class="rc-bars">${per.map(x => `<div class="rc-bar ${x.d === t0 ? 'today' : ''}"><span class="rc-n">${x.n || ''}</span><i style="height:${Math.round(x.n / max * 100)}%"></i><small>${dayName(x.d)}</small></div>`).join('')}</div>`;
+  const chart = `<div class="act-bars">${per.map(x => `<div class="act-bar ${x.d === t0 ? 'today' : ''}"><span class="act-n">${x.n || ''}</span><i style="height:${Math.round(x.n / max * 100)}%"></i><small>${dayName(x.d)}</small></div>`).join('')}</div>`;
   return {
     title: 'Récap',
     html: `<div class="muted small pad">Les 7 derniers jours, jusqu'à aujourd'hui.</div>

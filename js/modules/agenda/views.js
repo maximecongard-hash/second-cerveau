@@ -173,9 +173,11 @@ views.agenda = () => {
   const [a, b] = range([day]);
   const timed = timedOn(day), untimed = untimedOn(day), due = dueOn(day), ext = eventsOn(day), allDay = allDayOn(day);
   const total = timed.filter(i => i.status !== 'done').reduce((s, i) => s + (i.duration_min || DEFAULT_DUR), 0);
+  // À partir de 700 px le panneau de droite liste déjà les tâches prévues ce jour sans heure : pas de doublon dans la bande
+  const inBand = innerWidth >= 700 ? [] : untimed;
   let band = '';
-  if (untimed.length || due.length || allDay.length) band = `<div class="ag-band"><div class="ag-band-title">Sans heure</div>
-    <div class="ag-chips">${allDay.map(extChip).join('')}${untimed.map(i => chipOf(i)).join('')}${due.map(i => chipOf(i, '<span class="ag-due">Échéance</span>')).join('')}</div></div>`;
+  if (inBand.length || due.length || allDay.length) band = `<div class="ag-band"><div class="ag-band-title">${inBand.length ? 'Sans heure' : 'Échéances et journée entière'}</div>
+    <div class="ag-chips">${allDay.map(extChip).join('')}${inBand.map(i => chipOf(i)).join('')}${due.map(i => chipOf(i, '<span class="ag-due">Échéance</span>')).join('')}</div></div>`;
   return {
     title: 'Agenda',
     html: `<div class="ag-layout"><div class="ag-main">` + nav(cap(FMT_LONG.format(parseYmd(day))), `S${weekNum(day)}${day === today() ? '' : ` · ${fmtDate(day)}`}`) +
