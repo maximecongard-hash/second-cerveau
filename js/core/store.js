@@ -1,4 +1,4 @@
-import { LS_KEY, DEMO } from './config.js';
+import { LS_KEY } from './config.js';
 import { uuid, nowIso, ymd } from './util.js';
 import { scheduleSync } from './sync.js';
 import { queueRender, toast } from './ui.js';
@@ -87,23 +87,6 @@ export function endAt(it) {
 }
 export const sameInstant = (a, b) => (a ? +new Date(a) : null) === (b ? +new Date(b) : null);
 
-// Mode démo : petit journal local, comme le trigger log_item_event du serveur
-const snaps = new Map();
-function demoLog(it, known) {
-  if (!DEMO || !['task', 'project'].includes(it.kind)) return;
-  const prev = snaps.get(it.id);
-  snaps.set(it.id, { status: it.status, title: it.title, parent_id: it.parent_id });
-  const proj = it.kind === 'project' ? it.id : it.parent_id;
-  const add = (project_id, action, detail = '') => project_id && action && (S.ui.demoEvents ??= []).unshift({ id: uuid(), project_id, item_id: it.id, kind: it.kind, actor: meId(), action, title: it.title, detail, at: nowIso() });
-  if (!prev) { if (!known) add(proj, 'created'); return; }
-  if (prev.status !== it.status) add(proj, it.status === 'trashed' ? 'trashed' : prev.status === 'trashed' ? 'restored' : it.status === 'done' ? 'done' : prev.status === 'done' ? 'reopened' : null);
-  if (prev.title !== it.title && prev.title) add(proj, 'renamed', prev.title);
-  if (it.kind === 'task' && prev.parent_id !== it.parent_id) {
-    add(it.parent_id, 'moved_in', S.items.get(prev.parent_id)?.title || '');
-    add(prev.parent_id, 'moved_out', S.items.get(it.parent_id)?.title || '');
-  }
-}
-
 // Note ce qu'il faut envoyer : seuls les champs modifiés, pour ne pas écraser ce qu'un autre appareil a changé ailleurs.
 // Sans liste (élément neuf, ou appel sans précision), la ligne entière part.
 function markDirty(id, fields) {
@@ -121,7 +104,6 @@ export function saveItem(it, { render = true, fields = null } = {}) {
     if (fields && !sameInstant(it.end_at, end)) fields = [...fields, 'end_at'];
     it.end_at = end;
   }
-  demoLog(it, known);
   it.updated_at = nowIso();
   S.items.set(it.id, it);
   markDirty(it.id, known ? fields : null);

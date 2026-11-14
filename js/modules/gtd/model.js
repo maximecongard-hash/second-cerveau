@@ -1,5 +1,5 @@
 import { uuid, today, parseYmd, addDays, daysBetween, ymd, nowIso, fmtDate } from '../../core/util.js';
-import { DEMO, sb } from '../../core/config.js';
+import { sb } from '../../core/config.js';
 import { S, meId, endAt, sameInstant, newItem, saveItem, patch, live, ofKind, ofKindAll, byTitle } from '../../core/store.js';
 import { toast, route, openEditor } from '../../core/ui.js';
 import { notifiesEnd } from '../../core/modules.js';
@@ -154,7 +154,7 @@ export function refreshEndAt() {
     const e = endAt(t);
     if (sameInstant(t.end_at, e)) continue;
     t.end_at = e;
-    if (sb && !DEMO && !S.dirty.has(t.id)) sb.from('items').update({ end_at: e }).eq('id', t.id).then(() => {}, () => {});
+    if (sb && !S.dirty.has(t.id)) sb.from('items').update({ end_at: e }).eq('id', t.id).then(() => {}, () => {});
   }
 }
 // Chronomètre : spent_sec cumule les temps passés, timer_started_at marque le départ en cours

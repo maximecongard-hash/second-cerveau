@@ -2,10 +2,9 @@ import { esc, I, sec, today, addDays, pad, fmtDate, fmtDur, empty } from '../../
 import { S, live, newItem, saveItem, patch, savePrefs } from '../../core/store.js';
 import { registerModule, kindOwner, isSchedulable, enabledModules } from '../../core/modules.js';
 import { SH, sheet, showSheet, closeSheet, setField, route, render, queueRender, toast, sheetHead } from '../../core/ui.js';
-import { DEMO } from '../../core/config.js';
 import { views, untimedOn, weekSpan } from './views.js';
 import './dnd.js';
-import { appleActs, appleSettings, calendarAccess, loadEvents, seedDemoEvents } from './apple.js';
+import { appleActs, appleSettings, calendarAccess, loadEvents } from './apple.js';
 
 // ---------------------------------------------------------------------------
 // Module « Agenda » : la journée et la semaine en grille horaire.
@@ -110,16 +109,6 @@ function settings() {
     <div class="f-row"><label>Fin</label><div class="f-val">${opts('agEnd', 13, 24)}</div></div></div>`) + appleSettings();
 }
 
-// Démo : quelques créneaux (dont deux qui se chevauchent) en plus des tâches du module Organisation
-function seedDemo() {
-  const t0 = today(), add = f => saveItem(newItem({ kind: 'task', ...f }), { render: false });
-  add({ title: 'Point avec Julie', scheduled_date: t0, scheduled_time: '10:00', duration_min: 60, contexts: ['@tél'] });
-  add({ title: 'Relire le devis', scheduled_date: t0, scheduled_time: '10:30', duration_min: 30, contexts: ['@ordi'] });
-  add({ title: 'Course à pied', scheduled_date: t0, scheduled_time: '12:30', duration_min: 45 });
-  add({ title: 'Dentiste', scheduled_date: addDays(t0, 1), scheduled_time: '09:00', duration_min: 30, contexts: ['@dehors'] });
-  add({ title: 'Atelier site perso', scheduled_date: addDays(t0, 2), scheduled_time: '14:00', duration_min: 120, contexts: ['@ordi'] });
-}
-
 registerModule({
   id: 'agenda',
   label: 'Agenda',
@@ -138,10 +127,9 @@ registerModule({
   settings,
   settingsMeta: 'Heures · événements',
   accessSettings: calendarAccess,
-  seedDemo,
   onChange,
   // après chaque synchro : relit les événements de Calendrier (au plus toutes les 5 minutes)
-  afterSync: () => { if (DEMO) seedDemoEvents(); else loadEvents(); return false; },
+  afterSync: () => { loadEvents(); return false; },
   onResume: () => {
     loadEvents();
     if (S.ui.agDay < today() && ['agenda', 'week'].includes(route().name)) S.ui.agDay = today();

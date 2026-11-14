@@ -23,7 +23,8 @@ RLS), hors ligne via localStorage + service worker.
 
 ## Où en est le projet (8 novembre 2026)
 
-- Version **0.35.0** (commitée), cache SW `sc-0.35.0`, schéma **25** (à recoller : widget Sport) ; schéma 24 = : statut agent (`agent_grants`, `row_role` étendu), accès total lecture/écriture du compte agent aux éléments du propriétaire, à activer par une requête dans le SQL Editor (commentaire en section 7 de `schema.sql`). Non appliqué tant que l'utilisateur n'a pas collé le schéma.
+- Version **0.36.0** (commitée), cache SW `sc-0.36.0`, schéma **25** (à recoller : widget Sport) ; schéma 24 = : statut agent (`agent_grants`, `row_role` étendu), accès total lecture/écriture du compte agent aux éléments du propriétaire, à activer par une requête dans le SQL Editor (commentaire en section 7 de `schema.sql`). Non appliqué tant que l'utilisateur n'a pas collé le schéma.
+- **0.36.0** : mode démo supprimé (`?demo=1`, `seedDemo`, `DEMO` dans `config.js` et partout), car plus à jour. Non testé en connexion réelle : seulement la syntaxe et le chargement de la page de connexion.
 - **0.35.0** : widget, constante `OPEN_SHORTCUT` (false par défaut) : à true, un toucher lance le raccourci « Ouvrir Brain » (action Ouvrir l'app) au lieu d'ouvrir Safari. À tester sur l'iPhone.
 - **0.34.0** : page Récap d'activité (`#/recap`, menu Organisation > Récap d'activité, `views.recap` dans `gtd/views.js`) : 7 derniers jours, tâches terminées par jour, temps chronométré, séances, projets les plus avancés, retards. Sans schéma. Testé en démo.
 - **0.33.0** : widget Scriptable : séances de sport du jour et à venir (`widget_today` renvoie `kind in ('task','workout')` avec `sport`, schéma 25 à recoller ; affichées en vert, ♥), créneaux proches dessinés en colonnes au lieu de se recouvrir (`le` dans `layout`), le toucher ouvre Aujourd'hui et l'Inbox ouvre l'Inbox. **Non testé sur l'iPhone** : recoller `schema.sql`, recopier le code du widget (Réglages > iPhone et Calendrier > Widget). Une PWA iOS s'ouvre parfois dans Safari : limite d'iOS.
@@ -86,7 +87,7 @@ RLS), hors ligne via localStorage + service worker.
 python3 -m http.server 5173
 ```
 
-Ouvrir `http://localhost:5173/?demo=1` (données fictives). Ne jamais tester sur le compte réel.
+Ouvrir `http://localhost:5173/` : le mode démo a été supprimé (0.36.0). Tester avec le compte agent, jamais avec le mot de passe saisi par Claude : l'utilisateur se connecte lui-même dans le navigateur de la session ; les écritures de test sont marquées « TEST agent » et mises à la corbeille.
 Pas de tests automatisés de l'interface : vérifier à la main en largeur mobile (~390 px), en mode sombre, et dans la console.
 
 ## Rappels qui reviennent souvent

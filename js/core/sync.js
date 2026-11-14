@@ -1,4 +1,4 @@
-import { DEMO, sb, CFG, SCHEMA_VERSION } from './config.js';
+import { sb, CFG, SCHEMA_VERSION } from './config.js';
 import { nowIso, same, FMT_TIME } from './util.js';
 import { S, FIELDS, DEFAULT_PREFS, persist, isMine, patch, canEdit } from './store.js';
 import { ITEM_DEFAULTS } from './state.js';
@@ -17,7 +17,6 @@ const FULL_READ_MS = 36e5; // au plus une heure entre deux relectures complètes
 
 let syncTimer = null;
 export function scheduleSync(delay = 800) {
-  if (DEMO) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(sync, delay);
   setSyncState();
@@ -235,7 +234,7 @@ export const SCHEMA_MSG = 'Base à mettre à jour : recolle supabase/schema.sql 
 const hasPending = () => S.prefsDirty || [...S.dirty.keys()].some(id => !S.stuck.has(id));
 
 export async function sync() {
-  if (DEMO || !sb || !S.user || S.syncing) return;
+  if (!sb || !S.user || S.syncing) return;
   if (!navigator.onLine) { setSyncState(); return; }
   S.syncing = true;
   setSyncState();
@@ -274,7 +273,6 @@ export async function sync() {
   }
 }
 export function syncClass() {
-  if (DEMO) return 'demo';
   if (!navigator.onLine || S.netDown) return 'off';
   if (S.lastError || S.stuck.size || S.ui.storageFull || schemaBehind()) return 'err';
   if (S.syncing || hasPending()) return 'busy';
@@ -285,7 +283,7 @@ export function syncLabel() {
     : schemaBehind() ? SCHEMA_MSG
     : S.stuck.size ? `${S.stuck.size} élément${S.stuck.size > 1 ? 's' : ''} non envoyé${S.stuck.size > 1 ? 's' : ''} : voir Réglages > Données`
     : 'Stockage du téléphone plein : voir Réglages > Données');
-  return { demo: () => 'Mode démo (local)', off: () => (navigator.onLine ? 'Serveur injoignable' : 'Hors ligne') + ' : modifications gardées sur le téléphone', err,
+  return { off: () => (navigator.onLine ? 'Serveur injoignable' : 'Hors ligne') + ' : modifications gardées sur le téléphone', err,
     busy: () => 'Synchronisation…', ok: () => 'Synchronisé' }[syncClass()]();
 }
 export const syncLine = () => syncLabel() + (S.lastSync ? ` · dernière synchro ${FMT_TIME.format(new Date(S.lastSync))}` : '');

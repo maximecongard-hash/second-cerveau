@@ -1,4 +1,4 @@
-import { DEMO, sb } from '../../core/config.js';
+import { sb } from '../../core/config.js';
 import { esc, FMT_TIME, ymd, fmtDate } from '../../core/util.js';
 import { S, meId } from '../../core/store.js';
 import { SH, queueRender, renderEditor } from '../../core/ui.js';
@@ -19,7 +19,6 @@ export function loadEvents(projectId) {
     ev[projectId] = { rows: rows || ev[projectId]?.rows || [], loading: false, err };
     if (SH.mode === 'editor') renderEditor(); else queueRender();
   };
-  if (DEMO) { done((S.ui.demoEvents || []).filter(e => e.project_id === projectId)); return; }
   sb.from('item_events').select('*').eq('project_id', projectId).order('at', { ascending: false }).limit(100).then(({ data, error }) => {
     done(data, error ? error.message : null);
   });

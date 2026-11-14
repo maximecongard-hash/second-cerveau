@@ -114,7 +114,6 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .sync.busy { background: var(--warn); animation: pulse 1s infinite alternate; }
 .sync.off { background: var(--muted); }
 .sync.err { background: var(--danger); }
-.sync.demo { background: var(--proj); }
 @keyframes pulse { to { opacity: .35; } }
 
 main {

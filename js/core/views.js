@@ -1,4 +1,4 @@
-import { VERSION, SCHEMA_VERSION, CFG, DEMO, sb } from './config.js';
+import { VERSION, SCHEMA_VERSION, CFG, sb } from './config.js';
 import { $, esc, I, empty, sec, today, nowIso, plain, ICONS, iconChoice, setIcon, logo, switchBtn, newToken } from './util.js';
 import { S, live, savePrefs, patch, persist, isMine, resetLocal, persistNow } from './store.js';
 import { sync, syncClass, syncLine, dropStuck, checkInstall, schemaBehind, SCHEMA_MSG } from './sync.js';
@@ -41,9 +41,9 @@ const fold = (id, icon, title, meta, body) => `<details class="fold" ${S.ui.fold
 function accountBody() {
   return `<div class="kv"><span>${esc(S.user.email)}</span><span class="sync ${syncClass()}"></span></div>
     <div class="muted small pad sync-line">${esc(syncLine())}</div>
-    ${DEMO ? '' : '<div class="btn-row"><button class="btn" data-act="sync-now">Synchroniser</button></div>'}
+    <div class="btn-row"><button class="btn" data-act="sync-now">Synchroniser</button></div>
     ${accountForms()}
-    ${DEMO ? '' : '<div class="btn-row"><button class="btn danger" data-act="logout">Se déconnecter</button></div>'}`;
+    <div class="btn-row"><button class="btn danger" data-act="logout">Se déconnecter</button></div>`;
 }
 
 // Activation et ordre des modules
@@ -75,7 +75,6 @@ const SHORTCUTS = [
   ['Importer séance', 'séance de la montre (FIT, TCX, GPX) partagée depuis COROS vers le Sport']
 ];
 function tokensHtml() {
-  if (DEMO) return '<div class="muted pad">Indisponible en mode démo.</div>';
   if (S.ui.tokens === undefined) { S.ui.tokens = null; loadTokens(); }
   if (S.ui.tokens === null) return '<div class="muted pad">Chargement…</div>';
   const DOORS = { capture: 'capture', agenda: 'agenda', widget: 'widget', activity: 'séances' };
@@ -122,7 +121,7 @@ function dataBody() {
       ${trash.length ? '<div class="btn-row"><button class="btn danger" data-act="trash-empty">Vider la corbeille</button></div>' : ''}`) +
     sec('Sur cet appareil', `${S.ui.storageFull ? '<div class="err pad">Stockage plein : tes derniers changements ne sont pas gardés hors ligne. Reste en ligne le temps de synchroniser, puis vide la corbeille.</div>' : ''}
       <div class="kv"><span>Espace utilisé</span><span class="muted">${storageLine()}</span></div>
-      <div class="kv"><span>Version</span><span class="muted">${VERSION}${DEMO ? ' · mode démo' : ''}</span></div>
+      <div class="kv"><span>Version</span><span class="muted">${VERSION}</span></div>
       <div class="btn-row"><button class="btn" data-act="export">Exporter (JSON)</button></div>`);
 }
 
@@ -161,7 +160,7 @@ VIEWS.settings = () => {
   const banner = schemaBehind() ? `<a class="banner soft" href="#/settings/install">${esc(SCHEMA_MSG)}</a>` : '';
   const trash = trashed().length;
   const html =
-    fold('account', I.user, 'Compte', esc(DEMO ? 'Mode démo' : (S.people[S.user.id]?.name || S.user.email)), accountBody) +
+    fold('account', I.user, 'Compte', esc(S.people[S.user.id]?.name || S.user.email), accountBody) +
     (isAdmin() ? fold('users', I.users, 'Utilisateurs', Object.keys(S.people).length + ' compte(s)', usersSettings) : '') +
     fold('modules', I.grid, 'Modules', enabledModules().map(m => esc(m.label)).join(' · '), modulesBody) +
     enabledModules().filter(m => m.settings).map(m => fold('mod-' + m.id, m.icon, esc(m.label), esc(m.settingsMeta || ''), m.settings)).join('') +
@@ -251,7 +250,7 @@ Object.assign(ACTS, {
   'trash-empty': async () => {
     const ids = trashed().map(i => i.id);
     if (!ids.length || !confirm(`Effacer définitivement ${ids.length} élément${ids.length > 1 ? 's' : ''} ? Impossible à annuler.`)) return;
-    if (!DEMO) for (let i = 0; i < ids.length; i += 100) {
+    for (let i = 0; i < ids.length; i += 100) {
       const { error } = await sb.from('items').delete().in('id', ids.slice(i, i + 100));
       if (error) { toast('Erreur : ' + error.message); return; }
     }
@@ -277,7 +276,7 @@ Object.assign(ACTS, {
   'widget-copy': async () => {
     // Promesse donnée au presse-papiers : iOS accepte la copie malgré l'attente du réseau
     const code = fetch('widget/Brain.js', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(t => (DEMO ? t : t.replace(/const APP_URL = '[^']*'/, `const APP_URL = '${new URL('./', location.href).href}'`)
+            .then(t => (t.replace(/const APP_URL = '[^']*'/, `const APP_URL = '${new URL('./', location.href).href}'`)
         .replace(/const API = '[^']*'/, `const API = '${CFG.url}'`).replace(/const KEY = '[^']*'/, `const KEY = '${CFG.key}'`)));
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'text/plain': code.then(t => new Blob([t], { type: 'text/plain' })) })]);
