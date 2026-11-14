@@ -220,6 +220,32 @@ views.someday = () => {
   };
 };
 
+// Récap d'activité : les 7 derniers jours (tâches terminées, temps chronométré, séances) et les projets du moment
+views.recap = () => {
+  const t0 = today(), days = Array.from({ length: 7 }, (_, k) => addDays(t0, k - 6));
+  const doneOn = d => ofKindAll('task').filter(t => t.status === 'done' && t.completed_at && ymd(new Date(t.completed_at)) === d);
+  const per = days.map(d => { const ts = doneOn(d); return { d, n: ts.length, sec: ts.reduce((a, t) => a + (t.spent_sec || 0), 0), ts }; });
+  const logs = ofKindAll('workout_log').filter(w => w.status !== 'trashed' && days.includes(w.scheduled_date));
+  const nTasks = per.reduce((a, x) => a + x.n, 0), totalSec = per.reduce((a, x) => a + x.sec, 0);
+  const byProj = {};
+  per.forEach(x => x.ts.forEach(t => { const k = (t.parent_id && S.items.get(t.parent_id)?.title) || 'Sans projet'; byProj[k] = (byProj[k] || 0) + 1; }));
+  const projs = Object.entries(byProj).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const late = ofKind('task').filter(t => t.status === 'active' && ((t.due_date && t.due_date < t0) || (t.scheduled_date && t.scheduled_date < t0))).length;
+  const max = Math.max(1, ...per.map(x => x.n));
+  const fmtSec = v => (v >= 3600 ? `${Math.floor(v / 3600)} h ${String(Math.floor(v % 3600 / 60)).padStart(2, '0')}` : `${Math.round(v / 60)} min`);
+  const stat = (v, l) => `<div><b>${v}</b><span>${l}</span></div>`;
+  const dayName = d => cap(new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(parseYmd(d)).replace('.', ''));
+  const chart = `<div class="rc-bars">${per.map(x => `<div class="rc-bar ${x.d === t0 ? 'today' : ''}"><span class="rc-n">${x.n || ''}</span><i style="height:${Math.round(x.n / max * 100)}%"></i><small>${dayName(x.d)}</small></div>`).join('')}</div>`;
+  return {
+    title: 'Récap',
+    html: `<div class="muted small pad">Les 7 derniers jours, jusqu'à aujourd'hui.</div>
+      <div class="ev-summary">${stat(nTasks, plural(nTasks, 'tâche faite', 'tâches faites').replace(/^\d+ /, ''))}${stat(totalSec ? fmtSec(totalSec) : '0', 'chronométrées')}${stat(logs.length, logs.length > 1 ? 'séances' : 'séance')}</div>` +
+      sec('Tâches terminées par jour', chart) +
+      sec('Projets les plus avancés', projs.length ? `<div class="list">${projs.map(([k, n]) => `<div class="row"><div class="row-main"><div class="row-title">${esc(k)}</div></div><span class="muted small">${plural(n, 'tâche', 'tâches')}</span></div>`).join('')}</div>` : `<div class="muted pad">Aucune tâche terminée cette semaine.</div>`) +
+      (late ? sec('À surveiller', `<div class="muted pad">${plural(late, 'tâche en retard', 'tâches en retard')}. <a href="#/actions">Voir les actions</a></div>`) : '')
+  };
+};
+
 views.logbook = () => {
   const list = live().filter(i => i.status === 'done' && i.completed_at && (i.kind === 'task' || i.kind === 'project')).sort((a, b) => b.completed_at.localeCompare(a.completed_at)).slice(0, 150);
   const groups = new Map();

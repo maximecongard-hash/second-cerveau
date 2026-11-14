@@ -121,6 +121,7 @@ registerModule({
     ['#/waiting', 'En attente', ofKind('task').filter(t => t.status === 'waiting').length],
     ['#/someday', 'Un jour / peut-être', somedayItems().length],
     ['#/review', 'Revue hebdo'],
+    ['#/recap', 'Récap d’activité'],
     ['#/logbook', 'Terminé']
   ],
   editor: editorHTML,

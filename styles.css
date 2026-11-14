@@ -896,3 +896,11 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .ag-side .chips { margin: 4px 0 6px; }
 .ag-grp { margin-top: 10px; }
 .ag-grp small { color: var(--muted); font-weight: 400; }
+
+/* Récap d'activité */
+.rc-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 140px; padding: 8px 0 0; }
+.rc-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; position: relative; }
+.rc-bar i { display: block; width: 100%; max-width: 28px; min-height: 2px; background: var(--muted); border-radius: 3px 3px 0 0; }
+.rc-bar.today i { background: var(--accent); }
+.rc-bar small, .rc-n { font-size: 11px; color: var(--muted); }
+.rc-bar.today small { color: var(--accent); font-weight: 500; }
