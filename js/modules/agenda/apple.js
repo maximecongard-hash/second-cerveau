@@ -1,4 +1,4 @@
-import { DEMO, CFG, LS_KEY, sb } from '../../core/config.js';
+import { CFG, LS_KEY, sb } from '../../core/config.js';
 import { esc, sec, today, addDays, fmtDate, FMT_TIME, switchBtn, newToken } from '../../core/util.js';
 import { S, live, savePrefs } from '../../core/store.js';
 import { SH, sheet, showSheet, render, queueRender, toast, sheetHead } from '../../core/ui.js';
@@ -21,7 +21,7 @@ try {
 const save = () => { try { localStorage.setItem(EV_KEY, JSON.stringify({ uid: EV.uid, list: EV.list, fetched: EV.fetched })); } catch { /* plein */ } };
 
 export async function loadEvents(force = false) {
-  if (DEMO || !sb || !S.user || EV.loading) return;
+  if (!sb || !S.user || EV.loading) return;
   if (!force && Date.now() - EV.at < EVERY) return;
   EV.loading = true; EV.at = Date.now();
   const { data, error } = await sb.from('events').select('id, calendar, title, location, starts_at, ends_at, all_day')
@@ -38,7 +38,7 @@ export async function loadEvents(force = false) {
 // ---------------------------------------------------------------------------
 const dayOf = ts => ts.slice(0, 10);
 const timeOf = ts => ts.slice(11, 16);
-const all = () => (S.prefs.agApple === false || (!DEMO && EV.uid && S.user && EV.uid !== S.user.id) ? [] : EV.list);
+const all = () => (S.prefs.agApple === false || (EV.uid && S.user && EV.uid !== S.user.id) ? [] : EV.list);
 // Un créneau de Brain revenu par l'abonnement (calendrier renommé) : on ne l'affiche pas deux fois
 const twin = (e, day) => live().some(i => i.scheduled_date === day && i.scheduled_time?.slice(0, 5) === timeOf(e.starts_at)
   && (i.title || '').trim().toLowerCase() === e.title.trim().toLowerCase());
@@ -98,18 +98,16 @@ async function loadCalTokens() {
 export function appleSettings() {
   const on = S.prefs.agApple !== false;
   const n = EV.list.filter(e => dayOf(e.starts_at) >= today()).length;
-  const status = DEMO ? `${n} événements d’exemple`
-    : EV.fetched ? `${n} événement${n > 1 ? 's' : ''} à venir · relu à ${FMT_TIME.format(new Date(EV.fetched))}`
+  const status = EV.fetched ? `${n} événement${n > 1 ? 's' : ''} à venir · relu à ${FMT_TIME.format(new Date(EV.fetched))}`
     : 'Aucun événement reçu pour l’instant.';
   return sec('Événements de Calendrier', `<div class="kv"><span>Afficher dans la grille</span>${switchBtn(on, 'cal-toggle', 'Afficher les événements de Calendrier')}</div>
-    <div class="kv"><span>${esc(status)}</span>${DEMO ? '' : '<button class="btn" data-act="cal-refresh">Relire</button>'}</div>`);
+    <div class="kv"><span>${esc(status)}</span><button class="btn" data-act="cal-refresh">Relire</button></div>`);
 }
 
 // Dans les deux sens : lien d'abonnement (Brain vers Calendrier), raccourci (Calendrier vers Brain)
 export function calendarAccess() {
   let feed;
-  if (DEMO) feed = '<div class="muted pad">Indisponible en mode démo.</div>';
-  else {
+  {
     if (S.ui.calTokens === undefined) { S.ui.calTokens = null; loadCalTokens(); }
     const ts = S.ui.calTokens;
     feed = ts === null ? '<div class="muted pad">Chargement…</div>'
@@ -141,18 +139,3 @@ export const appleActs = {
   }
 };
 
-// Démo : quelques événements de Calendrier autour d'aujourd'hui (jamais enregistrés)
-export function seedDemoEvents() {
-  const t0 = today(), d = k => addDays(t0, k);
-  const ev = (id, day, a, b, title, calendar, location = '', all_day = false) =>
-    ({ id: 'demo-ev-' + id, calendar, title, location, starts_at: `${day}T${a}:00`, ends_at: `${b.includes('T') ? b : `${day}T${b}`}:00`, all_day });
-  EV.list = [
-    ev(1, d(0), '08:30', '09:15', 'Réunion d’équipe', 'Travail', 'Salle 2'),
-    ev(2, d(0), '13:00', '14:00', 'Déjeuner avec Claire', 'Perso', 'Café du coin'),
-    ev(3, d(1), '18:30', '20:00', 'Cours de yoga', 'Perso'),
-    ev(4, d(2), '00:00', `${d(3)}T00:00`, 'Anniversaire de Léa', 'Anniversaires', '', true),
-    ev(5, d(2), '09:30', '11:00', 'Revue de sprint', 'Travail')
-  ];
-  EV.fetched = new Date().toISOString();
-  return EV.list;
-}

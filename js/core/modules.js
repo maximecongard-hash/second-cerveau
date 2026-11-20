@@ -21,7 +21,7 @@ import { S, DEFAULT_PREFS } from './state.js';
 //   notifSettings()                HTML ajouté à Réglages > Notifications
 //   accessSettings()               HTML ajouté à Réglages > iPhone et Calendrier
 //   keepKinds                      kinds dont l'éditeur n'a pas de bouton Supprimer (['foyer'])
-//   afterSync(), seedDemo()        initialisations (renvoie true si quelque chose a changé)
+//   afterSync()                    initialisations (renvoie true si quelque chose a changé)
 //   onInput(el), onChange(el)      saisies propres au module (renvoie true si traité)
 //   onResume()                     retour au premier plan
 //   schedulable                    kinds que l'Agenda peut placer comme des tâches (['workout'])

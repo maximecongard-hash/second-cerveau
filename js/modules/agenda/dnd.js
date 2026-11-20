@@ -20,7 +20,7 @@ let noClick = false; // le clic qui suit un glissement ne doit pas ouvrir l'édi
 const snap = m => Math.round(m / SNAP) * SNAP;
 
 document.addEventListener('pointerdown', e => {
-  if (st || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (st || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('.ag-act')) return;
   const rs = e.target.closest('.ag-rs');
   const el = rs ? rs.closest('[data-drag]') : e.target.closest('[data-drag]');
   const it = el && S.items.get(el.dataset.id);

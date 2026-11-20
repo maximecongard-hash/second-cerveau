@@ -3,7 +3,8 @@ import { S, newItem, saveItem, patch, savePrefs, ofKind } from '../../core/store
 import { SH, render, queueRender, route, openEditor, renderEditor, setField, closeSheet, toast } from '../../core/ui.js';
 import { complete, clarify, moveInDay, evening, remindPreset, nextOrder, toggleFocus, timerStart, timerPause, timerReset, refreshEndAt, recRuleOf } from './model.js';
 import { loadEvents } from './history.js';
-import { createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
+import { setMeta } from './frise.js';
+import { openMove, createAndEdit, openCapture, saveCapture, openPicker, renderPicker, pickSel } from './sheets.js';
 
 // ---------------------------------------------------------------------------
 // Actions GTD (data-act) et formulaires (data-form)
@@ -68,6 +69,22 @@ export const acts = {
     if (open[el.dataset.id]) loadEvents(el.dataset.id);
     queueRender();
   },
+  'sec-toggle': el => { const o = (S.ui.secOpen ??= {}); o[el.dataset.id] = el.dataset.open !== 'true'; queueRender(); },
+  'sec-all': el => {
+    const ss = ofKind('section').filter(s => s.parent_id === el.dataset.id), o = (S.ui.secOpen ??= {});
+    const anyOpen = el.dataset.any === 'true';
+    ss.forEach(s => { o[s.id] = !anyOpen; });
+    queueRender();
+  },
+  'done-show': el => { const o = (S.ui.showDone ??= {}); o[el.dataset.v] = !o[el.dataset.v]; queueRender(); },
+  'frise-f': el => { (S.ui.friseF ??= {})[el.dataset.id] = el.dataset.v; queueRender(); },
+  'plog-new': el => createAndEdit({ kind: 'plog', parent_id: el.dataset.id, meta: { types: ['feature'], date: today() } }),
+  'plog-type': el => {
+    const it = S.items.get(SH.editingId), cur = it.meta?.types || [];
+    const next = cur.includes(el.dataset.v) ? cur.filter(x => x !== el.dataset.v) : [...cur, el.dataset.v];
+    setMeta(it.id, 'types', next.length ? next : [el.dataset.v]);
+    renderEditor();
+  },
   'timer-toggle': el => {
     const t = S.items.get(el.dataset.id);
     if (t?.timer_started_at) timerPause(t.id); else if (t) timerStart(t.id);
@@ -76,6 +93,14 @@ export const acts = {
   'timer-pause': () => { timerPause(SH.editingId); renderEditor(); },
   'timer-reset': () => { timerReset(SH.editingId); renderEditor(); },
   'new-note': el => createAndEdit({ kind: 'note', parent_id: el.dataset.id }),
+  'move-open': el => openMove(el.dataset.id),
+  'move-to': el => {
+    const id = el.dataset.id, t = S.items.get(id), prev = t?.meta?.sec || null, v = el.dataset.v || null;
+    if (!t || v === prev) { closeSheet(); return; }
+    setMeta(id, 'sec', v);
+    closeSheet();
+    toast('Action déplacée', () => setMeta(id, 'sec', prev));
+  },
   clar: el => clarify(el.dataset.id, el.dataset.v),
   'clarify-one': el => { location.hash = '#/clarify/' + el.dataset.id; },
   day: el => {
@@ -145,9 +170,15 @@ export const forms = {
   'add-proj': f => {
     const input = f.querySelector('input'), v = input.value.trim();
     if (!v) return;
-    saveItem(newItem({ kind: 'task', title: v, parent_id: f.dataset.id }));
+    saveItem(newItem({ kind: 'task', title: v, parent_id: f.dataset.id, ...(f.dataset.sec ? { meta: { sec: f.dataset.sec } } : {}) }));
     input.value = '';
     if (SH.mode === 'editor') { renderEditor(); $('#ed-next')?.focus(); }
+  },
+  'add-sec': f => {
+    const input = f.querySelector('input'), v = input.value.trim();
+    if (!v) return;
+    saveItem(newItem({ kind: 'section', title: v, parent_id: f.dataset.id, ...(f.dataset.sup ? { meta: { sup: f.dataset.sup } } : {}) }));
+    input.value = '';
   },
   'ctx-add': f => {
     const input = f.querySelector('input');
@@ -169,6 +200,8 @@ export const forms = {
 // Saisies propres au module (renvoient true si traitées)
 export function onChange(t) {
   if (t.dataset.rec && S.ui.recDraft) { S.ui.recDraft[t.dataset.rec] = +t.value; return true; }
+  if (t.dataset.clar === 'proj') { patch(t.dataset.id, { parent_id: t.value || null, meta: { ...(S.items.get(t.dataset.id)?.meta || {}), sec: null } }); return true; }
+  if (t.dataset.clar === 'sec') { setMeta(t.dataset.id, 'sec', t.value || null); return true; }
   if (t.id === 'cap-file') { $('#cap-file-name').textContent = t.files[0] ? t.files[0].name : ''; return true; }
   if (t.dataset.evdate && t.value) { patch(t.dataset.evdate, { scheduled_date: t.value, day_order: nextOrder(t.value), focus: null }); toast(`Prévu ${fmtDate(t.value).toLowerCase()}`); return true; }
   return false;

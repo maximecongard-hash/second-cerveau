@@ -1,4 +1,4 @@
-import { DEMO, sb } from './config.js';
+import { sb } from './config.js';
 import { uuid } from './util.js';
 import { S } from './store.js';
 
@@ -40,8 +40,7 @@ function resizeImage(file, max = 1600, quality = 0.8) {
   });
 }
 export async function uploadImage(file) {
-  const blob = await resizeImage(file, DEMO ? 800 : 1600);
-  if (DEMO) return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+  const blob = await resizeImage(file, 1600);
   if (!navigator.onLine) throw new Error('Hors ligne : impossible d’envoyer la photo');
   const path = `${S.user.id}/${uuid()}.jpg`;
   const { error } = await sb.storage.from('captures').upload(path, blob, { contentType: 'image/jpeg' });

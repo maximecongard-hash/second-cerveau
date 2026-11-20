@@ -145,61 +145,6 @@ const eveningHtml = () => {
 
 // ---------------------------------------------------------------------------
 // Démo : modèles, une semaine type, la semaine en cours et six semaines d'historique
-// ---------------------------------------------------------------------------
-function seedDemo() {
-  const t0 = today(), mon = monday(t0);
-  const add = f => saveItem(newItem(f), { render: false });
-  const ex = (name, sets, rest) => ({ ...newExercise(name), rest_s: rest ?? restFor(name), sets: sets.map(([reps, w]) => ({ reps, w, done: false })) });
-  const mk = (title, meta, dur) => add({ kind: 'workout_tpl', title, meta, duration_min: dur });
-
-  const footing = mk('Footing 40 min', defaultMeta('run'), 40);
-  const intervals = defaultMeta('run');
-  intervals.blocks = PRESETS.interval[1]();
-  intervals.blocks[1].children[0].target = { kind: 'pace', lo: 265, hi: 275 };
-  intervals.goal = '6 × 3 min à allure 10 km, récup trottinée';
-  const frac = mk('Fractionné 6 × 3 min', intervals, 60);
-  const upper = { sport: 'strength', goal: 'Haut du corps, charges moyennes', exercises: [
-    ex('Développé couché', [[8, 60], [8, 60], [8, 60], [8, 60]], 120), ex('Tractions', [[6, 0], [6, 0], [6, 0], [5, 0]], 120),
-    ex('Rowing haltère', [[10, 24], [10, 24], [10, 24]], 90), ex('Développé militaire', [[8, 35], [8, 35], [8, 35]], 90)] };
-  const haut = mk('Haut du corps', upper, 60);
-  const lower = { sport: 'strength', goal: 'Jambes, lourd sur le squat', exercises: [
-    ex('Squat', [[6, 80], [6, 80], [6, 80], [6, 80]], 150), ex('Soulevé de terre roumain', [[8, 70], [8, 70], [8, 70]], 120),
-    ex('Fentes marchées', [[10, 16], [10, 16], [10, 16]], 90), ex('Mollets debout', [[12, 40], [12, 40], [12, 40]], 60)] };
-  const jambes = mk('Jambes', lower, 60);
-  const longRun = defaultMeta('run'); longRun.blocks = PRESETS.long[1]();
-  const sl = mk('Sortie longue', longRun, 90);
-
-  add({ kind: 'program', title: 'Semaine type', meta: { weeks: 4, start: addDays(mon, 7), plan: [{ wd: 1, tpl: footing.id, time: '18:30' }, { wd: 3, tpl: haut.id, time: '12:15' }, { wd: 5, tpl: frac.id, time: '18:30' }, { wd: 6, tpl: sl.id, time: '09:30' }] } });
-
-  const make = (tpl, day, time, done, k) => {
-    const meta = freshMeta(tpl.meta);
-    meta.tpl = tpl.id;
-    const w = newItem({ kind: 'workout', title: tpl.title, meta, duration_min: tpl.duration_min, scheduled_date: day, scheduled_time: time });
-    if (done) {
-      // charges qui progressent d'une semaine à l'autre
-      (meta.exercises || []).forEach(e => e.sets.forEach(s => { s.done = true; if (s.w) s.w = Math.round((s.w - k * 1.25) * 4) / 4; }));
-      const dur = (tpl.duration_min || 45) * 60 - 120 + (k % 3) * 90;
-      meta.result = { dur_s: dur, dist_m: meta.sport === 'run' ? Math.round(dur / 60 * 175) : null, avg_hr: meta.sport === 'run' ? 148 + (k % 4) : null, rpe: 6 + (k % 3), feeling: 3 + (k % 3 === 0 ? 1 : 0), note: '', source: 'manual', ext_id: null };
-      w.status = 'done';
-      w.spent_sec = dur;
-      w.completed_at = new Date(`${day}T${time}:00`).toISOString();
-    }
-    return add(w);
-  };
-  for (let k = 6; k >= 1; k--) {
-    const m = addDays(mon, -7 * k);
-    make(haut, addDays(m, 1), '18:30', true, k);
-    make(k % 2 ? footing : frac, addDays(m, 3), '18:30', true, k);
-    if (k !== 3) make(k % 2 ? sl : jambes, addDays(m, 5), '09:30', true, k);
-  }
-  if (t0 > mon) make(footing, mon, '18:30', true, 0);
-  make(haut, t0, '18:30', false, 0);
-  make(frac, addDays(mon, 4) < t0 ? addDays(t0, 1) : addDays(mon, 4), '18:30', false, 0);
-  make(sl, addDays(mon, 5) < t0 ? addDays(t0, 2) : addDays(mon, 5), '09:30', false, 0);
-  make(jambes, addDays(mon, 8), '12:15', false, 0);
-  migrateLogs(); // l'historique de la démo : des objets figés, comme dans l'app
-}
-
 registerModule({
   id: 'sport',
   label: 'Sport',
@@ -226,7 +171,6 @@ registerModule({
   settingsMeta: 'Objectif · repos · exercices',
   afterSync: () => { pullActivityInbox(); return migrateLogs(); },
   todayRows, reviewStep, eveningHtml,
-  seedDemo,
   onChange
 });
 

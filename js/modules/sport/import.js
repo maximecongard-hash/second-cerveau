@@ -1,4 +1,4 @@
-import { DEMO, sb } from '../../core/config.js';
+import { sb } from '../../core/config.js';
 import { ymd, pad, plural } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
 import { render, toast } from '../../core/ui.js';
@@ -121,7 +121,7 @@ const summary = n => {
 // Un échec réseau laisse le fichier pour la prochaine ouverture ; un fichier illisible est écarté.
 let polling = false, lastPoll = 0;
 export async function pullActivityInbox(client = sb) {
-  if ((DEMO && client === sb) || !client || polling || (client === sb && Date.now() - lastPoll < 15000)) return;
+  if (!client || polling || (client === sb && Date.now() - lastPoll < 15000)) return;
   polling = true; lastPoll = Date.now();
   try {
     const { data: rows, error } = await client.from('activity_inbox').select('id,path').order('created_at').limit(20);

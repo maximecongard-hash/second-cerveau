@@ -1,4 +1,4 @@
-import { DEMO, sb } from './config.js';
+import { sb } from './config.js';
 import { esc } from './util.js';
 import { S, persist } from './store.js';
 import { ACTS, FORMS } from './modules.js';
@@ -10,7 +10,7 @@ import { sync } from './sync.js';
 // L'ajout passe par l'Edge Function brain, route add-user (clé de service côté serveur, jamais dans l'app).
 // ---------------------------------------------------------------------------
 export const me = () => S.people[S.user?.id] || null;
-export const isAdmin = () => !DEMO && !!me()?.is_admin;
+export const isAdmin = () => !!me()?.is_admin;
 
 // Mot de passe provisoire lisible (sans 0/O ni 1/l/I)
 function tempPassword() {
@@ -20,7 +20,6 @@ function tempPassword() {
 
 // Contenu du groupe « Compte » (sous l'email et la synchro)
 export function accountForms() {
-  if (DEMO) return '';
   return `<form class="inline-add with-btn" data-form="profile-name"><input id="profile-name" value="${esc(me()?.name || '')}" placeholder="Ton pseudo, vu par ceux avec qui tu partages" autocomplete="name"><button class="btn" type="submit">Enregistrer</button></form>
     <form class="inline-add with-btn" data-form="password-change"><input id="new-pass" type="password" minlength="8" placeholder="Nouveau mot de passe (8 caractères)" autocomplete="new-password"><button class="btn" type="submit">Changer</button></form>`;
 }

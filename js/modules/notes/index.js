@@ -54,19 +54,6 @@ function fab(v) {
   else createAndEdit({ kind: 'note', tags: S.ui.noteTag ? [S.ui.noteTag] : [] });
 }
 
-// Après les données du module Organisation (ordre de js/main.js) : les liens retrouvent tâches et projets par leur titre
-function seedDemo() {
-  const id = t => findByTitle(t)?.id;
-  const add = f => saveItem(newItem(f), { render: false });
-  const ids = (...ts) => ts.map(id).filter(Boolean);
-  add({ kind: 'note', title: 'Principes GTD', body: '# Les 5 étapes\n1. **Capturer**\n2. Clarifier\n3. Organiser\n4. Réfléchir (revue)\n5. Agir\n\nVoir aussi [[Idées de projets]] #productivité' });
-  add({ kind: 'note', title: 'Idées de projets', body: '- Newsletter mensuelle\n- [ ] Atelier photo\n- [[Refaire le site perso]]\n\n#idées', pinned: true });
-  add({ kind: 'note', title: 'Inspirations de design', body: 'Sites sobres, beaucoup de blanc, une seule couleur d’accent.', links: ids('Choisir un thème pour le site') });
-  add({ kind: 'bookmark', title: 'Comparateur de billets de train', url: 'https://example.com/trains', body: 'Affiche toutes les compagnies.', tags: ['voyage'], links: ids('Comparer les prix des billets de train', 'Préparer les vacances de Noël') });
-  add({ kind: 'bookmark', title: 'Guide de la revue hebdomadaire', url: 'https://example.com/revue-hebdo', tags: ['productivité'], pinned: true });
-  add({ kind: 'bookmark', title: '', url: 'https://example.org/typographie', status: 'done', completed_at: new Date().toISOString(), tags: ['design'], links: ids('Inspirations de design') });
-}
-
 registerModule({
   id: 'notes',
   label: 'Notes',
@@ -87,6 +74,5 @@ registerModule({
   setField,
   row: anyRow,
   searchable: () => true,
-  seedDemo,
   onInput
 });

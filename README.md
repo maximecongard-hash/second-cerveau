@@ -3,7 +3,6 @@
 PWA personnelle pensée pour l'iPhone : un second cerveau organisé en modules. Le cœur est un GTD complet (capture rapide, tri, prochaines actions, projets, journée), complété par un agenda en grille horaire, des notes et signets, un suivi de sport et des courses, le tout lié entre eux. Les données sont synchronisées avec Supabase et l'app fonctionne hors ligne.
 
 - **App** : https://maximecongard-hash.github.io/second-cerveau/
-- **Démo sans compte** : https://maximecongard-hash.github.io/second-cerveau/?demo=1 (données fictives, stockées seulement dans le navigateur)
 - **Code** : https://github.com/maximecongard-hash/second-cerveau
 
 Stack : HTML, CSS et modules ES natifs, sans build ni npm. Hébergement GitHub Pages (branche `main`). Base, comptes, photos et fonctions : Supabase.
@@ -285,7 +284,7 @@ Choix assumés, faibles pour un usage entre comptes de confiance :
 python3 -m http.server 5173
 ```
 
-Ouvre `http://localhost:5173/?demo=1` (données fictives, jamais le compte réel). Vérifie à la main en largeur mobile (~390 px), en mode sombre, et dans la console. Avant un commit :
+Ouvre `http://localhost:5173/` et connecte-toi (le mode démo a été supprimé). Vérifie à la main en largeur mobile (~390 px), en mode sombre, et dans la console. Avant un commit :
 
 ```bash
 python3 scripts/check.py

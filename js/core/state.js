@@ -22,6 +22,7 @@ export const S = {
   email: null,
   items: new Map(),
   shares: [], // partages visibles (donnés ou reçus), table shares
+  grants: [], // propriétaires qui m'ont désigné compte agent (table agent_grants) : je modifie tout chez eux
   people: {}, // comptes connus : id -> { id, email, name, is_admin }
   prefs: { ...DEFAULT_PREFS },
   dirty: new Map(), // id -> champs à envoyer (Set), ou null pour la ligne entière
