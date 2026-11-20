@@ -1,7 +1,8 @@
 import { esc, I, fRow, chip } from '../../core/util.js';
 import { S, newItem, saveItem, patch } from '../../core/store.js';
-import { SH, renderEditor, openEditor, sheetHead } from '../../core/ui.js';
+import { SH, renderEditor, openEditor, sheetHead, toast } from '../../core/ui.js';
 import { linksBlock } from '../../core/links.js';
+import { uploadImage } from '../../core/images.js';
 import { inFoyer, foyerEditor } from './foyer.js';
 import { inWeek } from './semaine.js';
 import { SEASONS, QUICK_TAGS, UNITS, metaOf, shopMeta, fmtQty, parseQty, parseIngredient, STORES } from './model.js';
@@ -48,7 +49,9 @@ export function editorHTML(it) {
   const ings = `<datalist id="rc-units">${UNITS.map(u => `<option value="${esc(u)}"></option>`).join('')}</datalist>
     <div class="rc-ings">${m.ingredients.map(ingredientRow).join('') || '<div class="muted small pad">Aucun ingrédient. Écris-en un ci-dessous, par exemple « 250 g de farine ».</div>'}</div>
     <form class="inline-add" data-form="rc-ing-add" data-id="${it.id}"><input id="rc-ing-new" placeholder="+ Ingrédient (250 g de farine)" enterkeyhint="done" autocomplete="off"></form>`;
-  return head + title +
+  const photo = `<div class="rc-photo">${it.image_path ? `<img class="rc-photo-img" data-img="${esc(it.image_path)}" alt="">` : ''}
+    <div class="cap-tools"><label class="btn">${I.camera} ${it.image_path ? 'Changer la photo' : 'Photo'}<input type="file" accept="image/*" data-rc="photo" hidden></label>${it.image_path ? `<button type="button" class="btn" data-act="rc-photo-del" data-id="${it.id}">Retirer</button>` : ''}</div></div>`;
+  return head + photo + title +
     `<div class="fields">${fields}</div>
     <div class="sec-head rc-h"><h2>Ingrédients</h2></div>${ings}
     <div class="sec-head rc-h"><h2>Étapes et notes</h2></div>
@@ -92,6 +95,12 @@ export function addIngredient(id, text) {
 export function delIngredient(id, gid) { editMeta(id, m => { m.ingredients = m.ingredients.filter(g => g.id !== gid); }); renderEditor(); }
 // Saisie dans une ligne d'ingrédient ou le nombre de parts (enregistrée à la sortie du champ)
 export function editorChange(t) {
+  if (t.dataset.rc === 'photo') {
+    const f = t.files?.[0];
+    t.value = '';
+    setPhoto(SH.editingId, f);
+    return true;
+  }
   if (t.dataset.rc === 'servings') {
     const n = Math.max(1, Math.min(99, Math.round(+t.value) || 4));
     editMeta(SH.editingId, m => { m.servings = n; });
@@ -119,6 +128,17 @@ export function editorChange(t) {
   if (k === 'qty') t.value = fmtQty(parseQty(t.value));
   return true;
 }
+
+// Photo de la recette : réduite puis envoyée (refus hors ligne : message, la fiche reste intacte)
+export async function setPhoto(id, file) {
+  if (!file) return;
+  try {
+    const path = await uploadImage(file);
+    patch(id, { image_path: path }, { render: false });
+  } catch (e) { toast(e.message || 'Envoi de la photo impossible'); return; }
+  if (SH.editingId === id) renderEditor();
+}
+export function delPhoto(id) { patch(id, { image_path: null }, { render: false }); renderEditor(); }
 
 export function createAndEdit(fields = {}) {
   const it = saveItem(newItem({ kind: 'recipe', meta: { servings: 4, seasons: [], ingredients: [] }, ...inFoyer(), ...fields }));

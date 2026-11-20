@@ -3,7 +3,7 @@ import { S, newItem, saveItem, patch, ofKindAll, savePrefs } from '../../core/st
 import { registerModule } from '../../core/modules.js';
 import { SH, render, renderEditor, toast } from '../../core/ui.js';
 import { KINDS, views, recipesList, recipeRow, shopRow } from './views.js';
-import { editorHTML, setField, createAndEdit, toggleIn, addIngredient, delIngredient, editorChange } from './editor.js';
+import { editorHTML, setField, createAndEdit, toggleIn, addIngredient, delIngredient, editorChange, delPhoto } from './editor.js';
 
 const aisleOpts = cur => AISLES.map(a => `<option ${a === cur ? 'selected' : ''}>${esc(a)}</option>`).join('');
 import { parseIngredient, AISLES, productKey } from './model.js';
@@ -29,6 +29,7 @@ const acts = {
   'rc-season-pick': el => { S.ui.rcSeason = el.dataset.v; render(); },
   'rc-tag': el => toggleIn(SH.editingId, 'tags', el.dataset.v),
   'rc-season': el => toggleIn(SH.editingId, 'seasons', el.dataset.v),
+  'rc-photo-del': el => delPhoto(el.dataset.id),
   'rc-ing-del': el => delIngredient(SH.editingId, el.dataset.id),
   'rc-have-del': el => {
     const before = S.prefs.rcHave;
