@@ -1,6 +1,6 @@
 // Configuration globale (clés publiques Supabase dans config.js à la racine)
-export const VERSION = '0.40.0';
-export const SCHEMA_VERSION = 25; // à augmenter avec brain_status() de supabase/schema.sql
+export const VERSION = '0.41.0';
+export const SCHEMA_VERSION = 26; // à augmenter avec brain_status() de supabase/schema.sql
 export const CFG = window.SC_CONFIG || {};
 export const LS_KEY = 'sc.v1';
 // Une requête à la base ne reste jamais suspendue (iOS peut figer un appel pendant la mise en veille) ; les envois de photos gardent leur rythme

@@ -277,6 +277,16 @@ create policy "captures_owner" on storage.objects
     bucket_id = 'captures' and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+-- Lecture des photos partagées : un fichier est lisible si un élément que je peux voir (règles de la table items)
+-- l'utilise comme photo. Lecture seule, l'envoi reste réservé au propriétaire.
+drop policy if exists "captures_shared_read" on storage.objects;
+create policy "captures_shared_read" on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'captures'
+    and exists (select 1 from public.items i where i.image_path = name)
+  );
+
 drop policy if exists "captures_shortcut_upload" on storage.objects;
 create policy "captures_shortcut_upload" on storage.objects
   for insert to anon
@@ -808,7 +818,7 @@ create trigger items_log_event after insert or update or delete on public.items
 create or replace function public.brain_status() returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'schema', 25, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
+    'schema', 26, -- à augmenter avec SCHEMA_VERSION de js/core/config.js
     'vapid', c.public_key is not null,
     'url', c.project_url,
     'cron', exists (select 1 from cron.job where jobname = 'brain-reminders'),

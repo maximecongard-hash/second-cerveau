@@ -253,7 +253,7 @@ Un élément supprimé reste 30 jours dans **Réglages** > **Données** > **Corb
 Choix assumés, faibles pour un usage entre comptes de confiance :
 
 - **Clé dans le chemin des photos** : une photo capturée par raccourci a la clé d'accès dans son chemin de stockage, donc un invité qui reçoit cet élément pourrait la lire. Le corriger demanderait de refaire les raccourcis.
-- **Photos partagées** : un invité ne voit pas les photos d'un élément partagé.
+- **Photos partagées** : corrigé par le schéma 24 (règle `captures_shared_read`), à valider en vrai avec un invité.
 - **Double répétition** : une tâche répétée terminée hors ligne sur deux appareils crée deux occurrences.
 - **Photos orphelines** : la purge de la corbeille efface l'élément, pas sa photo dans le stockage.
 - **Corbeille vidée à la main** : un autre appareil garde la copie dans sa corbeille jusqu'à sa propre purge ; la restaurer là-bas recrée l'élément.

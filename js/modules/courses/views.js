@@ -26,6 +26,20 @@ export function recipeRow(r) {
   </div>`;
 }
 
+// Carte de la banque : photo en haut (ou pastille neutre), titre et sous-ligne dessous.
+// Toucher = panier, appui long ou ⋯ = fiche, cœur = favori.
+export function recipeCard(r) {
+  const m = metaOf(r), on = (S.ui.rcSel || []).includes(r.id);
+  const sub = [`${m.servings} pers.`, m.seasons.length ? m.seasons.join(' / ') : ''].filter(Boolean).map(esc).join(' · ');
+  return `<div class="rc-card ${on ? 'sel' : ''}" data-act="rc-sel" data-long="edit" data-id="${r.id}">
+    <div class="rc-ph">${r.image_path ? `<img data-img="${esc(r.image_path)}" alt="" loading="lazy">` : `<span class="rc-ph-none">${I.camera}</span>`}
+      <button type="button" class="check ${on ? 'on' : ''}" aria-label="${on ? 'Retirer du panier' : 'Ajouter au panier'}"></button>
+      <span class="rc-fav" data-act="rc-fav" data-id="${r.id}">${heart(r.pinned)}</span></div>
+    <div class="rc-cap"><div class="rc-cap-main"><div class="rc-t">${esc(r.title) || '<i>Sans titre</i>'}</div><div class="rc-s">${sub}</div></div>
+      <button type="button" class="icon-btn sh-more" data-act="edit" data-id="${r.id}" aria-label="Détails de ${esc(r.title)}">${I.menu}</button></div>
+  </div>`;
+}
+
 const matches = (r, q) => (r.title + ' ' + r.body + ' ' + (r.tags || []).join(' ') + ' ' + metaOf(r).ingredients.map(g => g.name).join(' ')).toLowerCase().includes(q);
 const byFav = (a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.title.localeCompare(b.title, 'fr');
 
@@ -41,7 +55,7 @@ export function recipesList() {
   }
   if (q) list = list.filter(r => matches(r, q));
   if (f !== 'saison') list.sort(byFav);
-  if (list.length) return list.map(recipeRow).join('');
+  if (list.length) return `<div class="rc-grid">${list.map(recipeCard).join('')}</div>`;
   return q || f !== 'all' ? empty('Aucune recette trouvée') : empty('Ta banque de recettes', 'Écris tes recettes avec leurs ingrédients : elles alimenteront la liste de courses.');
 }
 
