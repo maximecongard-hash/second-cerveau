@@ -1,5 +1,5 @@
 // Configuration globale (clés publiques Supabase dans config.js à la racine)
-export const VERSION = '0.41.0';
+export const VERSION = '0.42.0';
 export const SCHEMA_VERSION = 26; // à augmenter avec brain_status() de supabase/schema.sql
 export const CFG = window.SC_CONFIG || {};
 export const LS_KEY = 'sc.v1';

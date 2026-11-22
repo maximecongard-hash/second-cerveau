@@ -7,6 +7,7 @@ import { pushSettings } from './push.js';
 import { accountForms, usersSettings, isAdmin } from './users.js';
 import { VIEWS, ACTS, FORMS, moduleOrder, enabledModules, getModule, kindOwner, fromModules } from './modules.js';
 import { queueRender, render, toast } from './ui.js';
+import { seriousness, sceneDirty } from './scene.js';
 
 // ---------------------------------------------------------------------------
 // Vues communes à tous les modules
@@ -166,11 +167,23 @@ VIEWS.settings = () => {
     enabledModules().filter(m => m.settings).map(m => fold('mod-' + m.id, m.icon, esc(m.label), esc(m.settingsMeta || ''), m.settings)).join('') +
     fold('notif', I.bell, 'Notifications', 'Rappels · fin de créneau', notifBody) +
     fold('iphone', I.phone, 'iPhone et Calendrier', 'Clés d’accès · raccourcis · widget', iphoneBody) +
+    fold('scene', I.flame, 'Fond d’écran', SCENE_LABEL[S.prefs.scene || 'anim'], sceneBody) +
     fold('icon', I.image, 'Icône', iconChoice().label, iconSettings) +
     fold('data', I.save, 'Données', (S.stuck.size ? 'Éléments non envoyés · ' : '') + (trash ? `Corbeille (${trash}) · ` : 'Corbeille · ') + 'export', dataBody) +
     (isAdmin() ? fold('install', I.checkCircle, 'Installation', schemaBehind() ? 'À mettre à jour' : 'Base · fonction · rappels', installBody) : '');
   return { title: 'Réglages', html: `${banner}<div class="folds">${html}</div>` };
 };
+// Fond Bivouac : il suit le score de sérieux des 7 derniers jours (js/core/scene.js)
+const SCENE_LABEL = { anim: 'Bivouac animé', still: 'Bivouac fixe', off: 'Sans fond' };
+const SCENE_SHORT = { anim: 'Animé', still: 'Fixe', off: 'Sans fond' };
+function sceneBody() {
+  const cur = S.prefs.scene || 'anim', { score, parts } = seriousness();
+  const word = score >= 75 ? 'Le feu brûle bien.' : score >= 50 ? 'Le feu tient.' : score >= 25 ? 'Le feu faiblit.' : 'Il ne reste que des cendres.';
+  return `<div class="seg scene-seg">${Object.keys(SCENE_LABEL).map(k => `<button class="${k === cur ? 'on' : ''}" data-act="scene-set" data-v="${k}" aria-pressed="${k === cur}">${SCENE_SHORT[k]}</button>`).join('')}</div>
+    <div class="kv"><span>Ta semaine</span><span class="mono">${score} / 100</span></div>
+    ${parts.map(p => `<div class="kv"><span>${p.label}</span><span class="muted small">${esc(p.detail)} · ${p.v}</span></div>`).join('')}
+    <div class="muted small pad">${word} Le fond reprend des couleurs quand tu termines tes tâches, tiens tes échéances et fais tes séances de sport (objectif : 3 par semaine si rien n’est prévu). Calculé sur les 7 derniers jours.</div>`;
+}
 // iOS lit l'icône au moment de « Sur l'écran d'accueil » puis la fige
 function iconSettings() {
   const cur = iconChoice().id;
@@ -293,6 +306,7 @@ Object.assign(ACTS, {
     if (error) { toast('Erreur : ' + error.message); return; }
     S.ui.tokens = undefined; render();
   },
+  'scene-set': el => { S.prefs.scene = el.dataset.v; sceneDirty(); savePrefs(); },
   'icon-set': el => { setIcon(el.dataset.v); render(); toast('Icône choisie'); },
   export: () => exportJSON()
 });

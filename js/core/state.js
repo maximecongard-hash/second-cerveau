@@ -1,7 +1,8 @@
 // État partagé (module feuille : n'importe rien, pour éviter les cycles d'import)
 // Préférences par défaut : chaque module y ajoute les siennes (registerModule)
 export const DEFAULT_PREFS = {
-  modules: null // [{ id, on }] dans l'ordre de la barre latérale ; null = ordre par défaut
+  modules: null, // [{ id, on }] dans l'ordre de la barre latérale ; null = ordre par défaut
+  scene: 'anim' // fond Bivouac : 'anim' | 'still' | 'off' (js/core/scene.js)
 };
 // Colonnes d'un élément et leur valeur par défaut : la seule liste à compléter quand une colonne s'ajoute à items.
 // newItem() et l'envoi au serveur en découlent (updated_at est fixé par le serveur).
