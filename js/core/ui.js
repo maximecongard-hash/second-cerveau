@@ -4,6 +4,7 @@ import { syncClass, syncLabel } from './sync.js';
 import { hydrateImages } from './images.js';
 import { VIEWS, enabledModules, viewOwner, kindOwner, getModule, isEnabled } from './modules.js';
 import { viewLogin } from './views.js';
+import { updateScene } from './scene.js';
 
 // ---------------------------------------------------------------------------
 // Routage : #/vue/argument. Les vues GTD gardent leurs adresses d'origine.
@@ -63,7 +64,7 @@ function sidebar(r, mod) {
 }
 
 export function render() {
-  if (!S.user) { app.innerHTML = viewLogin(); return; }
+  if (!S.user) { app.innerHTML = viewLogin(); updateScene(); return; }
   const r = route();
   const mod = activeModule(r);
   if (viewOwner(r.name)) S.ui.mod = mod.id;
@@ -90,6 +91,7 @@ export function render() {
   window.scrollTo(0, keep);
   lastRouteKey = key;
   if (focusId) { const el = document.getElementById(focusId); if (el) el.focus({ preventScroll: true }); }
+  updateScene();
 }
 
 // Tiroir des modules sur mobile (sur grand écran la barre est toujours visible)

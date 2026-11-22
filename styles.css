@@ -923,3 +923,24 @@ body.ag-dragging, body.ag-dragging * { cursor: grabbing !important; -webkit-user
 .act-bar.today i { background: var(--accent); }
 .act-bar small, .act-n { font-size: 11px; color: var(--muted); }
 .act-bar.today small { color: var(--accent); font-weight: 500; }
+
+/* Fond Bivouac (js/core/scene.js) : canvas fixe derrière l'app, contenu posé sur une feuille translucide */
+#scene { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+body.scene { background: transparent; }
+body.scene #app { position: relative; z-index: 1; }
+/* La feuille translucide s'arrête avec le contenu : en dessous, la scène reste nette (feu au-dessus de la barre d'onglets) */
+body.scene main {
+  background: color-mix(in srgb, var(--bg) 66%, transparent);
+  -webkit-backdrop-filter: blur(8px) saturate(120%); backdrop-filter: blur(8px) saturate(120%);
+  border-radius: 0 0 14px 14px; padding-bottom: 16px; margin-bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom) + 160px);
+}
+body.scene .tabs { background: color-mix(in srgb, var(--surface) 86%, transparent); }
+@media (min-width: 900px) {
+  body.scene main {
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); border-radius: 14px;
+    -webkit-backdrop-filter: blur(12px) saturate(120%); backdrop-filter: blur(12px) saturate(120%);
+    margin-top: 6px; margin-bottom: 40px;
+  }
+}
+.scene-seg { margin: 4px 0 10px; }
